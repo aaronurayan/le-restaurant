@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShoppingCart, User, Menu as MenuIcon } from 'lucide-react';
 import { Button } from '../atoms/Button';
+import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
 
 interface HeaderProps {
   cartItemCount: number;
@@ -48,6 +49,11 @@ export const Header: React.FC<HeaderProps> = ({
             <a href="#contact" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Contact
             </a>
+            
+            {/* API Status Indicator */}
+            <div className="border-l border-neutral-200 pl-6">
+              <ApiStatusIndicator showDetails={false} />
+            </div>
           </nav>
           
           {/* Right Actions */}

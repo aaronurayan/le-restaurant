@@ -148,6 +148,7 @@ src/
 
 ### Entity Relationship Diagram
 
+#### Simplified Core ERD
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │    Customer     │     │      Order      │     │   OrderItem     │
@@ -175,6 +176,238 @@ src/
                         │ created_at      │
                         │ updated_at      │
                         └─────────────────┘
+```
+
+#### Comprehensive ERD (Mermaid)
+```mermaid
+erDiagram
+    %% User Management Entities (F100, F101, F102)
+    USERS {
+        int user_id PK
+        string email UK
+        string password_hash
+        string phone_number
+        string first_name
+        string last_name
+        enum user_role "customer, manager, admin"
+        enum status "active, inactive, suspended"
+        datetime created_at
+        datetime updated_at
+        datetime last_login
+        string profile_image_url
+    }
+
+    USER_SESSIONS {
+        int session_id PK
+        int user_id FK
+        string session_token UK
+        datetime created_at
+        datetime expires_at
+        string ip_address
+        string user_agent
+        enum status "active, expired, revoked"
+    }
+
+    %% Menu Management Entities (F103, F104)
+    MENU_CATEGORIES {
+        int category_id PK
+        string category_name
+        string description
+        int sort_order
+        enum status "active, inactive"
+        datetime created_at
+        datetime updated_at
+    }
+
+    MENU_ITEMS {
+        int item_id PK
+        int category_id FK
+        string item_name
+        text description
+        decimal price
+        string image_url
+        text ingredients
+        text allergens
+        enum dietary_type "vegetarian, vegan, gluten_free, none"
+        enum availability "available, out_of_stock, seasonal"
+        int preparation_time_minutes
+        datetime created_at
+        datetime updated_at
+    }
+
+    %% Order Management Entities (F105)
+    ORDERS {
+        int order_id PK
+        int customer_id FK
+        int table_id FK "nullable for delivery"
+        enum order_type "dine_in, takeout, delivery"
+        decimal subtotal
+        decimal tax_amount
+        decimal tip_amount
+        decimal total_amount
+        enum status "pending, confirmed, preparing, ready, completed, cancelled"
+        text special_instructions
+        datetime order_time
+        datetime estimated_completion
+        datetime completed_at
+    }
+
+    ORDER_ITEMS {
+        int order_item_id PK
+        int order_id FK
+        int menu_item_id FK
+        int quantity
+        decimal unit_price
+        text customizations
+        text special_requests
+        datetime created_at
+    }
+
+    %% Payment Management Entities (F106)
+    PAYMENTS {
+        int payment_id PK
+        int order_id FK
+        decimal amount
+        enum payment_method "credit_card, debit_card, cash, digital_wallet"
+        string transaction_id UK
+        enum status "pending, completed, failed, refunded"
+        text payment_details "encrypted"
+        datetime payment_time
+        datetime processed_at
+        string gateway_response
+    }
+
+    PAYMENT_REFUNDS {
+        int refund_id PK
+        int payment_id FK
+        decimal refund_amount
+        text refund_reason
+        enum status "pending, completed, failed"
+        datetime refund_requested
+        datetime refund_processed
+        int processed_by_user_id FK
+    }
+
+    %% Delivery Management Entities (F107)
+    DELIVERY_ADDRESSES {
+        int address_id PK
+        int user_id FK
+        string address_line1
+        string address_line2
+        string city
+        string state
+        string postal_code
+        string country
+        decimal latitude
+        decimal longitude
+        enum address_type "home, work, other"
+        boolean is_default
+        datetime created_at
+    }
+
+    DELIVERIES {
+        int delivery_id PK
+        int order_id FK
+        int delivery_address_id FK
+        int driver_id FK "nullable"
+        decimal delivery_fee
+        int estimated_delivery_time_minutes
+        enum status "assigned, picked_up, in_transit, delivered, failed"
+        text delivery_instructions
+        datetime assigned_at
+        datetime picked_up_at
+        datetime delivered_at
+        string delivery_photo_url
+    }
+
+    DELIVERY_DRIVERS {
+        int driver_id PK
+        int user_id FK
+        string vehicle_type
+        string license_plate
+        enum status "available, busy, offline"
+        decimal current_latitude
+        decimal current_longitude
+        datetime last_location_update
+        datetime created_at
+    }
+
+    %% Table Reservation Entities (F108, F109)
+    RESTAURANT_TABLES {
+        int table_id PK
+        string table_number
+        int capacity
+        enum table_type "regular, booth, bar, outdoor"
+        enum status "available, occupied, reserved, maintenance"
+        text location_description
+        datetime created_at
+        datetime updated_at
+    }
+
+    RESERVATIONS {
+        int reservation_id PK
+        int customer_id FK
+        int table_id FK "nullable until assigned"
+        datetime reservation_date
+        time reservation_time
+        int party_size
+        text special_requests
+        enum status "pending, confirmed, seated, completed, cancelled, no_show"
+        datetime created_at
+        datetime confirmed_at
+        datetime checked_in_at
+        int confirmed_by_user_id FK "nullable"
+    }
+
+    %% Additional Supporting Entities
+    CUSTOMER_PREFERENCES {
+        int preference_id PK
+        int user_id FK
+        string dietary_restrictions
+        string favorite_cuisines
+        string allergens
+        boolean marketing_emails
+        boolean sms_notifications
+        datetime updated_at
+    }
+
+    AUDIT_LOGS {
+        int log_id PK
+        int user_id FK
+        string entity_type
+        int entity_id
+        enum action_type "create, update, delete, view"
+        text old_values "JSON"
+        text new_values "JSON"
+        string ip_address
+        datetime timestamp
+    }
+
+    %% Relationships
+    USERS ||--o{ USER_SESSIONS : "has"
+    USERS ||--o{ ORDERS : "places"
+    USERS ||--o{ RESERVATIONS : "makes"
+    USERS ||--o{ DELIVERY_ADDRESSES : "has"
+    USERS ||--o{ CUSTOMER_PREFERENCES : "has"
+    USERS ||--o{ AUDIT_LOGS : "performs"
+    USERS ||--o{ DELIVERY_DRIVERS : "can_be"
+    USERS ||--o{ PAYMENT_REFUNDS : "processes"
+    
+    MENU_CATEGORIES ||--o{ MENU_ITEMS : "contains"
+    MENU_ITEMS ||--o{ ORDER_ITEMS : "ordered_as"
+    
+    ORDERS ||--o{ ORDER_ITEMS : "contains"
+    ORDERS ||--o{ PAYMENTS : "paid_by"
+    ORDERS ||--o{ DELIVERIES : "fulfilled_by"
+    ORDERS }o--|| RESTAURANT_TABLES : "assigned_to"
+    
+    PAYMENTS ||--o{ PAYMENT_REFUNDS : "can_have"
+    
+    DELIVERIES }o--|| DELIVERY_ADDRESSES : "delivered_to"
+    DELIVERIES }o--|| DELIVERY_DRIVERS : "assigned_to"
+    
+    RESERVATIONS }o--|| RESTAURANT_TABLES : "assigned_to"
+    RESERVATIONS }o--|| USERS : "confirmed_by"
 ```
 
 ### Database Schema
