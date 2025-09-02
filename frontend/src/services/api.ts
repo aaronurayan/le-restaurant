@@ -1,4 +1,5 @@
 import { MenuItem, MenuCategory, Order, CartItem } from '../types';
+import { User, CreateUserRequest, UpdateUserRequest, UserSearchParams } from '../types/user';
 
 // API 기본 설정
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -114,6 +115,68 @@ export const cartApi = {
     apiRequest<void>(`/cart/items/${itemId}`, {
       method: 'DELETE',
     }),
+};
+
+// 사용자 관리 API
+export const userApi: {
+  getAllUsers: () => Promise<User[]>;
+  getUserById: (id: number) => Promise<User>;
+  getUserByEmail: (email: string) => Promise<User>;
+  createUser: (userData: CreateUserRequest) => Promise<User>;
+  updateUser: (id: number, userData: UpdateUserRequest) => Promise<User>;
+  updateUserStatus: (id: number, status: string) => Promise<User>;
+  deleteUser: (id: number) => Promise<void>;
+  getUsersByRole: (role: string) => Promise<User[]>;
+  getActiveUsers: () => Promise<User[]>;
+  searchUsersByName: (keyword: string) => Promise<User[]>;
+} = {
+  // 모든 사용자 조회 (매니저용)
+  getAllUsers: (): Promise<User[]> => 
+    apiRequest<User[]>('/users'),
+  
+  // ID로 사용자 조회
+  getUserById: (id: number): Promise<User> => 
+    apiRequest<User>(`/users/${id}`),
+  
+  // 이메일로 사용자 조회
+  getUserByEmail: (email: string): Promise<User> => 
+    apiRequest<User>(`/users/email/${email}`),
+  
+  // 사용자 생성
+  createUser: (userData: CreateUserRequest): Promise<User> => 
+    apiRequest<User>('/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    }),
+  
+  // 사용자 정보 업데이트
+  updateUser: (id: number, userData: UpdateUserRequest): Promise<User> => 
+    apiRequest<User>(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    }),
+  
+  // 사용자 상태 변경
+  updateUserStatus: (id: number, status: string): Promise<User> => 
+    apiRequest<User>(`/users/${id}/status?status=${status}`),
+  
+  // 사용자 삭제 (소프트 삭제)
+  deleteUser: (id: number): Promise<void> => 
+    apiRequest<void>(`/users/${id}`, {
+      method: 'DELETE',
+    }),
+  
+  // 역할별 사용자 조회
+  getUsersByRole: (role: string): Promise<User[]> => 
+    apiRequest<User[]>(`/users/role/${role}`),
+  
+  // 활성 사용자만 조회
+  getActiveUsers: (): Promise<User[]> => 
+    apiRequest<User[]>('/users/active'),
+  
+  // 이름으로 사용자 검색
+  searchUsersByName: (keyword: string): Promise<User[]> => 
+    apiRequest<User[]>(`/users/search?keyword=${encodeURIComponent(keyword)}`),
 };
 
 // API 상태 확인
