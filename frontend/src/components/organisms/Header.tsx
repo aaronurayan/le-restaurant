@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ShoppingCart, User, Menu as MenuIcon } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
+import AuthModal from './AuthModal';
+import UserManagementPanel from './UserManagementPanel';
+import PaymentManagementPanel from './PaymentManagementPanel';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
   cartItemCount: number;
@@ -14,8 +18,29 @@ export const Header: React.FC<HeaderProps> = ({
   onCartClick,
   onMenuToggle,
 }) => {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserManagement, setShowUserManagement] = useState(false);
+  const [showPaymentManagement, setShowPaymentManagement] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const handleUserClick = () => {
+    if (isAuthenticated) {
+      // 로그인된 상태: 드롭다운 메뉴 표시
+      // TODO: 사용자 드롭다운 메뉴 구현
+      console.log('User menu clicked');
+    } else {
+      // 로그인되지 않은 상태: 인증 모달 표시
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
-    <header className="bg-white shadow-md border-b border-neutral-100 sticky top-0 z-50">
+    <>
+      <header className="bg-white shadow-md border-b border-neutral-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Mobile Menu Button */}
@@ -72,9 +97,58 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
             
             {/* User Profile Button */}
-            <button className="p-2 rounded-lg hover:bg-neutral-100 transition-colors">
-              <User className="w-6 h-6 text-neutral-600" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={handleUserClick}
+                className="p-2 rounded-lg hover:bg-neutral-100 transition-colors flex items-center space-x-2"
+              >
+                <User className="w-6 h-6 text-neutral-600" />
+                {isAuthenticated && (
+                  <span className="hidden sm:block text-sm text-neutral-700">
+                    {user?.firstName} {user?.lastName}
+                  </span>
+                )}
+              </button>
+              
+              {/* User Dropdown Menu (로그인된 상태에서만) */}
+              {isAuthenticated && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-neutral-200 py-2 z-50">
+                  <div className="px-4 py-2 border-b border-neutral-100">
+                    <p className="text-sm font-medium text-neutral-900">
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                    <p className="text-xs text-neutral-500">{user?.email}</p>
+                  </div>
+                  
+                  {/* User Management (Admin/Manager only) */}
+                  {(user?.role === 'admin' || user?.role === 'manager') && (
+                    <button
+                      onClick={() => setShowUserManagement(true)}
+                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    >
+                      User Management
+                    </button>
+                  )}
+                  
+                  {/* Payment Management (Admin/Manager only) */}
+                  {(user?.role === 'admin' || user?.role === 'manager') && (
+                    <button
+                      onClick={() => setShowPaymentManagement(true)}
+                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    >
+                      Payment Management
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
             
             {/* Order Now Button - Desktop */}
             <Button variant="primary" size="md" className="hidden sm:flex">
@@ -84,5 +158,24 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
     </header>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
+
+      {/* User Management Panel */}
+      <UserManagementPanel
+        isOpen={showUserManagement}
+        onClose={() => setShowUserManagement(false)}
+      />
+
+      {/* Payment Management Panel */}
+      <PaymentManagementPanel
+        isOpen={showPaymentManagement}
+        onClose={() => setShowPaymentManagement(false)}
+      />
+    </>
   );
 };
