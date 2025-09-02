@@ -1,35 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
+import { MainLayout } from './components/templates/MainLayout';
+import { CartSidebar } from './components/organisms/CartSidebar';
+import { NotificationContainer } from './components/organisms/NotificationContainer';
+import { Home } from './pages/Home';
+import { useCart } from './hooks/useCart';
+import { MenuItem } from './types';
+import { toast } from './utils/notifications';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [favoritedItems, setFavoritedItems] = useState<Set<string>>(new Set());
+  
+  const {
+    cartItems,
+    cartTotal,
+    cartItemCount,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+  } = useCart();
+
+  const handleAddToCart = (item: MenuItem, quantity: number) => {
+    addToCart(item, quantity);
+    toast.success(`${item.name} added to cart!`);
+  };
+
+  const handleFavorite = (item: MenuItem) => {
+    setFavoritedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(item.id)) {
+        newSet.delete(item.id);
+        toast.info(`${item.name} removed from favorites`);
+      } else {
+        newSet.add(item.id);
+        toast.success(`${item.name} added to favorites!`);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) return;
+    
+    toast.success('Order placed successfully! You will receive a confirmation email shortly.');
+    setIsCartOpen(false);
+    clearCart();
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="App">
+      <MainLayout
+        cartItemCount={cartItemCount}
+        onCartClick={() => setIsCartOpen(true)}
+      >
+        <Home
+          onAddToCart={handleAddToCart}
+          favoritedItems={favoritedItems}
+          onFavorite={handleFavorite}
+        />
+      </MainLayout>
+      
+      <CartSidebar
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cartItems}
+        cartTotal={cartTotal}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
+        onCheckout={handleCheckout}
+      />
+      
+      <NotificationContainer />
+    </div>
+  );
 }
 
-export default App
+export default App;
