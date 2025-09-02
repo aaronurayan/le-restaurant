@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/menu")
@@ -55,7 +57,10 @@ public class MenuController {
     }
     
     @GetMapping("/test")
-    public ResponseEntity<String> testConnection() {
-        return ResponseEntity.ok("Backend connection successful! 🎉");
+    public ResponseEntity<Map<String, String>> testConnection() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Backend connection successful! 🎉");
+        response.put("status", "success");
+        return ResponseEntity.ok(response);
     }
 }
