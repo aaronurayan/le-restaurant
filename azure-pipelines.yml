@@ -10,7 +10,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  NODE_VERSION: '18.x'
+  NODE_VERSION: '22.x'
   SYSTEM_DEBUG: 'true'
 
 steps:
