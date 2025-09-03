@@ -1,10 +1,11 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
+# Azure Pipelines YAML file for a Menu Feature
 trigger:
-- main
+- Menu-Feature
+
+pr:
+  branches:
+    include:
+      - Menu-Feature
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -12,6 +13,7 @@ pool:
 variables:
   NODE_VERSION: '22.x'
   SYSTEM_DEBUG: 'true'
+  FRONTEND_DIR: 'frontend'
 
 steps:
 
@@ -21,7 +23,7 @@ steps:
     versionSpec: '$(NODE_VERSION)'
   displayName: 'Install Node.js $(NODE_VERSION)'
 
-# Optional: cache npm to speed up and make installs more reliable
+# Optional: cache npm to speed up installs
 - task: Cache@2
   inputs:
     key: 'npm | "$(Agent.OS)" | package-lock.json'
@@ -31,27 +33,44 @@ steps:
   displayName: 'Cache npm'
 
 # Install deps
-- script: npm ci --loglevel=warn
+- script: |
+    cd ${FRONTEND_DIR:-.}
+    npm ci --loglevel=warn
   displayName: 'Install dependencies (npm ci)'
   env:
     npm_config_cache: '~/.npm'
 
-# Build (change workingDirectory if your app is not in repo root)
-- script: npm run build
+# Ensure jest-junit is present (install temporarily if missing)
+- script: |
+    cd ${FRONTEND_DIR:-.}
+    if ! npm ls jest-junit >/dev/null 2>&1; then
+      echo "jest-junit not found — installing temporarily (no-save)"
+      npm i --no-save jest-junit
+    else
+      echo "jest-junit already present"
+    fi
+  displayName: 'Ensure jest-junit reporter'
+
+# Build (adjust if your build script/path differs)
+- script: |
+    cd ${FRONTEND_DIR:-.}
+    npm run build
   displayName: 'Build React app'
 
 # Run tests and emit junit.xml for Azure DevOps
-- script: npm test -- --ci --reporters=default --reporters=jest-junit --coverage
+- script: |
+    cd ${FRONTEND_DIR:-.}
+    npm test -- --ci --reporters=default --reporters=jest-junit --coverage
   displayName: 'Run tests (Jest)'
   env:
-    # ensure jest-junit writes the file where PublishTestResults can find it
-    JEST_JUNIT_OUTPUT: '$(Build.SourcesDirectory)/junit.xml'
+    # path where junit.xml will be written (PublishTestResults will look here)
+    JEST_JUNIT_OUTPUT: '$(Build.SourcesDirectory)/$(FRONTEND_DIR)/junit.xml'
   continueOnError: false
 
 # Publish test results to Azure DevOps
 - task: PublishTestResults@2
   inputs:
-    testResultsFiles: '$(Build.SourcesDirectory)/junit.xml'
+    testResultsFiles: '$(Build.SourcesDirectory)/$(FRONTEND_DIR)/junit.xml'
     testRunTitle: 'Menu Feature Tests'
     testResultsFormat: 'JUnit'
   condition: succeededOrFailed()
