@@ -6,10 +6,13 @@ import { Home } from './pages/Home';
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
 import { toast } from './utils/notifications';
+import RegisterForm from './components/molecules/RegisterForm';
+import LoginForm from './components/molecules/LoginForm';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [favoritedItems, setFavoritedItems] = useState<Set<string>>(new Set());
+  const [user, setUser] = useState<string | null>(null);
   
   const {
     cartItems,
@@ -48,30 +51,52 @@ function App() {
     clearCart();
   };
 
+  const handleLogin = (email: string) => {
+    setUser(email);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  const handleRegister = (email: string) => {
+    setUser(email);
+  };
+
   return (
     <div className="App">
-      <MainLayout
-        cartItemCount={cartItemCount}
-        onCartClick={() => setIsCartOpen(true)}
-      >
-        <Home
-          onAddToCart={handleAddToCart}
-          favoritedItems={favoritedItems}
-          onFavorite={handleFavorite}
-        />
-      </MainLayout>
-      
-      <CartSidebar
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cartItems={cartItems}
-        cartTotal={cartTotal}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeFromCart}
-        onCheckout={handleCheckout}
-      />
-      
-      <NotificationContainer />
+      {!user ? (
+        <>
+          <LoginForm onLogin={handleLogin} />
+          <RegisterForm onRegister={handleRegister} />
+        </>
+      ) : (
+        <>
+          <button onClick={handleLogout}>Logout</button>
+          <MainLayout
+            cartItemCount={cartItemCount}
+            onCartClick={() => setIsCartOpen(true)}
+          >
+            <Home
+              onAddToCart={handleAddToCart}
+              favoritedItems={favoritedItems}
+              onFavorite={handleFavorite}
+            />
+          </MainLayout>
+          
+          <CartSidebar
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            cartItems={cartItems}
+            cartTotal={cartTotal}
+            onUpdateQuantity={updateQuantity}
+            onRemoveItem={removeFromCart}
+            onCheckout={handleCheckout}
+          />
+          
+          <NotificationContainer />
+        </>
+      )}
     </div>
   );
 }
