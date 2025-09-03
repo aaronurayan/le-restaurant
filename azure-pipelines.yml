@@ -7,13 +7,27 @@ trigger:
 - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- task: UseNode@1
+  inputs:
+  version: '18.x'
+
+- script: npm ci
+  displayName: 'Install dependencies'
+
+
+- script: npm run build
+  displayName: 'Build React app'
+
+- script: npm test -- --ci --reporters=jest-junit --coverage
+  displayName: 'Run tests'
+  continueOnError: false
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: '**/junit.xml'
+    testRunTitle: 'Menu Feature Tests'
+    condition: succeededOrFailed()
