@@ -1,4 +1,4 @@
-package com.lerestaurant.le_restaurant_backend.repository;
+package main.java.com.lerestaurant.le_restaurant_backend.repository;
 
 import com.lerestaurant.le_restaurant_backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

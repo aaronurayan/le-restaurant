@@ -1,4 +1,4 @@
-package com.lerestaurant.le_restaurant_backend.controller;
+package main.java.com.lerestaurant.le_restaurant_backend.controller;
 
 import com.lerestaurant.le_restaurant_backend.entity.User;
 import com.lerestaurant.le_restaurant_backend.service.UserService;
