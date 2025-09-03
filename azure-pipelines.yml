@@ -9,25 +9,50 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+variables:
+  NODE_VERSION: '18.x'
+  SYSTEM_DEBUG: 'true'
+
 steps:
 
-- task: UseNode@1
+# Install Node
+- task: NodeTool@0
   inputs:
-  version: '18.x'
+    versionSpec: '$(NODE_VERSION)'
+  displayName: 'Install Node.js $(NODE_VERSION)'
 
-- script: npm ci
-  displayName: 'Install dependencies'
+# Optional: cache npm to speed up and make installs more reliable
+- task: Cache@2
+  inputs:
+    key: 'npm | "$(Agent.OS)" | package-lock.json'
+    restoreKeys: |
+      npm | "$(Agent.OS)"
+    path: ~/.npm
+  displayName: 'Cache npm'
 
+# Install deps
+- script: npm ci --loglevel=warn
+  displayName: 'Install dependencies (npm ci)'
+  env:
+    npm_config_cache: '~/.npm'
 
+# Build (change workingDirectory if your app is not in repo root)
 - script: npm run build
   displayName: 'Build React app'
 
-- script: npm test -- --ci --reporters=jest-junit --coverage
-  displayName: 'Run tests'
+# Run tests and emit junit.xml for Azure DevOps
+- script: npm test -- --ci --reporters=default --reporters=jest-junit --coverage
+  displayName: 'Run tests (Jest)'
+  env:
+    # ensure jest-junit writes the file where PublishTestResults can find it
+    JEST_JUNIT_OUTPUT: '$(Build.SourcesDirectory)/junit.xml'
   continueOnError: false
 
+# Publish test results to Azure DevOps
 - task: PublishTestResults@2
   inputs:
-    testResultsFiles: '**/junit.xml'
+    testResultsFiles: '$(Build.SourcesDirectory)/junit.xml'
     testRunTitle: 'Menu Feature Tests'
-    condition: succeededOrFailed()
+    testResultsFormat: 'JUnit'
+  condition: succeededOrFailed()
+  displayName: 'Publish test results'
