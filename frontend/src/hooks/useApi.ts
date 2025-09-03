@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MenuItem, MenuCategory, Order, CartItem } from '../types';
+import { MenuItem, Order, CartItem } from '../types';
 import { menuApi, orderApi, cartApi, apiHealth } from '../services/api';
 
 // API 상태 타입
@@ -208,7 +208,7 @@ export const useApiHealth = () => {
       const status = await apiHealth.checkBackendStatus();
       setIsBackendHealthy(status);
       return status;
-    } catch (error) {
+    } catch {
       setIsBackendHealthy(false);
       return false;
     } finally {
