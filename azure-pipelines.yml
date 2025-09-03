@@ -6,9 +6,9 @@ trigger:
     include:
     - main
     - dev
-    - F102USERMANAGEMENT
-    - F105ORDERMANAGEMENT
-    - F106PAYMENTMANAGEMENT
+    - 'F102USERMANAGEMENT'
+    - 'F105ORDERMANAGEMENT'
+    - 'F106PAYMENTMANAGEMENT'
     - Menu-Feature
   paths:
     exclude:
@@ -146,12 +146,16 @@ stages:
 - stage: DeployStaging
   displayName: 'Deploy to Staging'
   dependsOn: CI
-  condition: and(succeeded(), or(
-    startsWith(variables['Build.SourceBranch'], 'refs/heads/F102'),
-    startsWith(variables['Build.SourceBranch'], 'refs/heads/F105'),
-    startsWith(variables['Build.SourceBranch'], 'refs/heads/F106'),
-    eq(variables['Build.SourceBranch'], 'refs/heads/Menu-Feature')
-  ))
+  condition: |
+    and(
+      succeeded(),
+      or(
+        startsWith(variables['Build.SourceBranch'], 'refs/heads/F102'),
+        startsWith(variables['Build.SourceBranch'], 'refs/heads/F105'),
+        startsWith(variables['Build.SourceBranch'], 'refs/heads/F106'),
+        eq(variables['Build.SourceBranch'], 'refs/heads/Menu-Feature')
+      )
+    )
   variables:
     environmentName: 'staging'
     staticWebAppName: 'le-restaurant-staging'
