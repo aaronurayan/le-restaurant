@@ -23,15 +23,6 @@ steps:
     versionSpec: '$(NODE_VERSION)'
   displayName: 'Install Node.js $(NODE_VERSION)'
 
-# Optional: cache npm to speed up installs
-- task: Cache@2
-  inputs:
-    key: 'npm | "$(Agent.OS)" | package-lock.json'
-    restoreKeys: |
-      npm | "$(Agent.OS)"
-    path: ~/.npm
-  displayName: 'Cache npm'
-
 # Install deps
 - script: |
     cd ${FRONTEND_DIR:-.}
