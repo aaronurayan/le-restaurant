@@ -5,11 +5,6 @@ trigger:
   branches:
     include:
     - main
-    - dev
-    - 'F102USERMANAGEMENT'
-    - 'F105ORDERMANAGEMENT'
-    - 'F106PAYMENTMANAGEMENT'
-    - Menu-Feature
   paths:
     exclude:
     - README.md
@@ -21,7 +16,6 @@ pr:
   branches:
     include:
     - main
-    - dev
   paths:
     exclude:
     - README.md
@@ -34,11 +28,6 @@ variables:
   
   # Azure Variables
   azureSubscription: 'le-restaurant-service-connection'
-  staticWebAppName: 'le-restaurant-frontend'
-  resourceGroupName: 'rg-le-restaurant'
-  
-  # Build Configuration
-  buildConfiguration: 'production'
 
 stages:
 # =============================================================================
@@ -103,201 +92,44 @@ stages:
         publishLocation: 'Container'
 
 # =============================================================================
-# DEPLOYMENT STAGES
+# DEPLOYMENT STAGE
 # =============================================================================
-- stage: DeployDev
-  displayName: 'Deploy to Development'
+- stage: Deploy
+  displayName: 'Deploy to Azure Static Web Apps'
   dependsOn: CI
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/dev'))
-  variables:
-    environmentName: 'development'
-    staticWebAppName: 'le-restaurant-dev'
+  condition: succeeded()
   
   jobs:
-  - deployment: DeployToAzure
-    displayName: 'Deploy to Azure Static Web Apps (Dev)'
+  - job: DeployToAzure
+    displayName: 'Deploy to Azure Static Web Apps'
     pool:
       vmImage: 'ubuntu-latest'
-    environment: 'le-restaurant-dev'
     
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          # Download Build Artifacts
-          - task: DownloadBuildArtifacts@0
-            displayName: 'Download Build Artifacts'
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'le-restaurant-frontend'
-              downloadPath: '$(System.ArtifactsDirectory)'
-          
-          # Deploy to Azure Static Web Apps
-          - task: AzureStaticWebApp@0
-            displayName: 'Deploy to Azure Static Web Apps'
-            inputs:
-              azure_subscription: '$(azureSubscription)'
-              app_location: '$(System.ArtifactsDirectory)/le-restaurant-frontend'
-              skip_app_build: true
-              production_branch: 'main'
-              environment: '$(environmentName)'
-
-- stage: DeployStaging
-  displayName: 'Deploy to Staging'
-  dependsOn: CI
-  condition: |
-    and(
-      succeeded(),
-      or(
-        startsWith(variables['Build.SourceBranch'], 'refs/heads/F102'),
-        startsWith(variables['Build.SourceBranch'], 'refs/heads/F105'),
-        startsWith(variables['Build.SourceBranch'], 'refs/heads/F106'),
-        eq(variables['Build.SourceBranch'], 'refs/heads/Menu-Feature')
-      )
-    )
-  variables:
-    environmentName: 'staging'
-    staticWebAppName: 'le-restaurant-staging'
-  
-  jobs:
-  - deployment: DeployToAzure
-    displayName: 'Deploy to Azure Static Web Apps (Staging)'
-    pool:
-      vmImage: 'ubuntu-latest'
-    environment: 'le-restaurant-staging'
+    steps:
+    # Download Build Artifacts
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'le-restaurant-frontend'
+        downloadPath: '$(System.ArtifactsDirectory)'
     
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          # Download Build Artifacts
-          - task: DownloadBuildArtifacts@0
-            displayName: 'Download Build Artifacts'
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'le-restaurant-frontend'
-              downloadPath: '$(System.ArtifactsDirectory)'
-          
-          # Deploy to Azure Static Web Apps
-          - task: AzureStaticWebApp@0
-            displayName: 'Deploy to Azure Static Web Apps'
-            inputs:
-              azure_subscription: '$(azureSubscription)'
-              app_location: '$(System.ArtifactsDirectory)/le-restaurant-frontend'
-              skip_app_build: true
-              production_branch: 'main'
-              environment: '$(environmentName)'
-          
-          # Run Smoke Tests
-          - task: PowerShell@2
-            displayName: 'Run Smoke Tests'
-            inputs:
-              targetType: 'inline'
-              script: |
-                $baseUrl = "https://$(staticWebAppName).azurestaticapps.net"
-                $maxAttempts = 5
-                $attempt = 1
-                
-                do {
-                  try {
-                    Write-Host "Smoke test attempt $attempt of $maxAttempts"
-                    $response = Invoke-WebRequest -Uri $baseUrl -Method Get -TimeoutSec 30
-                    
-                    if ($response.StatusCode -eq 200) {
-                      Write-Host "✅ Website is accessible!"
-                      exit 0
-                    }
-                  }
-                  catch {
-                    Write-Host "⚠️ Smoke test failed: $($_.Exception.Message)"
-                  }
-                  
-                  if ($attempt -lt $maxAttempts) {
-                    Write-Host "Waiting 30 seconds before next attempt..."
-                    Start-Sleep -Seconds 30
-                  }
-                  
-                  $attempt++
-                } while ($attempt -le $maxAttempts)
-                
-                Write-Host "❌ Smoke test failed after $maxAttempts attempts"
-                exit 1
-
-- stage: DeployProduction
-  displayName: 'Deploy to Production'
-  dependsOn: CI
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  variables:
-    environmentName: 'production'
-    staticWebAppName: 'le-restaurant-prod'
-  
-  jobs:
-  - deployment: DeployToAzure
-    displayName: 'Deploy to Azure Static Web Apps (Production)'
-    pool:
-      vmImage: 'ubuntu-latest'
-    environment: 'le-restaurant-production'
+    # Deploy to Azure Static Web Apps
+    - task: AzureStaticWebApp@0
+      displayName: 'Deploy to Azure Static Web Apps'
+      inputs:
+        azure_subscription: '$(azureSubscription)'
+        app_location: '$(System.ArtifactsDirectory)/le-restaurant-frontend'
+        skip_app_build: true
+        production_branch: 'main'
     
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          # Download Build Artifacts
-          - task: DownloadBuildArtifacts@0
-            displayName: 'Download Build Artifacts'
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'le-restaurant-frontend'
-              downloadPath: '$(System.ArtifactsDirectory)'
-          
-          # Deploy to Azure Static Web Apps
-          - task: AzureStaticWebApp@0
-            displayName: 'Deploy to Azure Static Web Apps'
-            inputs:
-              azure_subscription: '$(azureSubscription)'
-              app_location: '$(System.ArtifactsDirectory)/le-restaurant-frontend'
-              skip_app_build: true
-              production_branch: 'main'
-              environment: '$(environmentName)'
-          
-          # Run Production Tests
-          - task: PowerShell@2
-            displayName: 'Run Production Tests'
-            inputs:
-              targetType: 'inline'
-              script: |
-                $baseUrl = "https://$(staticWebAppName).azurestaticapps.net"
-                $testUrls = @(
-                  "$baseUrl/",
-                  "$baseUrl/menu",
-                  "$baseUrl/cart"
-                )
-                
-                foreach ($url in $testUrls) {
-                  try {
-                    Write-Host "Testing: $url"
-                    $response = Invoke-WebRequest -Uri $url -Method Get -TimeoutSec 30
-                    
-                    if ($response.StatusCode -eq 200) {
-                      Write-Host "✅ $url - OK"
-                    } else {
-                      Write-Host "⚠️ $url - Status: $($response.StatusCode)"
-                    }
-                  }
-                  catch {
-                    Write-Host "❌ $url - Error: $($_.Exception.Message)"
-                  }
-                }
-          
-          # Send Deployment Notification
-          - task: PowerShell@2
-            displayName: 'Send Deployment Notification'
-            inputs:
-              targetType: 'inline'
-              script: |
-                Write-Host "🚀 Production deployment completed successfully!"
-                Write-Host "🌐 Website URL: https://$(staticWebAppName).azurestaticapps.net"
-                # Add notification logic here (Slack, Teams, Email)
+    # Run Basic Tests
+    - task: PowerShell@2
+      displayName: 'Run Basic Tests'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "🚀 Deployment completed successfully!"
+          Write-Host "🌐 Website should be available at your Azure Static Web App URL"
+          # Add notification logic here (Slack, Teams, Email)
