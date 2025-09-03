@@ -1,15 +1,14 @@
-import { MenuItem, MenuCategory, Order, CartItem } from '../types';
+import { MenuItem, Order, CartItem } from '../types';
 
 // API 기본 설정
 const API_BASE_URL = 'http://localhost:8080/api';
 
-// API 응답 타입
-// API response type
-interface ApiResponse<T> {
-  data: T;
-  success: boolean;
-  message?: string;
-}
+// API 응답 타입 (향후 사용 예정)
+// interface ApiResponse<T> {
+//   data: T;
+//   success: boolean;
+//   message?: string;
+// }
 
 // 에러 처리
 class ApiError extends Error {
