@@ -5,6 +5,7 @@ trigger:
 pr:
   branches:
     include:
+      - main
       - Menu-Feature
 
 pool:
