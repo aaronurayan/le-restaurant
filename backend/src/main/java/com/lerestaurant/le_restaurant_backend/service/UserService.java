@@ -22,13 +22,13 @@ public class UserService {
         User user = new User();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        return userRepository.save(user);
+    user.setPassword(password); // For prototype, store plain password
     }
 
     public Optional<User> authenticate(String email, String password) {
         Optional<User> userOpt = userRepository.findByEmail(email);
-        if (userOpt.isPresent() && passwordEncoder.matches(password, userOpt.get().getPassword())) {
-            return userOpt;
+    Optional<User> userOpt = userRepository.findByEmail(email);
+    if (userOpt.isPresent() && userOpt.get().getPassword().equals(password)) {
         }
         return Optional.empty();
     }
