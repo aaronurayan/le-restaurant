@@ -20,47 +20,47 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Partial<typeof formData>>({});
-  
+
   const { login, register, isLoading } = useAuth();
 
   if (!isOpen) return null;
 
   const validateForm = (): boolean => {
     const newErrors: Partial<typeof formData> = {};
-    
+
     if (!formData.email) {
-      newErrors.email = '이메일을 입력해주세요';
+      newErrors.email = 'Please enter your email';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = '올바른 이메일 형식을 입력해주세요';
+      newErrors.email = 'Please enter a valid email address';
     }
-    
+
     if (!formData.password) {
-      newErrors.password = '비밀번호를 입력해주세요';
+      newErrors.password = 'Please enter your password';
     } else if (formData.password.length < 6) {
-      newErrors.password = '비밀번호는 최소 6자 이상이어야 합니다';
+      newErrors.password = 'Password must be at least 6 characters';
     }
-    
+
     if (!isLogin) {
       if (!formData.firstName) {
-        newErrors.firstName = '이름을 입력해주세요';
+        newErrors.firstName = 'Please enter your first name';
       }
       if (!formData.lastName) {
-        newErrors.lastName = '성을 입력해주세요';
+        newErrors.lastName = 'Please enter your last name';
       }
       if (!formData.phoneNumber) {
-        newErrors.phoneNumber = '전화번호를 입력해주세요';
+        newErrors.phoneNumber = 'Please enter your phone number';
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     try {
       if (isLogin) {
         await login({
@@ -108,7 +108,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-neutral-100">
           <h2 className="text-xl font-semibold text-neutral-900">
-            {isLogin ? '로그인' : '회원가입'}
+            {isLogin ? 'Login' : 'Sign Up'}
           </h2>
           <button
             onClick={onClose}
@@ -122,16 +122,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Email */}
           <div className="form-group">
-            <label htmlFor="email" className="form-label">
+            <label htmlFor="email" className="form-label flex items-center gap-2">
               <Mail className="w-4 h-4" />
-              이메일
+              Email
             </label>
             <input
               type="email"
               id="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className={`form-input ${errors.email ? 'form-input-error' : ''}`}
+              className={`form-input mt-1 ${errors.email ? 'form-input-error' : ''}`}
               placeholder="your@email.com"
             />
             {errors.email && <span className="form-error">{errors.email}</span>}
@@ -141,7 +141,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <div className="form-group">
             <label htmlFor="password" className="form-label">
               <Lock className="w-4 h-4" />
-              비밀번호
+              Password
             </label>
             <div className="relative">
               <input
@@ -168,51 +168,51 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <>
               {/* First Name */}
               <div className="form-group">
-                <label htmlFor="firstName" className="form-label">
+                <label htmlFor="firstName" className="form-label flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  이름
+                  First Name
                 </label>
                 <input
                   type="text"
                   id="firstName"
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className={`form-input ${errors.firstName ? 'form-input-error' : ''}`}
-                  placeholder="홍"
+                  className={`form-input mt-1 ${errors.firstName ? 'form-input-error' : ''}`}
+                  placeholder="John"
                 />
                 {errors.firstName && <span className="form-error">{errors.firstName}</span>}
               </div>
 
               {/* Last Name */}
               <div className="form-group">
-                <label htmlFor="lastName" className="form-label">
+                <label htmlFor="lastName" className="form-label flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  성
+                  Last Name
                 </label>
                 <input
                   type="text"
                   id="lastName"
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className={`form-input ${errors.lastName ? 'form-input-error' : ''}`}
-                  placeholder="길동"
+                  className={`form-input mt-1 ${errors.lastName ? 'form-input-error' : ''}`}
+                  placeholder="Doe"
                 />
                 {errors.lastName && <span className="form-error">{errors.lastName}</span>}
               </div>
 
               {/* Phone Number */}
               <div className="form-group">
-                <label htmlFor="phoneNumber" className="form-label">
+                <label htmlFor="phoneNumber" className="form-label flex items-center gap-2">
                   <Phone className="w-4 h-4" />
-                  전화번호
+                  Phone Number
                 </label>
                 <input
                   type="tel"
                   id="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  className={`form-input ${errors.phoneNumber ? 'form-input-error' : ''}`}
-                  placeholder="010-1234-5678"
+                  className={`form-input mt-1 ${errors.phoneNumber ? 'form-input-error' : ''}`}
+                  placeholder="123-456-7890"
                 />
                 {errors.phoneNumber && <span className="form-error">{errors.phoneNumber}</span>}
               </div>
@@ -228,7 +228,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             {isLoading ? (
               <div className="spinner" />
             ) : (
-              isLogin ? '로그인' : '회원가입'
+              isLogin ? 'Login' : 'Sign Up'
             )}
           </button>
         </form>
@@ -236,12 +236,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         {/* Footer */}
         <div className="p-6 border-t border-neutral-100 text-center">
           <p className="text-neutral-600">
-            {isLogin ? '계정이 없으신가요?' : '이미 계정이 있으신가요?'}
+            {isLogin ? "Don't have an account?" : 'Already have an account?'}
             <button
               onClick={toggleMode}
               className="ml-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
             >
-              {isLogin ? '회원가입' : '로그인'}
+              {isLogin ? 'Sign Up' : 'Login'}
             </button>
           </p>
         </div>
