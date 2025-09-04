@@ -4,6 +4,7 @@ import { CartItem, MenuItem } from '../types';
 export const useCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
+  // This is a comment on the order management branch
   const addToCart = useCallback((menuItem: MenuItem, quantity: number = 1, specialInstructions?: string) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.menuItem.id === menuItem.id);
