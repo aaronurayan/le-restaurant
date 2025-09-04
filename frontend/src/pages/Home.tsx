@@ -12,6 +12,7 @@ interface HomeProps {
   onFavorite: (item: MenuItem) => void;
 }
 
+//This is a comment in the order management branch
 export const Home: React.FC<HomeProps> = ({
   onAddToCart,
   favoritedItems,
