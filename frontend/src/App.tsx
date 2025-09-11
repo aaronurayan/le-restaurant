@@ -1,7 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home';
-import PaymentManagement from './pages/PaymentManagement';
+import PaymentManagementPanel from './components/organisms/PaymentManagementPanel';
 import { MainLayout } from './components/templates/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
@@ -17,11 +17,11 @@ function App() {
     addToCart,
     updateQuantity,
     removeFromCart,
-    clearCart,
   } = useCart();
 
   const [favoritedItems, setFavoritedItems] = React.useState<Set<string>>(new Set());
   const [isCartOpen, setIsCartOpen] = React.useState(false);
+  const [redirectToPayments, setRedirectToPayments] = React.useState(false);
 
   const handleAddToCart = (item: MenuItem, quantity: number) => {
     addToCart(item, quantity);
@@ -42,9 +42,8 @@ function App() {
   };
 
   const handleCheckout = () => {
-    // TODO: Integrate with Payment Management flow
-    alert('Proceeding to checkout (mock)');
     setIsCartOpen(false);
+    setRedirectToPayments(true);
   };
 
   return (
@@ -55,6 +54,7 @@ function App() {
             cartItemCount={cartItemCount}
             onCartClick={handleCartClick}
           >
+            {redirectToPayments && <Navigate to="/payments" replace />}
             <Routes>
               <Route 
                 path="/" 
@@ -66,7 +66,7 @@ function App() {
                   />
                 } 
               />
-              <Route path="/payments" element={<PaymentManagement />} />
+              <Route path="/payments" element={<PaymentManagementPanel />} />
             </Routes>
           </MainLayout>
 

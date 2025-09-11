@@ -8,6 +8,9 @@ import {
   CheckCircle,
   Clock,
   CreditCard,
+  Smartphone,
+  Building2,
+  Wallet,
   MapPin,
   Phone,
   Globe
@@ -253,14 +256,14 @@ Thank you for your business!
 
   const getMethodIcon = () => {
     switch (method) {
-      case 'CREDIT_CARD':
-      case 'DEBIT_CARD':
+      case PaymentMethod.CREDIT_CARD:
+      case PaymentMethod.DEBIT_CARD:
         return CreditCard;
-      case 'DIGITAL_WALLET':
+      case PaymentMethod.DIGITAL_WALLET:
         return Smartphone;
-      case 'BANK_TRANSFER':
+      case PaymentMethod.BANK_TRANSFER:
         return Building2;
-      case 'CASH':
+      case PaymentMethod.CASH:
         return Wallet;
       default:
         return CreditCard;
