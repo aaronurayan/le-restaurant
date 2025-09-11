@@ -1,5 +1,7 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Home } from './pages/Home';
+import PaymentManagement from './pages/PaymentManagement';
 import { MainLayout } from './components/templates/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
@@ -47,28 +49,38 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="App">
-        <MainLayout
-          cartItemCount={cartItemCount}
-          onCartClick={handleCartClick}
-        >
-          <Home
-            onAddToCart={handleAddToCart}
-            favoritedItems={favoritedItems}
-            onFavorite={handleFavorite}
-          />
-        </MainLayout>
+      <Router>
+        <div className="App">
+          <MainLayout
+            cartItemCount={cartItemCount}
+            onCartClick={handleCartClick}
+          >
+            <Routes>
+              <Route 
+                path="/" 
+                element={
+                  <Home
+                    onAddToCart={handleAddToCart}
+                    favoritedItems={favoritedItems}
+                    onFavorite={handleFavorite}
+                  />
+                } 
+              />
+              <Route path="/payments" element={<PaymentManagement />} />
+            </Routes>
+          </MainLayout>
 
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cartItems={cartItems}
-          cartTotal={cartTotal}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
-        />
-      </div>
+          <CartSidebar
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            cartItems={cartItems}
+            cartTotal={cartTotal}
+            onUpdateQuantity={updateQuantity}
+            onRemoveItem={removeFromCart}
+            onCheckout={handleCheckout}
+          />
+        </div>
+      </Router>
     </AuthProvider>
   );
 }

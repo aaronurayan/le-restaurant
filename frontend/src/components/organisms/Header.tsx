@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { ShoppingCart, User, Menu as MenuIcon } from 'lucide-react';
+import { ShoppingCart, User, Menu as MenuIcon, Truck, CreditCard } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
 import AuthModal from './AuthModal';
 import UserManagementPanel from './UserManagementPanel';
-import PaymentManagementPanel from './PaymentManagementPanel';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
@@ -20,7 +20,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
-  const [showPaymentManagement, setShowPaymentManagement] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
 
   const handleUserClick = () => {
@@ -65,15 +64,33 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#menu" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
+            <Link to="/" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Menu
-            </a>
+            </Link>
             <a href="#about" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               About
             </a>
             <a href="#contact" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Contact
             </a>
+            {(user?.role === 'admin' || user?.role === 'manager') && (
+              <Link
+                to="/delivery"
+                className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
+              >
+                <Truck className="w-4 h-4" />
+                Delivery
+              </Link>
+            )}
+            {(user?.role === 'admin' || user?.role === 'manager') && (
+              <Link
+                to="/payments"
+                className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
+              >
+                <CreditCard className="w-4 h-4" />
+                Payments
+              </Link>
+            )}
             
             {/* API Status Indicator */}
             <div className="border-l border-neutral-200 pl-6">
@@ -132,12 +149,24 @@ export const Header: React.FC<HeaderProps> = ({
                   
                   {/* Payment Management (Admin/Manager only) */}
                   {(user?.role === 'admin' || user?.role === 'manager') && (
-                    <button
-                      onClick={() => setShowPaymentManagement(true)}
-                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    <Link
+                      to="/payments"
+                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
                     >
+                      <CreditCard className="w-4 h-4" />
                       Payment Management
-                    </button>
+                    </Link>
+                  )}
+                  
+                  {/* Delivery Management (Admin/Manager only) */}
+                  {(user?.role === 'admin' || user?.role === 'manager') && (
+                    <Link
+                      to="/delivery"
+                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                    >
+                      <Truck className="w-4 h-4" />
+                      Delivery Management
+                    </Link>
                   )}
                   
                   <button
@@ -171,11 +200,6 @@ export const Header: React.FC<HeaderProps> = ({
         onClose={() => setShowUserManagement(false)}
       />
 
-      {/* Payment Management Panel */}
-      <PaymentManagementPanel
-        isOpen={showPaymentManagement}
-        onClose={() => setShowPaymentManagement(false)}
-      />
     </>
   );
 };
