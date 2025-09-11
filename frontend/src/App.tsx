@@ -66,7 +66,10 @@ function App() {
                   />
                 } 
               />
-              <Route path="/payments" element={<PaymentManagementPanel />} />
+              <Route 
+                path="/payments" 
+                element={<PaymentManagementPanel isOpen={true} onClose={() => window.history.back()} />} 
+              />
             </Routes>
           </MainLayout>
 
