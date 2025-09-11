@@ -76,22 +76,22 @@ export const Header: React.FC<HeaderProps> = ({
               Contact
             </a>
             {(user?.role === 'admin' || user?.role === 'manager') && (
-              <Link
-                to="/delivery"
-                className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
-              >
-                <Truck className="w-4 h-4" />
-                Delivery
-              </Link>
-            )}
-            {(user?.role === 'admin' || user?.role === 'manager') && (
-              <Link
-                to="/payments"
-                className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
-              >
-                <CreditCard className="w-4 h-4" />
-                Payments
-              </Link>
+              <>
+                <Link
+                  to="/delivery"
+                  className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
+                >
+                  <Truck className="w-4 h-4" />
+                  Delivery
+                </Link>
+                <Link
+                  to="/payments"
+                  className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  Payments
+                </Link>
+              </>
             )}
             
             {/* API Status Indicator */}
@@ -169,15 +169,24 @@ export const Header: React.FC<HeaderProps> = ({
                     </Link>
                   )}
                   
-                  {/* Delivery Management (Admin/Manager only) */}
+                  {/* Delivery & Payment Management (Admin/Manager only) */}
                   {(user?.role === 'admin' || user?.role === 'manager') && (
-                    <Link
-                      to="/delivery"
-                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
-                    >
-                      <Truck className="w-4 h-4" />
-                      Delivery Management
-                    </Link>
+                    <>
+                      <Link
+                        to="/delivery"
+                        className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                      >
+                        <Truck className="w-4 h-4" />
+                        Delivery Management
+                      </Link>
+                      <Link
+                        to="/payments"
+                        className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        Payment Management
+                      </Link>
+                    </>
                   )}
                   
                   <button
