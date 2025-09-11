@@ -1,5 +1,7 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home';
+import PaymentManagementPanel from './components/organisms/PaymentManagementPanel';
 import { MainLayout } from './components/templates/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
@@ -15,11 +17,11 @@ function App() {
     addToCart,
     updateQuantity,
     removeFromCart,
-    clearCart,
   } = useCart();
 
   const [favoritedItems, setFavoritedItems] = React.useState<Set<string>>(new Set());
   const [isCartOpen, setIsCartOpen] = React.useState(false);
+  const [redirectToPayments, setRedirectToPayments] = React.useState(false);
 
   const handleAddToCart = (item: MenuItem, quantity: number) => {
     addToCart(item, quantity);
@@ -40,35 +42,48 @@ function App() {
   };
 
   const handleCheckout = () => {
-    // TODO: Integrate with Payment Management flow
-    alert('Proceeding to checkout (mock)');
     setIsCartOpen(false);
+    setRedirectToPayments(true);
   };
 
   return (
     <AuthProvider>
-      <div className="App">
-        <MainLayout
-          cartItemCount={cartItemCount}
-          onCartClick={handleCartClick}
-        >
-          <Home
-            onAddToCart={handleAddToCart}
-            favoritedItems={favoritedItems}
-            onFavorite={handleFavorite}
-          />
-        </MainLayout>
+      <Router>
+        <div className="App">
+          <MainLayout
+            cartItemCount={cartItemCount}
+            onCartClick={handleCartClick}
+          >
+            {redirectToPayments && <Navigate to="/payments" replace />}
+            <Routes>
+              <Route 
+                path="/" 
+                element={
+                  <Home
+                    onAddToCart={handleAddToCart}
+                    favoritedItems={favoritedItems}
+                    onFavorite={handleFavorite}
+                  />
+                } 
+              />
+              <Route 
+                path="/payments" 
+                element={<PaymentManagementPanel isOpen={true} onClose={() => window.history.back()} />} 
+              />
+            </Routes>
+          </MainLayout>
 
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cartItems={cartItems}
-          cartTotal={cartTotal}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
-        />
-      </div>
+          <CartSidebar
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            cartItems={cartItems}
+            cartTotal={cartTotal}
+            onUpdateQuantity={updateQuantity}
+            onRemoveItem={removeFromCart}
+            onCheckout={handleCheckout}
+          />
+        </div>
+      </Router>
     </AuthProvider>
   );
 }
