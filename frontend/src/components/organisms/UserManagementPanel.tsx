@@ -8,10 +8,13 @@ import {
   UserCheck,
   Shield,
   Mail,
-  Phone
+  Phone,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { User, UserRole, UserStatus, CreateUserRequest, UpdateUserRequest } from '../../types/user';
 import UserFormModal from './UserFormModal';
+import { useUserApi } from '../../hooks/useUserApi';
 
 interface UserManagementPanelProps {
   isOpen: boolean;
@@ -19,7 +22,6 @@ interface UserManagementPanelProps {
 }
 
 const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClose }) => {
-  const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
@@ -27,97 +29,29 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  
+  // API 훅 사용
+  const {
+    users,
+    loading: isLoading,
+    error,
+    isBackendConnected,
+    loadUsers,
+    createUser,
+    updateUser,
+    deleteUser
+  } = useUserApi();
 
-  // Mock users data
-  const mockUsers: User[] = [
-    {
-      id: 1,
-      email: 'admin@lerestaurant.com',
-      passwordHash: '',
-      phoneNumber: '010-1234-5678',
-      firstName: 'Admin',
-      lastName: 'User',
-      role: UserRole.ADMIN,
-      status: UserStatus.ACTIVE,
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z',
-      lastLogin: '2024-01-15T10:30:00Z'
-    },
-    {
-      id: 2,
-      email: 'manager@lerestaurant.com',
-      passwordHash: '',
-      phoneNumber: '010-2345-6789',
-      firstName: 'Manager',
-      lastName: 'User',
-      role: UserRole.MANAGER,
-      status: UserStatus.ACTIVE,
-      createdAt: '2024-01-02T00:00:00Z',
-      updatedAt: '2024-01-02T00:00:00Z',
-      lastLogin: '2024-01-14T15:45:00Z'
-    },
-    {
-      id: 3,
-      email: 'customer@lerestaurant.com',
-      passwordHash: '',
-      phoneNumber: '010-3456-7890',
-      firstName: 'Customer',
-      lastName: 'User',
-      role: UserRole.CUSTOMER,
-      status: UserStatus.ACTIVE,
-      createdAt: '2024-01-03T00:00:00Z',
-      updatedAt: '2024-01-03T00:00:00Z',
-      lastLogin: '2024-01-13T09:20:00Z'
-    },
-    {
-      id: 4,
-      email: 'john.doe@example.com',
-      passwordHash: '',
-      phoneNumber: '010-4567-8901',
-      firstName: 'John',
-      lastName: 'Doe',
-      role: UserRole.CUSTOMER,
-      status: UserStatus.INACTIVE,
-      createdAt: '2024-01-04T00:00:00Z',
-      updatedAt: '2024-01-04T00:00:00Z'
-    },
-    {
-      id: 5,
-      email: 'jane.smith@example.com',
-      passwordHash: '',
-      phoneNumber: '010-5678-9012',
-      firstName: 'Jane',
-      lastName: 'Smith',
-      role: UserRole.CUSTOMER,
-      status: UserStatus.SUSPENDED,
-      createdAt: '2024-01-05T00:00:00Z',
-      updatedAt: '2024-01-05T00:00:00Z'
-    }
-  ];
 
   useEffect(() => {
     if (isOpen) {
       loadUsers();
     }
-  }, [isOpen]);
+  }, [isOpen, loadUsers]);
 
   useEffect(() => {
     filterUsers();
   }, [users, searchTerm, roleFilter, statusFilter]);
-
-  const loadUsers = async () => {
-    setIsLoading(true);
-    try {
-      // TODO: Replace with actual API call
-      // const response = await userApi.getAllUsers();
-      setUsers(mockUsers);
-    } catch (error) {
-      console.error('Failed to load users:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const filterUsers = () => {
     let filtered = users;
@@ -152,23 +86,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
       }
       
       const createData = userData as CreateUserRequest;
-      
-      // TODO: Replace with actual API call
-      // const newUser = await userApi.createUser(createData);
-      const newUser: User = {
-        id: Date.now(),
-        email: createData.email,
-        passwordHash: '',
-        phoneNumber: createData.phoneNumber,
-        firstName: createData.firstName,
-        lastName: createData.lastName,
-        role: createData.role || UserRole.CUSTOMER,
-        status: createData.status || UserStatus.ACTIVE,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      setUsers(prev => [...prev, newUser]);
+      await createUser(createData);
       setShowCreateModal(false);
     } catch (error) {
       console.error('Failed to create user:', error);
@@ -177,15 +95,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
 
   const handleUpdateUser = async (userId: number, userData: UpdateUserRequest) => {
     try {
-      // TODO: Replace with actual API call
-      // const updatedUser = await userApi.updateUser(userId, userData);
-      const updatedUser: User = {
-        ...users.find(u => u.id === userId)!,
-        ...userData,
-        updatedAt: new Date().toISOString()
-      };
-      
-      setUsers(prev => prev.map(u => u.id === userId ? updatedUser : u));
+      await updateUser(userId, userData);
       setShowEditModal(false);
       setSelectedUser(null);
     } catch (error) {
@@ -197,9 +107,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
     if (!confirm('Are you sure you want to delete this user?')) return;
     
     try {
-      // TODO: Replace with actual API call
-      // await userApi.deleteUser(userId);
-      setUsers(prev => prev.filter(u => u.id !== userId));
+      await deleteUser(userId);
     } catch (error) {
       console.error('Failed to delete user:', error);
     }
@@ -310,6 +218,25 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
             </div>
           </div>
         </div>
+
+        {/* Backend Connection Status */}
+        {isBackendConnected && (
+          <div className="p-4 bg-green-100 border-b border-green-200">
+            <div className="flex items-center text-green-700">
+              <CheckCircle className="w-5 h-5 mr-2" />
+              <span className="font-medium">🟢 Connected to Backend API</span>
+            </div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="p-4 bg-yellow-100 border-b border-yellow-200">
+            <div className="flex items-center text-yellow-700">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              <span className="font-medium">⚠️ Using Mock Data: {error}</span>
+            </div>
+          </div>
+        )}
 
         {/* User Table */}
         <div className="overflow-y-auto max-h-96">
