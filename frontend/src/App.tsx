@@ -6,6 +6,8 @@ import DeliveryManagement from './pages/DeliveryManagement';
 import DeliveryTracking from './pages/DeliveryTracking';
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import { MainLayout } from './components/templates/MainLayout';
+import ProtectedRoute from './components/routes/ProtectedRoute';
+import { UserRole } from './types/user';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
@@ -71,11 +73,36 @@ function App() {
               />
               <Route 
                 path="/payments" 
-                element={<PaymentManagementPanel isOpen={true} onClose={() => window.history.back()} />} 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <PaymentManagementPanel isOpen={true} onClose={() => window.history.back()} />
+                  </ProtectedRoute>
+                } 
               />
-              <Route path="/delivery" element={<DeliveryManagement />} />
-              <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
-              <Route path="/delivery/tracking/:deliveryId" element={<DeliveryTracking />} />
+              <Route 
+                path="/delivery" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <DeliveryManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/delivery/dashboard" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <DeliveryDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/delivery/tracking/:deliveryId" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <DeliveryTracking />
+                  </ProtectedRoute>
+                } 
+              />
             </Routes>
           </MainLayout>
 
