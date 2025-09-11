@@ -3,18 +3,16 @@ import {
   CreditCard, 
   DollarSign, 
   Search, 
-  Filter,
   Eye,
   CheckCircle,
   XCircle,
   Clock,
   AlertCircle,
   TrendingUp,
-  Calendar,
   User
 } from 'lucide-react';
 import { Payment, PaymentMethod, PaymentStatus } from '../../types/payment';
-import { useAuth } from '../../contexts/AuthContext';
+import { usePaymentApi } from '../../hooks/usePaymentApi';
 
 interface PaymentManagementPanelProps {
   isOpen: boolean;
@@ -22,112 +20,31 @@ interface PaymentManagementPanelProps {
 }
 
 const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen, onClose }) => {
-  const { user: currentUser } = useAuth();
-  const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [methodFilter, setMethodFilter] = useState<PaymentMethod | 'all'>('all');
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  
+  // API 훅 사용
+  const {
+    payments,
+    loading: isLoading,
+    error,
+    isBackendConnected,
+    loadPayments,
+    updatePaymentStatus
+  } = usePaymentApi();
 
-  // Mock payments data
-  const mockPayments: Payment[] = [
-    {
-      id: 1,
-      orderId: 1001,
-      amount: 45.99,
-      currency: 'USD',
-      method: PaymentMethod.CREDIT_CARD,
-      status: PaymentStatus.COMPLETED,
-      transactionId: 'txn_123456789',
-      processedAt: '2024-01-15T10:30:00Z',
-      createdAt: '2024-01-15T10:25:00Z',
-      updatedAt: '2024-01-15T10:30:00Z',
-      customerEmail: 'customer@example.com',
-      customerName: 'John Doe'
-    },
-    {
-      id: 2,
-      orderId: 1002,
-      amount: 32.50,
-      currency: 'USD',
-      method: PaymentMethod.DEBIT_CARD,
-      status: PaymentStatus.PROCESSING,
-      transactionId: 'txn_987654321',
-      processedAt: undefined,
-      createdAt: '2024-01-15T11:15:00Z',
-      updatedAt: '2024-01-15T11:15:00Z',
-      customerEmail: 'jane@example.com',
-      customerName: 'Jane Smith'
-    },
-    {
-      id: 3,
-      orderId: 1003,
-      amount: 28.75,
-      currency: 'USD',
-      method: PaymentMethod.CASH,
-      status: PaymentStatus.PENDING,
-      transactionId: undefined,
-      processedAt: undefined,
-      createdAt: '2024-01-15T12:00:00Z',
-      updatedAt: '2024-01-15T12:00:00Z',
-      customerEmail: 'bob@example.com',
-      customerName: 'Bob Johnson'
-    },
-    {
-      id: 4,
-      orderId: 1004,
-      amount: 67.25,
-      currency: 'USD',
-      method: PaymentMethod.DIGITAL_WALLET,
-      status: PaymentStatus.FAILED,
-      transactionId: 'txn_failed_123',
-      processedAt: undefined,
-      createdAt: '2024-01-15T13:30:00Z',
-      updatedAt: '2024-01-15T13:35:00Z',
-      customerEmail: 'alice@example.com',
-      customerName: 'Alice Brown'
-    },
-    {
-      id: 5,
-      orderId: 1005,
-      amount: 89.99,
-      currency: 'USD',
-      method: PaymentMethod.BANK_TRANSFER,
-      status: PaymentStatus.REFUNDED,
-      transactionId: 'txn_refund_456',
-      processedAt: '2024-01-15T14:00:00Z',
-      createdAt: '2024-01-15T09:00:00Z',
-      updatedAt: '2024-01-15T14:00:00Z',
-      customerEmail: 'charlie@example.com',
-      customerName: 'Charlie Wilson'
-    }
-  ];
 
   useEffect(() => {
     if (isOpen) {
       loadPayments();
     }
-  }, [isOpen]);
+  }, [isOpen, loadPayments]);
 
   useEffect(() => {
     filterPayments();
   }, [payments, searchTerm, statusFilter, methodFilter]);
-
-  const loadPayments = async () => {
-    setIsLoading(true);
-    try {
-      // TODO: Replace with actual API call
-      // const response = await paymentApi.getAllPayments();
-      setPayments(mockPayments);
-    } catch (error) {
-      console.error('Failed to load payments:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const filterPayments = () => {
     let filtered = payments;
@@ -157,13 +74,7 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
 
   const handleStatusChange = async (paymentId: number, newStatus: PaymentStatus) => {
     try {
-      // TODO: Replace with actual API call
-      // await paymentApi.updatePaymentStatus(paymentId, newStatus);
-      setPayments(prev => prev.map(p => 
-        p.id === paymentId 
-          ? { ...p, status: newStatus, updatedAt: new Date().toISOString() }
-          : p
-      ));
+      await updatePaymentStatus(paymentId, newStatus);
     } catch (error) {
       console.error('Failed to update payment status:', error);
     }
@@ -285,6 +196,25 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
             <span className="text-neutral-500">×</span>
           </button>
         </div>
+
+        {/* Backend Connection Status */}
+        {isBackendConnected && (
+          <div className="p-4 bg-green-100 border-b border-green-200">
+            <div className="flex items-center text-green-700">
+              <CheckCircle className="w-5 h-5 mr-2" />
+              <span className="font-medium">🟢 Connected to Backend API</span>
+            </div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="p-4 bg-yellow-100 border-b border-yellow-200">
+            <div className="flex items-center text-yellow-700">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              <span className="font-medium">⚠️ Using Mock Data: {error}</span>
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="p-6 border-b border-neutral-100">
@@ -456,8 +386,8 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => {
-                            setSelectedPayment(payment);
-                            setShowPaymentDetails(true);
+                            // TODO: Implement payment details view
+                            console.log('View payment details:', payment);
                           }}
                           className="text-primary-600 hover:text-primary-900 p-1"
                         >
