@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.Arrays;
 
-@Component
+// @Component  // Mock data loading disabled
 public class DataLoader implements CommandLineRunner {
     
     private final MenuItemRepository menuItemRepository;
