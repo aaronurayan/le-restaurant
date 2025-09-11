@@ -158,17 +158,6 @@ export const Header: React.FC<HeaderProps> = ({
                     </button>
                   )}
                   
-                  {/* Payment Management (Admin/Manager only) */}
-                  {(user?.role === 'admin' || user?.role === 'manager') && (
-                    <Link
-                      to="/payments"
-                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      Payment Management
-                    </Link>
-                  )}
-                  
                   {/* Delivery & Payment Management (Admin/Manager only) */}
                   {(user?.role === 'admin' || user?.role === 'manager') && (
                     <>
@@ -178,13 +167,6 @@ export const Header: React.FC<HeaderProps> = ({
                       >
                         <Truck className="w-4 h-4" />
                         Delivery Management
-                      </Link>
-                      <Link
-                        to="/payments"
-                        className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        Payment Management
                       </Link>
                     </>
                   )}
