@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { ShoppingCart, User, Menu as MenuIcon } from 'lucide-react';
+import { ShoppingCart, User, Menu as MenuIcon, Calendar } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
 import AuthModal from './AuthModal';
 import UserManagementPanel from './UserManagementPanel';
 import PaymentManagementPanel from './PaymentManagementPanel';
+import { ReservationModal } from './ReservationModal';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showPaymentManagement, setShowPaymentManagement] = useState(false);
+  const [showReservationModal, setShowReservationModal] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
 
   const handleUserClick = () => {
@@ -120,6 +122,15 @@ export const Header: React.FC<HeaderProps> = ({
                     <p className="text-xs text-neutral-500">{user?.email}</p>
                   </div>
                   
+                  {/* Book Table - All authenticated users */}
+                  <button
+                    onClick={() => setShowReservationModal(true)}
+                    className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Book Table
+                  </button>
+                  
                   {/* User Management (Admin/Manager only) */}
                   {(user?.role === 'admin' || user?.role === 'manager') && (
                     <button
@@ -150,10 +161,25 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
             
-            {/* Order Now Button - Desktop */}
-            <Button variant="primary" size="md" className="hidden sm:flex">
-              Order Now
-            </Button>
+            {/* Action Buttons - Desktop */}
+            <div className="hidden sm:flex items-center gap-3">
+              {/* Reservation Button - Only for authenticated users */}
+              {isAuthenticated && (
+                <Button 
+                  variant="outline" 
+                  size="md"
+                  onClick={() => setShowReservationModal(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Book Table
+                </Button>
+              )}
+              
+              <Button variant="primary" size="md">
+                Order Now
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -175,6 +201,12 @@ export const Header: React.FC<HeaderProps> = ({
       <PaymentManagementPanel
         isOpen={showPaymentManagement}
         onClose={() => setShowPaymentManagement(false)}
+      />
+
+      {/* Reservation Modal */}
+      <ReservationModal
+        isOpen={showReservationModal}
+        onClose={() => setShowReservationModal(false)}
       />
     </>
   );
