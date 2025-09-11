@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, MapPin, MessageSquare, User, Mail, Phone } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
@@ -117,7 +117,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-6 ${className}`}>
+    <form onSubmit={handleSubmit} className={'space-y-6 ' + className}>
       {/* Date and Time Selection */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -130,7 +130,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
             required
             min={getMinDate()}
             max={getMaxDate()}
-            icon={<Calendar className="w-4 h-4" />}
+            icon={Calendar}
           />
         </div>
         
@@ -143,14 +143,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
           <select
             value={formData.time}
             onChange={(e) => handleInputChange('time', e.target.value)}
-            className={`
-              w-full px-4 py-2 border rounded-lg transition-colors duration-200
-              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-              ${errors.time 
-                ? 'border-accent-red focus:ring-accent-red' 
-                : 'border-neutral-300 focus:border-transparent'
-              }
-            `}
+            className={'w-full px-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent' + (errors.time ? ' border-accent-red focus:ring-accent-red' : ' border-neutral-300 focus:border-transparent')}
             required
           >
             <option value="">Select time</option>
@@ -216,17 +209,11 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
                 key={table.id}
                 type="button"
                 onClick={() => setSelectedTable(table.id)}
-                className={`
-                  p-3 border rounded-lg text-left transition-all duration-200
-                  ${selectedTable === table.id
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-neutral-300 hover:border-primary-300 hover:bg-neutral-50'
-                  }
-                `}
+                className={'p-3 border rounded-lg text-left transition-all duration-200' + (selectedTable === table.id ? ' border-primary-500 bg-primary-50 text-primary-700' : ' border-neutral-300 hover:border-primary-300 hover:bg-neutral-50')}
               >
                 <div className="font-medium">Table {table.number}</div>
                 <div className="text-sm text-neutral-600">
-                  Capacity: {table.capacity} • {table.location}
+                  Capacity: {table.capacity}  {table.location}
                 </div>
                 {table.features.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
@@ -258,7 +245,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
             onChange={(value) => handleInputChange('customerName', value)}
             error={errors.customerName}
             required
-            icon={<User className="w-4 h-4" />}
+            icon={User}
           />
           
           <Input
@@ -268,7 +255,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
             onChange={(value) => handleInputChange('customerEmail', value)}
             error={errors.customerEmail}
             required
-            icon={<Mail className="w-4 h-4" />}
+            icon={Mail}
           />
         </div>
         
@@ -279,7 +266,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
           onChange={(value) => handleInputChange('customerPhone', value)}
           error={errors.customerPhone}
           required
-          icon={<Phone className="w-4 h-4" />}
+          icon={Phone}
         />
       </div>
 
