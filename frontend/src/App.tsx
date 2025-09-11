@@ -2,6 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home';
 import PaymentManagementPanel from './components/organisms/PaymentManagementPanel';
+import DeliveryManagement from './pages/DeliveryManagement';
+import DeliveryTracking from './pages/DeliveryTracking';
+import DeliveryDashboard from './pages/DeliveryDashboard';
 import { MainLayout } from './components/templates/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
@@ -70,6 +73,9 @@ function App() {
                 path="/payments" 
                 element={<PaymentManagementPanel isOpen={true} onClose={() => window.history.back()} />} 
               />
+              <Route path="/delivery" element={<DeliveryManagement />} />
+              <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
+              <Route path="/delivery/tracking/:deliveryId" element={<DeliveryTracking />} />
             </Routes>
           </MainLayout>
 

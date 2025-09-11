@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { LucideIcon } from 'lucide-react';
 
 interface InputProps {
-  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'date' | 'time';
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'date' | 'time' | 'datetime-local';
   label?: string;
   placeholder?: string;
   error?: string;
