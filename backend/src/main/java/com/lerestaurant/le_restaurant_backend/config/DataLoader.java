@@ -21,7 +21,7 @@ public class DataLoader implements CommandLineRunner {
     
     @Override
     public void run(String... args) throws Exception {
-        // 기존 데이터가 없을 때만 샘플 데이터 로드
+        // if there is no data, load sample data
         if (menuItemRepository.count() == 0) {
             loadSampleData();
         }
