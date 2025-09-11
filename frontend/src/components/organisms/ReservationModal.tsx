@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { X, CheckCircle, AlertCircle } from 'lucide-react';
 import { ReservationForm } from '../molecules/ReservationForm';
 import { ReservationFormData, CreateReservationRequest } from '../../types/reservation';
@@ -85,7 +85,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
           <div className="px-6 py-3 bg-green-100 border-b border-green-200">
             <div className="flex items-center text-green-700">
               <CheckCircle className="w-4 h-4 mr-2" />
-              <span className="text-sm font-medium">🟢 Connected to Backend API</span>
+              <span className="text-sm font-medium"> Connected to Backend API</span>
             </div>
           </div>
         )}
