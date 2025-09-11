@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ShoppingCart, User, Menu as MenuIcon } from 'lucide-react';
+import { ShoppingCart, User, Menu as MenuIcon, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
 import AuthModal from './AuthModal';
@@ -65,15 +66,26 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#menu" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
+            <Link to="/" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Menu
-            </a>
+            </Link>
             <a href="#about" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               About
             </a>
             <a href="#contact" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Contact
             </a>
+            
+            {/* Delivery Management (Admin/Manager only) */}
+            {(user?.role === 'admin' || user?.role === 'manager') && (
+              <Link 
+                to="/delivery" 
+                className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
+              >
+                <Truck className="w-4 h-4" />
+                Delivery
+              </Link>
+            )}
             
             {/* API Status Indicator */}
             <div className="border-l border-neutral-200 pl-6">
@@ -138,6 +150,17 @@ export const Header: React.FC<HeaderProps> = ({
                     >
                       Payment Management
                     </button>
+                  )}
+                  
+                  {/* Delivery Management (Admin/Manager only) */}
+                  {(user?.role === 'admin' || user?.role === 'manager') && (
+                    <Link
+                      to="/delivery"
+                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                    >
+                      <Truck className="w-4 h-4" />
+                      Delivery Management
+                    </Link>
                   )}
                   
                   <button
