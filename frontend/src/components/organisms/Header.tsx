@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ShoppingCart, User, Menu as MenuIcon } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
@@ -28,20 +29,23 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Logo */}
           <div className="flex items-center">
-            <div className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">L</span>
               </div>
               <span className="font-serif text-xl font-bold text-neutral-900 hidden sm:block">
                 Le Restaurant
               </span>
-            </div>
+            </Link>
           </div>
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <a href="#menu" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Menu
+            </a>
+            <a href="/orders" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
+              Orders
             </a>
             <a href="#about" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               About

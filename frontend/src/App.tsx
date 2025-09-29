@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/templates/MainLayout';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { NotificationContainer } from './components/organisms/NotificationContainer';
 import { Home } from './pages/Home';
+import { Orders } from './pages/Orders'; // import your Orders page
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
 import { toast } from './utils/notifications';
@@ -49,30 +51,48 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <MainLayout
-        cartItemCount={cartItemCount}
-        onCartClick={() => setIsCartOpen(true)}
-      >
-        <Home
-          onAddToCart={handleAddToCart}
-          favoritedItems={favoritedItems}
-          onFavorite={handleFavorite}
+    <Router>
+      <div className="App">
+        <MainLayout
+          cartItemCount={cartItemCount}
+          onCartClick={() => setIsCartOpen(true)}
+        >
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Home
+                  onAddToCart={handleAddToCart}
+                  favoritedItems={favoritedItems}
+                  onFavorite={handleFavorite}
+                />
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <Orders
+                  cartItemCount={cartItemCount}   // pass cart count
+                  onCartClick={() => setIsCartOpen(true)} // pass cart toggle
+                />
+              }
+            />
+          </Routes>
+        </MainLayout>
+        
+        <CartSidebar
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          cartItems={cartItems}
+          cartTotal={cartTotal}
+          onUpdateQuantity={updateQuantity}
+          onRemoveItem={removeFromCart}
+          onCheckout={handleCheckout}
         />
-      </MainLayout>
-      
-      <CartSidebar
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cartItems={cartItems}
-        cartTotal={cartTotal}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeFromCart}
-        onCheckout={handleCheckout}
-      />
-      
-      <NotificationContainer />
-    </div>
+        
+        <NotificationContainer />
+      </div>
+    </Router>
   );
 }
 
