@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Hero } from '../components/organisms/Hero';
 import { CategoryFilter } from '../components/organisms/CategoryFilter';
 import { MenuGrid } from '../components/organisms/MenuGrid';
 import { OrderStatus } from '../components/organisms/OrderStatus';
-import { mockCategories, mockMenuItems, mockOrders } from '../data/mockData';
+import { mockOrders } from '../data/mockData';
 import { MenuItem } from '../types';
+import { useMenuApi } from '../hooks/useMenuApi';
 
 interface HomeProps {
   onAddToCart: (item: MenuItem, quantity: number) => void;
@@ -19,21 +20,29 @@ export const Home: React.FC<HomeProps> = ({
   onFavorite,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  
+  // API 훅 사용
+  const {
+    menuItems,
+    categories,
+    loading,
+    error,
+    isBackendConnected,
+    loadMenuItemsByCategory,
+    searchMenuItems
+  } = useMenuApi();
 
   const filteredItems = useMemo(() => {
-    if (!selectedCategory) return mockMenuItems;
-    return mockMenuItems.filter(item => item.categoryId === selectedCategory);
-  }, [selectedCategory]);
+    if (!selectedCategory) return menuItems;
+    return menuItems.filter(item => item.categoryId === selectedCategory);
+  }, [selectedCategory, menuItems]);
 
-  const handleCategorySelect = (categoryId: string | null) => {
-    setLoading(true);
+  const handleCategorySelect = async (categoryId: string | null) => {
     setSelectedCategory(categoryId);
     
-    // Simulate loading delay
-    setTimeout(() => {
-      setLoading(false);
-    }, 300);
+    if (categoryId) {
+      await loadMenuItemsByCategory(categoryId);
+    }
   };
 
   const handleOrderNow = () => {
@@ -59,10 +68,23 @@ export const Home: React.FC<HomeProps> = ({
           
           {/* Category Filter */}
           <CategoryFilter
-            categories={mockCategories}
+            categories={categories.map(cat => ({ id: cat, name: cat, description: '', displayOrder: 1, isActive: true, itemCount: 0 }))}
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategorySelect}
           />
+          
+          {/* Backend Connection Status */}
+          {isBackendConnected && (
+            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-center">
+              🟢 Connected to Backend API
+            </div>
+          )}
+          
+          {error && (
+            <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg text-center">
+              ⚠️ Using Mock Data: {error}
+            </div>
+          )}
           
           {/* Menu Grid */}
           <div className="mt-8">

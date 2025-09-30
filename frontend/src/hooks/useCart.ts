@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { CartItem, MenuItem } from '../types';
 
+// this is a comment
 export const useCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
