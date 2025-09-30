@@ -4,6 +4,7 @@ import { MainLayout } from './components/templates/MainLayout';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { NotificationContainer } from './components/organisms/NotificationContainer';
 import { Home } from './pages/Home';
+import {Reservation} from './pages/Reservation';
 import { Orders } from './pages/Orders'; // import your Orders page
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
@@ -73,6 +74,14 @@ function App() {
                   onCartClick={() => setIsCartOpen(true)} // pass cart toggle
                 />
               }
+            />
+            <Route path="/reservation" 
+              element={
+                <Reservation 
+                  cartItemCount={cartItemCount}   
+                  onCartClick={() => setIsCartOpen(true)} 
+                />
+              } 
             />
           </Routes>
         </MainLayout>

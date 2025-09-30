@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';  // <-- import useNavigate
 import { ShoppingCart, User, Menu as MenuIcon } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
@@ -15,6 +15,8 @@ export const Header: React.FC<HeaderProps> = ({
   onCartClick,
   onMenuToggle,
 }) => {
+  const navigate = useNavigate();  // <-- initialize navigation
+
   return (
     <header className="bg-white shadow-md border-b border-neutral-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -83,6 +85,16 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Order Now Button - Desktop */}
             <Button variant="primary" size="md" className="hidden sm:flex">
               Order Now
+            </Button>
+
+            {/* Reserve Button - Desktop */}
+            <Button
+              variant="primary"
+              size="md"
+              className="hidden sm:flex"
+              onClick={() => navigate('/reservation')} // <-- navigate on click
+            >
+              Reserve
             </Button>
           </div>
         </div>
