@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-import React from 'react';
-import { Home } from './pages/Home';
-import { MainLayout } from './components/templates/MainLayout';
-import { AuthProvider } from './contexts/AuthContext';
-import { CartSidebar } from './components/organisms/CartSidebar';
-=======
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/templates/MainLayout';
@@ -12,7 +5,6 @@ import { CartSidebar } from './components/organisms/CartSidebar';
 import { NotificationContainer } from './components/organisms/NotificationContainer';
 import { Home } from './pages/Home';
 import { Orders } from './pages/Orders'; // import your Orders page
->>>>>>> F105ORDERMANAGEMENT
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
 import './index.css';
@@ -56,21 +48,6 @@ function App() {
   };
 
   return (
-<<<<<<< HEAD
-    <AuthProvider>
-      <div className="App">
-        <MainLayout
-          cartItemCount={cartItemCount}
-          onCartClick={handleCartClick}
-        >
-          <Home
-            onAddToCart={handleAddToCart}
-            favoritedItems={favoritedItems}
-            onFavorite={handleFavorite}
-          />
-        </MainLayout>
-
-=======
     <Router>
       <div className="App">
         <MainLayout
@@ -100,7 +77,6 @@ function App() {
           </Routes>
         </MainLayout>
         
->>>>>>> F105ORDERMANAGEMENT
         <CartSidebar
           isOpen={isCartOpen}
           onClose={() => setIsCartOpen(false)}
@@ -110,15 +86,10 @@ function App() {
           onRemoveItem={removeFromCart}
           onCheckout={handleCheckout}
         />
-<<<<<<< HEAD
-      </div>
-    </AuthProvider>
-=======
         
         <NotificationContainer />
       </div>
     </Router>
->>>>>>> F105ORDERMANAGEMENT
   );
 }
 
