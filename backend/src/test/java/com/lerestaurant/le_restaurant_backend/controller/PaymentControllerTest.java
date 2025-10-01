@@ -1,10 +1,9 @@
 package com.lerestaurant.le_restaurant_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lerestaurant.le_restaurant_backend.dto.PaymentDTO;
+import com.lerestaurant.le_restaurant_backend.dto.PaymentDto;
+import com.lerestaurant.le_restaurant_backend.dto.PaymentRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Payment;
-import com.lerestaurant.le_restaurant_backend.enums.PaymentMethod;
-import com.lerestaurant.le_restaurant_backend.enums.PaymentStatus;
 import com.lerestaurant.le_restaurant_backend.service.PaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,30 +16,20 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Unit Tests for PaymentController (F106 - Payment Management)
- * 
- * This test suite validates the REST API endpoints for payment processing
- * including payment creation, status updates, refunds, and queries.
- * 
- * @author Le Restaurant Development Team
- * @module F106-PaymentManagement
- */
 @WebMvcTest(PaymentController.class)
-@DisplayName("PaymentController Tests (F106)")
+@DisplayName("Payment Controller Tests")
 class PaymentControllerTest {
 
     @Autowired
@@ -52,42 +41,30 @@ class PaymentControllerTest {
     @MockBean
     private PaymentService paymentService;
 
-    private Payment testPayment1;
-    private Payment testPayment2;
-    private PaymentDTO testPaymentDTO;
+    private PaymentDto testPaymentDto;
+    private PaymentRequestDto testPaymentRequest;
 
     @BeforeEach
     void setUp() {
-        // Setup test data
-        testPayment1 = new Payment();
-        testPayment1.setId(1L);
-        testPayment1.setOrderId(1001L);
-        testPayment1.setCustomerName("John Doe");
-        testPayment1.setCustomerEmail("john@example.com");
-        testPayment1.setAmount(new BigDecimal("125.50"));
-        testPayment1.setCurrency("USD");
-        testPayment1.setMethod(PaymentMethod.CREDIT_CARD);
-        testPayment1.setStatus(PaymentStatus.COMPLETED);
-        testPayment1.setTransactionId("TXN-001");
-        testPayment1.setCreatedAt(LocalDateTime.now());
+        // Setup test DTO data
+        testPaymentDto = new PaymentDto(
+            1L,
+            100L,
+            new BigDecimal("50.00"),
+            Payment.PaymentMethod.CREDIT_CARD,
+            "TXN123456",
+            Payment.PaymentStatus.COMPLETED,
+            "Test payment details",
+            OffsetDateTime.now(),
+            OffsetDateTime.now(),
+            "Gateway success response"
+        );
 
-        testPayment2 = new Payment();
-        testPayment2.setId(2L);
-        testPayment2.setOrderId(1002L);
-        testPayment2.setCustomerName("Jane Smith");
-        testPayment2.setCustomerEmail("jane@example.com");
-        testPayment2.setAmount(new BigDecimal("87.25"));
-        testPayment2.setCurrency("USD");
-        testPayment2.setMethod(PaymentMethod.CASH);
-        testPayment2.setStatus(PaymentStatus.PENDING);
-        testPayment2.setTransactionId("TXN-002");
-        testPayment2.setCreatedAt(LocalDateTime.now());
-
-        testPaymentDTO = new PaymentDTO();
-        testPaymentDTO.setOrderId(1003L);
-        testPaymentDTO.setAmount(new BigDecimal("200.00"));
-        testPaymentDTO.setCurrency("USD");
-        testPaymentDTO.setMethod(PaymentMethod.DIGITAL_WALLET);
+        testPaymentRequest = new PaymentRequestDto();
+        testPaymentRequest.setOrderId(100L);
+        testPaymentRequest.setAmount(new BigDecimal("50.00"));
+        testPaymentRequest.setPaymentMethod(Payment.PaymentMethod.CREDIT_CARD);
+        testPaymentRequest.setPaymentDetails("Test payment details");
     }
 
     // =================================================================
@@ -101,7 +78,19 @@ class PaymentControllerTest {
         @DisplayName("Should return list of all payments successfully")
         void shouldReturnAllPayments() throws Exception {
             // Given
-            List<Payment> payments = Arrays.asList(testPayment1, testPayment2);
+            PaymentDto testPaymentDto2 = new PaymentDto(
+                2L,
+                101L,
+                new BigDecimal("75.00"),
+                Payment.PaymentMethod.DEBIT_CARD,
+                "TXN123457",
+                Payment.PaymentStatus.PENDING,
+                null,
+                OffsetDateTime.now(),
+                null,
+                null
+            );
+            List<PaymentDto> payments = Arrays.asList(testPaymentDto, testPaymentDto2);
             when(paymentService.getAllPayments()).thenReturn(payments);
 
             // When & Then
@@ -110,10 +99,10 @@ class PaymentControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(2)))
-                    .andExpect(jsonPath("$[0].transactionId", is("TXN-001")))
-                    .andExpect(jsonPath("$[0].amount", is(125.50)))
-                    .andExpect(jsonPath("$[1].transactionId", is("TXN-002")))
-                    .andExpect(jsonPath("$[1].amount", is(87.25)));
+                    .andExpect(jsonPath("$[0].orderId", is(100)))
+                    .andExpect(jsonPath("$[0].amount", is(50.00)))
+                    .andExpect(jsonPath("$[1].orderId", is(101)))
+                    .andExpect(jsonPath("$[1].amount", is(75.00)));
 
             verify(paymentService, times(1)).getAllPayments();
         }
@@ -144,16 +133,16 @@ class PaymentControllerTest {
         @DisplayName("Should return payment when valid ID is provided")
         void shouldReturnPaymentById() throws Exception {
             // Given
-            when(paymentService.getPaymentById(1L)).thenReturn(Optional.of(testPayment1));
+            when(paymentService.getPaymentById(1L)).thenReturn(testPaymentDto);
 
             // When & Then
             mockMvc.perform(get("/api/payments/1"))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id", is(1)))
-                    .andExpect(jsonPath("$.transactionId", is("TXN-001")))
-                    .andExpect(jsonPath("$.amount", is(125.50)))
-                    .andExpect(jsonPath("$.method", is("CREDIT_CARD")))
+                    .andExpect(jsonPath("$.orderId", is(100)))
+                    .andExpect(jsonPath("$.amount", is(50.00)))
+                    .andExpect(jsonPath("$.paymentMethod", is("CREDIT_CARD")))
                     .andExpect(jsonPath("$.status", is("COMPLETED")));
 
             verify(paymentService, times(1)).getPaymentById(1L);
@@ -163,7 +152,7 @@ class PaymentControllerTest {
         @DisplayName("Should return 404 when payment not found")
         void shouldReturn404WhenPaymentNotFound() throws Exception {
             // Given
-            when(paymentService.getPaymentById(999L)).thenReturn(Optional.empty());
+            when(paymentService.getPaymentById(999L)).thenThrow(new RuntimeException("Payment not found with id: 999"));
 
             // When & Then
             mockMvc.perform(get("/api/payments/999"))
@@ -174,415 +163,332 @@ class PaymentControllerTest {
     }
 
     // =================================================================
-    // POST /api/payments - Process Payment Tests
+    // POST /api/payments - Create Payment Tests
     // =================================================================
     @Nested
-    @DisplayName("POST /api/payments - Process Payment")
-    class ProcessPaymentTests {
+    @DisplayName("POST /api/payments - Create Payment")
+    class CreatePaymentTests {
 
         @Test
-        @DisplayName("Should process credit card payment successfully")
-        void shouldProcessCreditCardPayment() throws Exception {
+        @DisplayName("Should create new payment successfully")
+        void shouldCreatePayment() throws Exception {
             // Given
-            Payment processedPayment = new Payment();
-            processedPayment.setId(3L);
-            processedPayment.setOrderId(testPaymentDTO.getOrderId());
-            processedPayment.setAmount(testPaymentDTO.getAmount());
-            processedPayment.setCurrency(testPaymentDTO.getCurrency());
-            processedPayment.setMethod(testPaymentDTO.getMethod());
-            processedPayment.setStatus(PaymentStatus.COMPLETED);
-            processedPayment.setTransactionId("TXN-003");
-
-            when(paymentService.processPayment(any(PaymentDTO.class))).thenReturn(processedPayment);
+            PaymentDto createdPayment = new PaymentDto(
+                3L,
+                testPaymentRequest.getOrderId(),
+                testPaymentRequest.getAmount(),
+                testPaymentRequest.getPaymentMethod(),
+                "TXN123458",
+                Payment.PaymentStatus.PENDING,
+                testPaymentRequest.getPaymentDetails(),
+                OffsetDateTime.now(),
+                null,
+                null
+            );
+            when(paymentService.createPayment(any(PaymentRequestDto.class))).thenReturn(createdPayment);
 
             // When & Then
             mockMvc.perform(post("/api/payments")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(testPaymentDTO)))
+                            .content(objectMapper.writeValueAsString(testPaymentRequest)))
                     .andDo(print())
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id", is(3)))
-                    .andExpect(jsonPath("$.status", is("COMPLETED")))
-                    .andExpect(jsonPath("$.transactionId", notNullValue()));
+                    .andExpect(jsonPath("$.orderId", is(100)))
+                    .andExpect(jsonPath("$.amount", is(50.00)))
+                    .andExpect(jsonPath("$.status", is("PENDING")));
 
-            verify(paymentService, times(1)).processPayment(any(PaymentDTO.class));
+            verify(paymentService, times(1)).createPayment(any(PaymentRequestDto.class));
         }
 
         @Test
-        @DisplayName("Should return 400 when amount is missing")
-        void shouldReturn400WhenAmountIsMissing() throws Exception {
+        @DisplayName("Should return 400 when order ID is missing")
+        void shouldReturn400WhenOrderIdIsMissing() throws Exception {
             // Given
-            testPaymentDTO.setAmount(null);
+            testPaymentRequest.setOrderId(null);
 
             // When & Then
             mockMvc.perform(post("/api/payments")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(testPaymentDTO)))
+                            .content(objectMapper.writeValueAsString(testPaymentRequest)))
                     .andExpect(status().isBadRequest());
 
-            verify(paymentService, never()).processPayment(any(PaymentDTO.class));
+            verify(paymentService, never()).createPayment(any(PaymentRequestDto.class));
         }
 
         @Test
-        @DisplayName("Should return 400 when amount is negative")
-        void shouldReturn400WhenAmountIsNegative() throws Exception {
+        @DisplayName("Should return 400 when amount is invalid")
+        void shouldReturn400WhenAmountIsInvalid() throws Exception {
             // Given
-            testPaymentDTO.setAmount(new BigDecimal("-50.00"));
+            testPaymentRequest.setAmount(new BigDecimal("-10.00"));
 
             // When & Then
             mockMvc.perform(post("/api/payments")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(testPaymentDTO)))
+                            .content(objectMapper.writeValueAsString(testPaymentRequest)))
                     .andExpect(status().isBadRequest());
 
-            verify(paymentService, never()).processPayment(any(PaymentDTO.class));
+            verify(paymentService, never()).createPayment(any(PaymentRequestDto.class));
         }
 
         @Test
-        @DisplayName("Should return 400 when payment method is invalid")
-        void shouldReturn400WhenMethodIsInvalid() throws Exception {
+        @DisplayName("Should return 409 when order not found")
+        void shouldReturn409WhenOrderNotFound() throws Exception {
             // Given
-            String invalidPaymentJson = """
-                {
-                    "orderId": 1003,
-                    "amount": 200.00,
-                    "currency": "USD",
-                    "method": "INVALID_METHOD"
-                }
-                """;
+            when(paymentService.createPayment(any(PaymentRequestDto.class)))
+                    .thenThrow(new IllegalArgumentException("Order not found with id: 100"));
 
             // When & Then
             mockMvc.perform(post("/api/payments")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(invalidPaymentJson))
-                    .andExpect(status().isBadRequest());
+                            .content(objectMapper.writeValueAsString(testPaymentRequest)))
+                    .andExpect(status().isConflict());
 
-            verify(paymentService, never()).processPayment(any(PaymentDTO.class));
-        }
-
-        @Test
-        @DisplayName("Should handle payment processing failure")
-        void shouldHandlePaymentProcessingFailure() throws Exception {
-            // Given
-            when(paymentService.processPayment(any(PaymentDTO.class)))
-                    .thenThrow(new RuntimeException("Payment gateway error"));
-
-            // When & Then
-            mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(testPaymentDTO)))
-                    .andExpect(status().isInternalServerError());
-
-            verify(paymentService, times(1)).processPayment(any(PaymentDTO.class));
+            verify(paymentService, times(1)).createPayment(any(PaymentRequestDto.class));
         }
     }
 
     // =================================================================
-    // PATCH /api/payments/{id}/status - Update Payment Status Tests
+    // PUT /api/payments/{id}/status - Update Payment Status Tests
     // =================================================================
     @Nested
-    @DisplayName("PATCH /api/payments/{id}/status - Update Payment Status")
+    @DisplayName("PUT /api/payments/{id}/status - Update Payment Status")
     class UpdatePaymentStatusTests {
 
         @Test
-        @DisplayName("Should update payment status to COMPLETED")
-        void shouldUpdateStatusToCompleted() throws Exception {
+        @DisplayName("Should update payment status to COMPLETED successfully")
+        void shouldUpdatePaymentStatusToCompleted() throws Exception {
             // Given
-            testPayment2.setStatus(PaymentStatus.COMPLETED);
-            when(paymentService.updatePaymentStatus(2L, PaymentStatus.COMPLETED))
-                    .thenReturn(testPayment2);
+            PaymentDto updatedPayment = new PaymentDto(
+                1L,
+                100L,
+                new BigDecimal("50.00"),
+                Payment.PaymentMethod.CREDIT_CARD,
+                "TXN123456",
+                Payment.PaymentStatus.COMPLETED,
+                "Test payment details",
+                OffsetDateTime.now(),
+                OffsetDateTime.now(),
+                "Gateway success response"
+            );
+            when(paymentService.updatePaymentStatus(1L, Payment.PaymentStatus.COMPLETED)).thenReturn(updatedPayment);
 
             // When & Then
-            mockMvc.perform(patch("/api/payments/2/status")
+            mockMvc.perform(put("/api/payments/1/status")
                             .param("status", "COMPLETED"))
                     .andDo(print())
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id", is(1)))
                     .andExpect(jsonPath("$.status", is("COMPLETED")));
 
-            verify(paymentService, times(1)).updatePaymentStatus(2L, PaymentStatus.COMPLETED);
+            verify(paymentService, times(1)).updatePaymentStatus(1L, Payment.PaymentStatus.COMPLETED);
         }
 
         @Test
-        @DisplayName("Should update payment status to FAILED")
-        void shouldUpdateStatusToFailed() throws Exception {
+        @DisplayName("Should update payment status to FAILED successfully")
+        void shouldUpdatePaymentStatusToFailed() throws Exception {
             // Given
-            testPayment2.setStatus(PaymentStatus.FAILED);
-            when(paymentService.updatePaymentStatus(2L, PaymentStatus.FAILED))
-                    .thenReturn(testPayment2);
+            PaymentDto failedPayment = new PaymentDto(
+                1L,
+                100L,
+                new BigDecimal("50.00"),
+                Payment.PaymentMethod.CREDIT_CARD,
+                "TXN123456",
+                Payment.PaymentStatus.FAILED,
+                "Test payment details",
+                OffsetDateTime.now(),
+                null,
+                "Gateway error response"
+            );
+            when(paymentService.updatePaymentStatus(1L, Payment.PaymentStatus.FAILED)).thenReturn(failedPayment);
 
             // When & Then
-            mockMvc.perform(patch("/api/payments/2/status")
+            mockMvc.perform(put("/api/payments/1/status")
                             .param("status", "FAILED"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status", is("FAILED")));
 
-            verify(paymentService, times(1)).updatePaymentStatus(2L, PaymentStatus.FAILED);
-        }
-
-        @Test
-        @DisplayName("Should return 400 when status is invalid")
-        void shouldReturn400WhenStatusIsInvalid() throws Exception {
-            // When & Then
-            mockMvc.perform(patch("/api/payments/2/status")
-                            .param("status", "INVALID_STATUS"))
-                    .andExpect(status().isBadRequest());
-
-            verify(paymentService, never()).updatePaymentStatus(anyLong(), any(PaymentStatus.class));
+            verify(paymentService, times(1)).updatePaymentStatus(1L, Payment.PaymentStatus.FAILED);
         }
 
         @Test
         @DisplayName("Should return 404 when payment not found")
-        void shouldReturn404WhenPaymentNotFound() throws Exception {
+        void shouldReturn404WhenPaymentNotFoundForStatusUpdate() throws Exception {
             // Given
-            when(paymentService.updatePaymentStatus(999L, PaymentStatus.COMPLETED))
-                    .thenThrow(new IllegalArgumentException("Payment not found"));
+            when(paymentService.updatePaymentStatus(999L, Payment.PaymentStatus.COMPLETED))
+                    .thenThrow(new RuntimeException("Payment not found with id: 999"));
 
             // When & Then
-            mockMvc.perform(patch("/api/payments/999/status")
+            mockMvc.perform(put("/api/payments/999/status")
                             .param("status", "COMPLETED"))
                     .andExpect(status().isNotFound());
 
-            verify(paymentService, times(1)).updatePaymentStatus(999L, PaymentStatus.COMPLETED);
+            verify(paymentService, times(1)).updatePaymentStatus(999L, Payment.PaymentStatus.COMPLETED);
         }
     }
 
     // =================================================================
-    // POST /api/payments/{id}/refund - Process Refund Tests
+    // POST /api/payments/{id}/process - Process Payment Tests
     // =================================================================
     @Nested
-    @DisplayName("POST /api/payments/{id}/refund - Process Refund")
-    class ProcessRefundTests {
+    @DisplayName("POST /api/payments/{id}/process - Process Payment")
+    class ProcessPaymentTests {
 
         @Test
-        @DisplayName("Should process full refund successfully")
-        void shouldProcessFullRefund() throws Exception {
+        @DisplayName("Should process payment successfully")
+        void shouldProcessPayment() throws Exception {
             // Given
-            testPayment1.setStatus(PaymentStatus.REFUNDED);
-            when(paymentService.processRefund(1L, null)).thenReturn(testPayment1);
+            PaymentDto processedPayment = new PaymentDto(
+                1L,
+                100L,
+                new BigDecimal("50.00"),
+                Payment.PaymentMethod.CREDIT_CARD,
+                "TXN123456",
+                Payment.PaymentStatus.COMPLETED,
+                "Test payment details",
+                OffsetDateTime.now(),
+                OffsetDateTime.now(),
+                "Payment processed successfully"
+            );
+            when(paymentService.processPayment(1L)).thenReturn(processedPayment);
 
             // When & Then
-            mockMvc.perform(post("/api/payments/1/refund"))
+            mockMvc.perform(post("/api/payments/1/process"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status", is("REFUNDED")));
+                    .andExpect(jsonPath("$.id", is(1)))
+                    .andExpect(jsonPath("$.status", is("COMPLETED")))
+                    .andExpect(jsonPath("$.gatewayResponse", is("Payment processed successfully")));
 
-            verify(paymentService, times(1)).processRefund(1L, null);
+            verify(paymentService, times(1)).processPayment(1L);
         }
 
         @Test
-        @DisplayName("Should process partial refund successfully")
-        void shouldProcessPartialRefund() throws Exception {
+        @DisplayName("Should return 404 when payment not found for processing")
+        void shouldReturn404WhenPaymentNotFoundForProcessing() throws Exception {
             // Given
-            BigDecimal refundAmount = new BigDecimal("50.00");
-            testPayment1.setStatus(PaymentStatus.PARTIALLY_REFUNDED);
-            when(paymentService.processRefund(1L, refundAmount)).thenReturn(testPayment1);
+            when(paymentService.processPayment(999L))
+                    .thenThrow(new RuntimeException("Payment not found with id: 999"));
 
             // When & Then
-            mockMvc.perform(post("/api/payments/1/refund")
-                            .param("amount", "50.00"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status", is("PARTIALLY_REFUNDED")));
+            mockMvc.perform(post("/api/payments/999/process"))
+                    .andExpect(status().isNotFound());
 
-            verify(paymentService, times(1)).processRefund(eq(1L), any(BigDecimal.class));
-        }
-
-        @Test
-        @DisplayName("Should return 400 when refund amount exceeds payment amount")
-        void shouldReturn400WhenRefundExceedsPayment() throws Exception {
-            // Given
-            BigDecimal excessiveRefund = new BigDecimal("500.00");
-            when(paymentService.processRefund(1L, excessiveRefund))
-                    .thenThrow(new IllegalArgumentException("Refund amount exceeds payment amount"));
-
-            // When & Then
-            mockMvc.perform(post("/api/payments/1/refund")
-                            .param("amount", "500.00"))
-                    .andExpect(status().isBadRequest());
-
-            verify(paymentService, times(1)).processRefund(eq(1L), any(BigDecimal.class));
-        }
-
-        @Test
-        @DisplayName("Should return 400 when refunding non-completed payment")
-        void shouldReturn400WhenRefundingNonCompletedPayment() throws Exception {
-            // Given
-            when(paymentService.processRefund(2L, null))
-                    .thenThrow(new IllegalStateException("Cannot refund non-completed payment"));
-
-            // When & Then
-            mockMvc.perform(post("/api/payments/2/refund"))
-                    .andExpect(status().isBadRequest());
-
-            verify(paymentService, times(1)).processRefund(2L, null);
+            verify(paymentService, times(1)).processPayment(999L);
         }
     }
 
     // =================================================================
-    // GET /api/payments/filter - Filter Payments Tests
+    // DELETE /api/payments/{id} - Delete Payment Tests
     // =================================================================
     @Nested
-    @DisplayName("GET /api/payments/filter - Filter Payments")
-    class FilterPaymentsTests {
+    @DisplayName("DELETE /api/payments/{id} - Delete Payment")
+    class DeletePaymentTests {
 
         @Test
-        @DisplayName("Should filter payments by status")
-        void shouldFilterPaymentsByStatus() throws Exception {
+        @DisplayName("Should delete payment successfully")
+        void shouldDeletePayment() throws Exception {
             // Given
-            when(paymentService.filterPayments(eq(PaymentStatus.COMPLETED), any(), any()))
-                    .thenReturn(Arrays.asList(testPayment1));
+            doNothing().when(paymentService).deletePayment(1L);
 
             // When & Then
-            mockMvc.perform(get("/api/payments/filter")
-                            .param("status", "COMPLETED"))
+            mockMvc.perform(delete("/api/payments/1"))
+                    .andExpect(status().isNoContent());
+
+            verify(paymentService, times(1)).deletePayment(1L);
+        }
+
+        @Test
+        @DisplayName("Should return 404 when deleting non-existent payment")
+        void shouldReturn404WhenDeletingNonExistentPayment() throws Exception {
+            // Given
+            doThrow(new RuntimeException("Payment not found with id: 999"))
+                    .when(paymentService).deletePayment(999L);
+
+            // When & Then
+            mockMvc.perform(delete("/api/payments/999"))
+                    .andExpect(status().isNotFound());
+
+            verify(paymentService, times(1)).deletePayment(999L);
+        }
+    }
+
+    // =================================================================
+    // GET /api/payments/order/{orderId} - Get Payments by Order Tests
+    // =================================================================
+    @Nested
+    @DisplayName("GET /api/payments/order/{orderId} - Get Payments by Order")
+    class GetPaymentsByOrderTests {
+
+        @Test
+        @DisplayName("Should return payments for specific order")
+        void shouldReturnPaymentsByOrder() throws Exception {
+            // Given
+            List<PaymentDto> orderPayments = Arrays.asList(testPaymentDto);
+            when(paymentService.getPaymentsByOrderId(100L)).thenReturn(orderPayments);
+
+            // When & Then
+            mockMvc.perform(get("/api/payments/order/100"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(1)))
+                    .andExpect(jsonPath("$[0].orderId", is(100)))
+                    .andExpect(jsonPath("$[0].amount", is(50.00)));
+
+            verify(paymentService, times(1)).getPaymentsByOrderId(100L);
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no payments for order")
+        void shouldReturnEmptyListForOrder() throws Exception {
+            // Given
+            when(paymentService.getPaymentsByOrderId(999L)).thenReturn(Arrays.asList());
+
+            // When & Then
+            mockMvc.perform(get("/api/payments/order/999"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(0)));
+
+            verify(paymentService, times(1)).getPaymentsByOrderId(999L);
+        }
+    }
+
+    // =================================================================
+    // GET /api/payments/status/{status} - Get Payments by Status Tests
+    // =================================================================
+    @Nested
+    @DisplayName("GET /api/payments/status/{status} - Get Payments by Status")
+    class GetPaymentsByStatusTests {
+
+        @Test
+        @DisplayName("Should return payments with COMPLETED status")
+        void shouldReturnPaymentsByCompletedStatus() throws Exception {
+            // Given
+            List<PaymentDto> completedPayments = Arrays.asList(testPaymentDto);
+            when(paymentService.getPaymentsByStatus(Payment.PaymentStatus.COMPLETED)).thenReturn(completedPayments);
+
+            // When & Then
+            mockMvc.perform(get("/api/payments/status/COMPLETED"))
+                    .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].status", is("COMPLETED")));
 
-            verify(paymentService, times(1))
-                    .filterPayments(eq(PaymentStatus.COMPLETED), any(), any());
+            verify(paymentService, times(1)).getPaymentsByStatus(Payment.PaymentStatus.COMPLETED);
         }
 
         @Test
-        @DisplayName("Should filter payments by method")
-        void shouldFilterPaymentsByMethod() throws Exception {
+        @DisplayName("Should return payments with PENDING status")
+        void shouldReturnPaymentsByPendingStatus() throws Exception {
             // Given
-            when(paymentService.filterPayments(any(), eq(PaymentMethod.CREDIT_CARD), any()))
-                    .thenReturn(Arrays.asList(testPayment1));
+            when(paymentService.getPaymentsByStatus(Payment.PaymentStatus.PENDING)).thenReturn(Arrays.asList());
 
             // When & Then
-            mockMvc.perform(get("/api/payments/filter")
-                            .param("method", "CREDIT_CARD"))
+            mockMvc.perform(get("/api/payments/status/PENDING"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(1)))
-                    .andExpect(jsonPath("$[0].method", is("CREDIT_CARD")));
+                    .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(paymentService, times(1))
-                    .filterPayments(any(), eq(PaymentMethod.CREDIT_CARD), any());
-        }
-
-        @Test
-        @DisplayName("Should filter payments by search term")
-        void shouldFilterPaymentsBySearchTerm() throws Exception {
-            // Given
-            when(paymentService.filterPayments(any(), any(), eq("TXN-001")))
-                    .thenReturn(Arrays.asList(testPayment1));
-
-            // When & Then
-            mockMvc.perform(get("/api/payments/filter")
-                            .param("search", "TXN-001"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(1)))
-                    .andExpect(jsonPath("$[0].transactionId", is("TXN-001")));
-
-            verify(paymentService, times(1)).filterPayments(any(), any(), eq("TXN-001"));
-        }
-
-        @Test
-        @DisplayName("Should apply multiple filters")
-        void shouldApplyMultipleFilters() throws Exception {
-            // Given
-            when(paymentService.filterPayments(
-                    eq(PaymentStatus.COMPLETED),
-                    eq(PaymentMethod.CREDIT_CARD),
-                    eq("john")))
-                    .thenReturn(Arrays.asList(testPayment1));
-
-            // When & Then
-            mockMvc.perform(get("/api/payments/filter")
-                            .param("status", "COMPLETED")
-                            .param("method", "CREDIT_CARD")
-                            .param("search", "john"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(1)));
-
-            verify(paymentService, times(1)).filterPayments(
-                    eq(PaymentStatus.COMPLETED),
-                    eq(PaymentMethod.CREDIT_CARD),
-                    eq("john"));
-        }
-    }
-
-    // =================================================================
-    // GET /api/payments/statistics - Payment Statistics Tests
-    // =================================================================
-    @Nested
-    @DisplayName("GET /api/payments/statistics - Payment Statistics")
-    class PaymentStatisticsTests {
-
-        @Test
-        @DisplayName("Should return payment statistics")
-        void shouldReturnPaymentStatistics() throws Exception {
-            // Given
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalRevenue", new BigDecimal("212.75"));
-            stats.put("completedPayments", 1);
-            stats.put("pendingPayments", 1);
-            stats.put("failedPayments", 0);
-
-            when(paymentService.getPaymentStatistics()).thenReturn(stats);
-
-            // When & Then
-            mockMvc.perform(get("/api/payments/statistics"))
-                    .andDo(print())
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.totalRevenue", is(212.75)))
-                    .andExpect(jsonPath("$.completedPayments", is(1)))
-                    .andExpect(jsonPath("$.pendingPayments", is(1)));
-
-            verify(paymentService, times(1)).getPaymentStatistics();
-        }
-    }
-
-    // =================================================================
-    // Edge Cases Tests
-    // =================================================================
-    @Nested
-    @DisplayName("Edge Cases and Validation")
-    class EdgeCaseTests {
-
-        @Test
-        @DisplayName("Should handle extremely large payment amounts")
-        void shouldHandleLargeAmounts() throws Exception {
-            // Given
-            testPaymentDTO.setAmount(new BigDecimal("999999999.99"));
-            Payment largePayment = new Payment();
-            largePayment.setAmount(testPaymentDTO.getAmount());
-            when(paymentService.processPayment(any(PaymentDTO.class))).thenReturn(largePayment);
-
-            // When & Then
-            mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(testPaymentDTO)))
-                    .andExpect(status().isCreated());
-
-            verify(paymentService, times(1)).processPayment(any(PaymentDTO.class));
-        }
-
-        @Test
-        @DisplayName("Should validate currency format")
-        void shouldValidateCurrencyFormat() throws Exception {
-            // Given
-            testPaymentDTO.setCurrency("INVALID");
-
-            // When & Then
-            mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(testPaymentDTO)))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("Should handle concurrent payment processing")
-        void shouldHandleConcurrentProcessing() throws Exception {
-            // Given
-            when(paymentService.processPayment(any(PaymentDTO.class)))
-                    .thenThrow(new RuntimeException("Concurrent modification"));
-
-            // When & Then
-            mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(testPaymentDTO)))
-                    .andExpect(status().isInternalServerError());
+            verify(paymentService, times(1)).getPaymentsByStatus(Payment.PaymentStatus.PENDING);
         }
     }
 }
