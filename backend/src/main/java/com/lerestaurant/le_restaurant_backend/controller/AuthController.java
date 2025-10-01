@@ -1,4 +1,4 @@
-package main.java.com.lerestaurant.le_restaurant_backend.controller;
+package com.lerestaurant.le_restaurant_backend.controller;
 
 import com.lerestaurant.le_restaurant_backend.dto.AuthRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserDto;

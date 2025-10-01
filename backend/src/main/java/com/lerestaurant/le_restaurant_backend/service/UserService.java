@@ -17,22 +17,31 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class UserService {
-    
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    
+
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
-    
+
     public UserDto createUser(UserCreateRequestDto requestDto) {
-        // 이메일 중복 확인
-        if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
+        // 기본 입력 검증
+        if (requestDto.getEmail() == null) {
+            throw new IllegalArgumentException("Email must not be null");
+        }
+        if (requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password must not be null or empty");
+        }
+
+        // 이메일 중복 확인 (한 번만 조회)
+        java.util.Optional<User> existing = userRepository.findByEmail(requestDto.getEmail());
+        if (existing != null && existing.isPresent()) {
             throw new RuntimeException("User with email already exists: " + requestDto.getEmail());
         }
-        
+
         User user = new User();
         user.setEmail(requestDto.getEmail());
         user.setPasswordHash(passwordEncoder.encode(requestDto.getPassword()));
@@ -42,48 +51,48 @@ public class UserService {
         user.setRole(requestDto.getRole());
         user.setStatus(User.UserStatus.ACTIVE);
         user.setCreatedAt(OffsetDateTime.now());
-        
+
         User savedUser = userRepository.save(user);
         return convertToDto(savedUser);
     }
-    
+
     public UserDto getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         return convertToDto(user);
     }
-    
+
     public UserDto getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         return convertToDto(user);
     }
-    
+
     public List<UserDto> getAllUsers() {
         return userRepository.findAll()
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-    
+
     public List<UserDto> getUsersByRole(User.UserRole role) {
         return userRepository.findByRole(role)
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-    
+
     public List<UserDto> getUsersByStatus(User.UserStatus status) {
         return userRepository.findByStatus(status)
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-    
+
     public UserDto updateUser(Long id, UserUpdateRequestDto requestDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
+
         if (requestDto.getPhoneNumber() != null) {
             user.setPhoneNumber(requestDto.getPhoneNumber());
         }
@@ -99,45 +108,66 @@ public class UserService {
         if (requestDto.getProfileImageUrl() != null) {
             user.setProfileImageUrl(requestDto.getProfileImageUrl());
         }
-        
+
         user.setUpdatedAt(OffsetDateTime.now());
-        
+
         User updatedUser = userRepository.save(user);
         return convertToDto(updatedUser);
     }
-    
+
     public UserDto updateUserStatus(Long id, User.UserStatus status) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
+
         user.setStatus(status);
         user.setUpdatedAt(OffsetDateTime.now());
-        
+
         User updatedUser = userRepository.save(user);
         return convertToDto(updatedUser);
     }
-    
+
     public UserDto updateLastLogin(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
+
         user.setLastLogin(OffsetDateTime.now());
-        
+
         User updatedUser = userRepository.save(user);
         return convertToDto(updatedUser);
     }
-    
+
+    public UserDto authenticateUser(String email, String rawPassword) {
+        if (email == null) {
+            throw new IllegalArgumentException("Email must not be null");
+        }
+        if (rawPassword == null) {
+            throw new IllegalArgumentException("Password must not be null");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        user.setLastLogin(OffsetDateTime.now());
+        userRepository.save(user);
+
+        return convertToDto(user);
+    }
+
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
+
         userRepository.delete(user);
     }
-    
+
     public boolean existsByEmail(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
-    
+
     private UserDto convertToDto(User user) {
         return new UserDto(
                 user.getId(),
@@ -150,7 +180,6 @@ public class UserService {
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
                 user.getLastLogin(),
-                user.getProfileImageUrl()
-        );
+                user.getProfileImageUrl());
     }
 }
