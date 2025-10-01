@@ -11,54 +11,70 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { UserManagementPanel } from '../UserManagementPanel';
+import UserManagementPanel from '../UserManagementPanel';
 import { UserRole, UserStatus } from '../../../types/user';
+import { useUserApi } from '../../../hooks/useUserApi';
 
 // Mock the useUserApi hook
-vi.mock('../../../hooks/useUserApi', () => ({
-  useUserApi: () => ({
-    users: mockUsers,
-    loading: false,
-    error: null,
-    isBackendConnected: true,
-    loadUsers: vi.fn(),
-    createUser: vi.fn(),
-    updateUser: vi.fn(),
-    deleteUser: vi.fn(),
-  }),
-}));
+vi.mock('../../../hooks/useUserApi');
 
 // Mock data
 const mockUsers = [
   {
     id: 1,
     email: 'john.doe@example.com',
+    passwordHash: 'hashed_password',
     firstName: 'John',
     lastName: 'Doe',
     phoneNumber: '123-456-7890',
     role: UserRole.CUSTOMER,
     status: UserStatus.ACTIVE,
     createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z',
     lastLogin: '2024-01-20T15:30:00Z',
   },
   {
     id: 2,
     email: 'jane.admin@example.com',
+    passwordHash: 'hashed_password',
     firstName: 'Jane',
     lastName: 'Admin',
     phoneNumber: '098-765-4321',
     role: UserRole.ADMIN,
     status: UserStatus.ACTIVE,
     createdAt: '2024-01-10T09:00:00Z',
+    updatedAt: '2024-01-10T09:00:00Z',
     lastLogin: '2024-01-21T11:00:00Z',
   },
 ];
 
 describe('UserManagementPanel (F102)', () => {
   const mockOnClose = vi.fn();
+  const mockLoadUsers = vi.fn();
+  const mockCreateUser = vi.fn();
+  const mockUpdateUser = vi.fn();
+  const mockDeleteUser = vi.fn();
+  const mockLoadUserById = vi.fn();
+  const mockLoadUserByEmail = vi.fn();
+  const mockUpdateUserStatus = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Setup default mock return value
+    vi.mocked(useUserApi).mockReturnValue({
+      users: mockUsers,
+      loading: false,
+      error: null,
+      isBackendConnected: true,
+      loadUsers: mockLoadUsers,
+      createUser: mockCreateUser,
+      updateUser: mockUpdateUser,
+      deleteUser: mockDeleteUser,
+      loadUserById: mockLoadUserById,
+      loadUserByEmail: mockLoadUserByEmail,
+      updateUserStatus: mockUpdateUserStatus,
+    });
   });
 
   // =================================================================
@@ -84,15 +100,21 @@ describe('UserManagementPanel (F102)', () => {
         loading: true,
         error: null,
         isBackendConnected: true,
-        loadUsers: vi.fn(),
-        createUser: vi.fn(),
-        updateUser: vi.fn(),
-        deleteUser: vi.fn(),
+        loadUsers: mockLoadUsers,
+        createUser: mockCreateUser,
+        updateUser: mockUpdateUser,
+        deleteUser: mockDeleteUser,
+        loadUserById: mockLoadUserById,
+        loadUserByEmail: mockLoadUserByEmail,
+        updateUserStatus: mockUpdateUserStatus,
       });
 
       render(<UserManagementPanel isOpen={true} onClose={mockOnClose} />);
       
-      expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+      // Component uses <div className="spinner" /> without testid
+      expect(screen.getByText('User Management')).toBeDefined();
+      const spinnerElement = document.querySelector('.spinner');
+      expect(spinnerElement).not.toBeNull();
     });
 
     it('should show error message when API fails', () => {
