@@ -126,13 +126,6 @@ stages:
     #     app_location: '$(System.ArtifactsDirectory)/le-restaurant-frontend'
     #     skip_app_build: true
     #     production_branch: 'main'
-
-    - task: AzureStaticWebApp@0
-      inputs:
-        app_location: 'frontend'
-        output_location: 'dist'
-        skip_deploy_on_missing_secrets: true
-
     
     # Run Basic Tests
     - task: PowerShell@2
