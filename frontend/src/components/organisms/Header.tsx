@@ -1,8 +1,20 @@
+<<<<<<< HEAD
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';  // <-- import useNavigate
 import { ShoppingCart, User, Menu as MenuIcon } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
+=======
+import React, { useState } from 'react';
+import { ShoppingCart, User, Menu as MenuIcon, Calendar, Truck, CreditCard } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '../atoms/Button';
+import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
+import AuthModal from './AuthModal';
+import UserManagementPanel from './UserManagementPanel';
+import { ReservationModal } from './ReservationModal';
+import { useAuth } from '../../contexts/AuthContext';
+>>>>>>> main
 
 interface HeaderProps {
   cartItemCount: number;
@@ -15,7 +27,29 @@ export const Header: React.FC<HeaderProps> = ({
   onCartClick,
   onMenuToggle,
 }) => {
+<<<<<<< HEAD
   const navigate = useNavigate();  // <-- initialize navigation
+=======
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserManagement, setShowUserManagement] = useState(false);
+  const [showReservationModal, setShowReservationModal] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const handleUserClick = () => {
+    if (isAuthenticated) {
+      // 로그인된 상태: 드롭다운 메뉴 표시
+      // TODO: 사용자 드롭다운 메뉴 구현
+      console.log('User menu clicked');
+    } else {
+      // 로그인되지 않은 상태: 인증 모달 표시
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+  };
+>>>>>>> main
 
   return (
     <header className="bg-white shadow-md border-b border-neutral-100 sticky top-0 z-50">
@@ -43,18 +77,40 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#menu" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
+            <Link to="/" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Menu
+<<<<<<< HEAD
             </a>
             <a href="/orders" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Orders
             </a>
+=======
+            </Link>
+>>>>>>> main
             <a href="#about" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               About
             </a>
             <a href="#contact" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Contact
             </a>
+            {(user?.role === 'admin' || user?.role === 'manager') && (
+              <>
+                <Link
+                  to="/delivery"
+                  className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
+                >
+                  <Truck className="w-4 h-4" />
+                  Delivery
+                </Link>
+                <Link
+                  to="/payments"
+                  className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  Payments
+                </Link>
+              </>
+            )}
             
             {/* API Status Indicator */}
             <div className="border-l border-neutral-200 pl-6">
@@ -78,9 +134,76 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
             
             {/* User Profile Button */}
+<<<<<<< HEAD
             <button className="p-2 rounded-lg hover:bg-neutral-100 transition-colors">
               <User className="w-6 h-6 text-neutral-600" />
             </button>
+=======
+            <div className="relative">
+              <button
+                onClick={handleUserClick}
+                className="p-2 rounded-lg hover:bg-neutral-100 transition-colors flex items-center space-x-2"
+              >
+                <User className="w-6 h-6 text-neutral-600" />
+                {isAuthenticated && (
+                  <span className="hidden sm:block text-sm text-neutral-700">
+                    {user?.firstName} {user?.lastName}
+                  </span>
+                )}
+              </button>
+              
+              {/* User Dropdown Menu (로그인된 상태에서만) */}
+              {isAuthenticated && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-neutral-200 py-2 z-50">
+                  <div className="px-4 py-2 border-b border-neutral-100">
+                    <p className="text-sm font-medium text-neutral-900">
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                    <p className="text-xs text-neutral-500">{user?.email}</p>
+                  </div>
+                  
+                  {/* Book Table - All authenticated users */}
+                  <button
+                    onClick={() => setShowReservationModal(true)}
+                    className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Book Table
+                  </button>
+                  
+                  {/* User Management (Admin/Manager only) */}
+                  {(user?.role === 'admin' || user?.role === 'manager') && (
+                    <button
+                      onClick={() => setShowUserManagement(true)}
+                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    >
+                      User Management
+                    </button>
+                  )}
+                  
+                  {/* Delivery & Payment Management (Admin/Manager only) */}
+                  {(user?.role === 'admin' || user?.role === 'manager') && (
+                    <>
+                      <Link
+                        to="/delivery"
+                        className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                      >
+                        <Truck className="w-4 h-4" />
+                        Delivery Management
+                      </Link>
+                    </>
+                  )}
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+>>>>>>> main
             
             {/* Order Now Button - Desktop */}
             <Button variant="primary" size="md" className="hidden sm:flex">
@@ -100,5 +223,27 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
     </header>
+<<<<<<< HEAD
+=======
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
+
+      {/* User Management Panel */}
+      <UserManagementPanel
+        isOpen={showUserManagement}
+        onClose={() => setShowUserManagement(false)}
+      />
+      {/* Reservation Modal */}
+      <ReservationModal
+        isOpen={showReservationModal}
+        onClose={() => setShowReservationModal(false)}
+      />
+      
+    </>
+>>>>>>> main
   );
 };

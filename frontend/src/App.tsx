@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import { MainLayout } from './components/templates/MainLayout';
+import { Home } from './pages/Home';
+import { Reservation } from './pages/Reservation';
+import { Orders } from './pages/Orders';
+import PaymentManagementPanel from './components/organisms/PaymentManagementPanel';
+import DeliveryManagement from './pages/DeliveryManagement';
+import DeliveryTracking from './pages/DeliveryTracking';
+import DeliveryDashboard from './pages/DeliveryDashboard';
+
+import ProtectedRoute from './components/routes/ProtectedRoute';
+import { UserRole } from './types/user';
+import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { NotificationContainer } from './components/organisms/NotificationContainer';
-import { Home } from './pages/Home';
-import {Reservation} from './pages/Reservation';
-import { Orders } from './pages/Orders'; // import your Orders page
 import { useCart } from './hooks/useCart';
+
 import { MenuItem } from './types';
 import './index.css';
 
@@ -18,11 +28,11 @@ function App() {
     addToCart,
     updateQuantity,
     removeFromCart,
-    clearCart,
   } = useCart();
 
   const [favoritedItems, setFavoritedItems] = React.useState<Set<string>>(new Set());
   const [isCartOpen, setIsCartOpen] = React.useState(false);
+  const [redirectToPayments, setRedirectToPayments] = React.useState(false);
 
   const handleAddToCart = (item: MenuItem, quantity: number) => {
     addToCart(item, quantity);
@@ -38,67 +48,101 @@ function App() {
     setFavoritedItems(newFavoritedItems);
   };
 
-  const handleCartClick = () => {
-    setIsCartOpen(true);
-  };
-
   const handleCheckout = () => {
-    // TODO: Integrate with Payment Management flow
-    alert('Proceeding to checkout (mock)');
     setIsCartOpen(false);
+    setRedirectToPayments(true);
   };
 
   return (
-    <Router>
-      <div className="App">
-        <MainLayout
-          cartItemCount={cartItemCount}
-          onCartClick={() => setIsCartOpen(true)}
-        >
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <Home
-                  onAddToCart={handleAddToCart}
-                  favoritedItems={favoritedItems}
-                  onFavorite={handleFavorite}
-                />
-              }
-            />
-            <Route
-              path="/orders"
-              element={
-                <Orders
-                  cartItemCount={cartItemCount}   // pass cart count
-                  onCartClick={() => setIsCartOpen(true)} // pass cart toggle
-                />
-              }
-            />
-            <Route path="/reservation" 
-              element={
-                <Reservation 
-                  cartItemCount={cartItemCount}   
-                  onCartClick={() => setIsCartOpen(true)} 
-                />
-              } 
-            />
-          </Routes>
-        </MainLayout>
-        
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cartItems={cartItems}
-          cartTotal={cartTotal}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
-        />
-        
-        <NotificationContainer />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <MainLayout
+            cartItemCount={cartItemCount}
+            onCartClick={() => setIsCartOpen(true)}
+          >
+            {redirectToPayments && <Navigate to="/payments" replace />}
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <Home
+                    onAddToCart={handleAddToCart}
+                    favoritedItems={favoritedItems}
+                    onFavorite={handleFavorite}
+                  />
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <Orders
+                    cartItemCount={cartItemCount}
+                    onCartClick={() => setIsCartOpen(true)}
+                  />
+                }
+              />
+              <Route
+                path="/reservation"
+                element={
+                  <Reservation
+                    cartItemCount={cartItemCount}
+                    onCartClick={() => setIsCartOpen(true)}
+                  />
+                }
+              />
+              <Route
+                path="/payments"
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <PaymentManagementPanel
+                      isOpen={true}
+                      onClose={() => window.history.back()}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/delivery"
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <DeliveryManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/delivery/dashboard"
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <DeliveryDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/delivery/tracking/:deliveryId"
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <DeliveryTracking />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </MainLayout>
+
+          <CartSidebar
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            cartItems={cartItems}
+            cartTotal={cartTotal}
+            onUpdateQuantity={updateQuantity}
+            onRemoveItem={removeFromCart}
+            onCheckout={handleCheckout}
+          />
+
+          <NotificationContainer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
