@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="6" failures="4" errors="0" time="4.691">
-  <testsuite name="Reservation Form" errors="0" failures="4" skipped="0" timestamp="2025-10-01T19:05:34" time="3.56" tests="6">
-    <testcase classname="Reservation Form blocks past dates" name="Reservation Form blocks past dates" time="0.166">
+<testsuites name="jest tests" tests="6" failures="4" errors="0" time="3.309">
+  <testsuite name="Reservation Form" errors="0" failures="4" skipped="0" timestamp="2025-10-01T19:29:20" time="2.269" tests="6">
+    <testcase classname="Reservation Form blocks past dates" name="Reservation Form blocks past dates" time="0.168">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -356,9 +356,9 @@ Ignored nodes: comments, script, style
     at runTestInternal (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:275:16)
     at runTest (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:343:7)</failure>
     </testcase>
-    <testcase classname="Reservation Form accepts valid input" name="Reservation Form accepts valid input" time="0.074">
+    <testcase classname="Reservation Form accepts valid input" name="Reservation Form accepts valid input" time="0.065">
     </testcase>
-    <testcase classname="Reservation Form shows error for time before 12:00" name="Reservation Form shows error for time before 12:00" time="0.066">
+    <testcase classname="Reservation Form shows error for time before 12:00" name="Reservation Form shows error for time before 12:00" time="0.058">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -713,7 +713,7 @@ Ignored nodes: comments, script, style
     at runTestInternal (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:275:16)
     at runTest (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:343:7)</failure>
     </testcase>
-    <testcase classname="Reservation Form shows error for too many people" name="Reservation Form shows error for too many people" time="0.053">
+    <testcase classname="Reservation Form shows error for too many people" name="Reservation Form shows error for too many people" time="0.056">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -1068,7 +1068,7 @@ Ignored nodes: comments, script, style
     at runTestInternal (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:275:16)
     at runTest (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:343:7)</failure>
     </testcase>
-    <testcase classname="Reservation Form shows error for too few people" name="Reservation Form shows error for too few people" time="0.049">
+    <testcase classname="Reservation Form shows error for too few people" name="Reservation Form shows error for too few people" time="0.06">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -1423,7 +1423,7 @@ Ignored nodes: comments, script, style
     at runTestInternal (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:275:16)
     at runTest (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:343:7)</failure>
     </testcase>
-    <testcase classname="Reservation Form disables past dates in date input" name="Reservation Form disables past dates in date input" time="0.007">
+    <testcase classname="Reservation Form disables past dates in date input" name="Reservation Form disables past dates in date input" time="0.006">
     </testcase>
   </testsuite>
 </testsuites>

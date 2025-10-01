@@ -136,6 +136,7 @@ stages:
           Write-Host "🚀 Deployment completed successfully!"
           Write-Host "🌐 Website should be available at your Azure Static Web App URL"
           # Add notification logic here (Slack, Teams, Email)
+
     - task: PublishTestResults@2
       inputs:
         testResultsFormat: 'JUnit'
@@ -144,3 +145,19 @@ stages:
         failTaskOnFailedTests: false
         testRunTitle: 'Frontend Tests'
       condition: succeededOrFailed()
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+      displayName: 'Use Node.js'
+
+    - script: |
+        npm install
+        npm test
+      displayName: 'Run Jest tests'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFiles: 'test-results/results.xml'
+        testResultsFormat: 'JUnit'
+        failTaskOnFailedTests: true
