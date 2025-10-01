@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="6" failures="4" errors="0" time="3.219">
-  <testsuite name="Reservation Form" errors="0" failures="4" skipped="0" timestamp="2025-10-01T19:51:10" time="2.204" tests="6">
-    <testcase classname="Reservation Form blocks past dates" name="Reservation Form blocks past dates" time="0.159">
+<testsuites name="jest tests" tests="6" failures="4" errors="0" time="4.552">
+  <testsuite name="Reservation Form" errors="0" failures="4" skipped="0" timestamp="2025-10-01T19:47:22" time="3.549" tests="6">
+    <testcase classname="Reservation Form blocks past dates" name="Reservation Form blocks past dates" time="0.154">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -357,7 +357,7 @@ Ignored nodes: comments, script, style
     </testcase>
     <testcase classname="Reservation Form accepts valid input" name="Reservation Form accepts valid input" time="0.065">
     </testcase>
-    <testcase classname="Reservation Form shows error for time before 12:00" name="Reservation Form shows error for time before 12:00" time="0.055">
+    <testcase classname="Reservation Form shows error for time before 12:00" name="Reservation Form shows error for time before 12:00" time="0.056">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -1419,7 +1419,7 @@ Ignored nodes: comments, script, style
     at runTestInternal (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:275:16)
     at runTest (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:343:7)</failure>
     </testcase>
-    <testcase classname="Reservation Form disables past dates in date input" name="Reservation Form disables past dates in date input" time="0.006">
+    <testcase classname="Reservation Form disables past dates in date input" name="Reservation Form disables past dates in date input" time="0.007">
     </testcase>
   </testsuite>
 </testsuites>

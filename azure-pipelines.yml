@@ -1,33 +1,30 @@
 # Azure DevOps Pipeline for Le Restaurant Static Website
-# React/Vite frontend deployment to Azure Static Web Apps
+# React/Vite frontend deployment to Azure Static Web Apps with Jest Unit Tests
 
 trigger:
   branches:
     include:
-    - main
-    - F108TABLERESERVATION
+      - main
+      - F108TABLERESERVATION
   paths:
     exclude:
-    - README.md
-    - docs/*
-    - design-plan/*
-    - backend/*
+      - README.md
+      - docs/*
+      - design-plan/*
+      - backend/*
 
 pr:
   branches:
     include:
-    - main
+      - main
   paths:
     exclude:
-    - README.md
-    - docs/*
-    - backend/*
+      - README.md
+      - docs/*
+      - backend/*
 
 variables:
-  # Build Variables
   nodeVersion: '20.x'
-  
-  # Azure Variables
   azureSubscription: 'le-restaurant-service-connection'
 
 stages:
@@ -38,7 +35,7 @@ stages:
   displayName: 'Continuous Integration'
   jobs:
   - job: Build
-    displayName: 'Build and Test Frontend'
+    displayName: 'Build, Test, and Lint Frontend'
     pool:
       vmImage: 'ubuntu-latest'
     
@@ -66,7 +63,6 @@ stages:
         npm install
       displayName: 'Clean and install dependencies'
 
-    
     # Run Linting
     - script: |
         cd frontend
@@ -79,8 +75,22 @@ stages:
         cd frontend
         npx tsc --noEmit
       displayName: 'TypeScript Check'
-    
-    # Build Application
+
+    # Run Jest Unit Tests
+    - script: |
+        cd frontend
+        npm test -- --ci --reporters=default --reporters=jest-junit
+      displayName: 'Run Jest Unit Tests'
+
+    # Publish Jest Test Results
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFiles: 'frontend/test-results/jest/results.xml'
+        testResultsFormat: 'JUnit'
+        failTaskOnFailedTests: true
+        testRunTitle: 'Frontend Unit Tests'
+
+    # Build React Application
     - script: |
         cd frontend
         npm run build
@@ -126,38 +136,3 @@ stages:
         app_location: '$(System.ArtifactsDirectory)/le-restaurant-frontend'
         skip_app_build: true
         production_branch: 'main'
-    
-    # Run Basic Tests
-    - task: PowerShell@2
-      displayName: 'Run Basic Tests'
-      inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "🚀 Deployment completed successfully!"
-          Write-Host "🌐 Website should be available at your Azure Static Web App URL"
-          # Add notification logic here (Slack, Teams, Email)
-
-    - task: PublishTestResults@2
-      inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: '**/test-results/junit.xml'
-        mergeTestResults: true
-        failTaskOnFailedTests: false
-        testRunTitle: 'Frontend Tests'
-      condition: succeededOrFailed()
-
-    - task: NodeTool@0
-      inputs:
-        versionSpec: '20.x'
-      displayName: 'Use Node.js'
-
-    - script: |
-        npm install
-        npm test
-      displayName: 'Run Jest tests'
-
-    - task: PublishTestResults@2
-      inputs:
-        testResultsFiles: 'test-results/results.xml'
-        testResultsFormat: 'JUnit'
-        failTaskOnFailedTests: true
