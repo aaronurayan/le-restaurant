@@ -19,20 +19,9 @@ export function useAdminMenuApi(initial: MenuItem[] = []) {
   const loadAll = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const data = await fetchJson('/api/admin/menu');
-      // ensure types: convert price to number if server sends string
-      const normalized: MenuItem[] = (data || []).map((d: any) => ({
-        id: Number(d.id),
-        name: d.name,
-        description: d.description,
-        price: Number(d.price),
-        category: d.category,
-        imageUrl: d.imageUrl,
-        available: Boolean(d.available),
-        createdAt: d.createdAt,
-        updatedAt: d.updatedAt,
-      }));
-      setItems(normalized);
+      // The URL should match the backend controller's @RequestMapping
+      const data = await fetchJson('/api/admin/menu/items'); 
+      setItems(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load menu');
     } finally {
