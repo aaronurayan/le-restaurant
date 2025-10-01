@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
 @Table(name = "users", indexes = {
         @Index(name = "uk_users_email", columnList = "email", unique = true)
 })
+
 public class User {
 
     public enum UserRole {
