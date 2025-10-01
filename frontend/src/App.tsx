@@ -13,6 +13,7 @@ import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
 import './index.css';
+import AdminMenuPage from './pages/AdminMenuPage';
 
 function App() {
   const {
@@ -69,6 +70,14 @@ function App() {
                     favoritedItems={favoritedItems}
                     onFavorite={handleFavorite}
                   />
+                } 
+              />
+              <Route 
+                path="/admin/menu" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN]}>
+                    <AdminMenuPage />
+                  </ProtectedRoute>
                 } 
               />
               <Route 
