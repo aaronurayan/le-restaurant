@@ -10,6 +10,12 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov', 'cobertura'],
@@ -25,12 +31,7 @@ export default defineConfig({
         '.eslintrc.cjs',
       ],
       all: true,
-      lines: 80,
-      functions: 80,
-      branches: 80,
-      statements: 80,
       // Specific thresholds for F102 and F106 features
-      perFile: true,
       thresholds: {
         lines: 80,
         functions: 80,
