@@ -93,6 +93,37 @@ stages:
         artifactName: 'le-restaurant-frontend'
         publishLocation: 'Container'
 
+  # Backend tests job
+  - job: BackendTests
+    displayName: 'Build and Test Backend'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: JavaToolInstaller@0
+      displayName: 'Install JDK 21'
+      inputs:
+        versionSpec: '21'
+
+    - script: |
+        cd backend
+        ./gradlew test --no-daemon
+      displayName: 'Run backend unit tests'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish backend test results'
+      inputs:
+        testResultsFiles: '**/build/test-results/test/*.xml'
+        testRunTitle: 'Backend Unit Tests'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish backend test reports'
+      inputs:
+        pathToPublish: 'backend/build/reports/tests'
+        artifactName: 'le-restaurant-backend-test-reports'
+        publishLocation: 'Container'
+
 
 # =============================================================================
 # DEPLOYMENT STAGE
