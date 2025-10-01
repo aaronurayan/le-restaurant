@@ -92,6 +92,12 @@ stages:
         pathToPublish: 'frontend/dist'
         artifactName: 'le-restaurant-frontend'
         publishLocation: 'Container'
+    - task: AzureStaticWebApp@0
+    inputs:
+    app_location: 'frontend'
+    output_location: 'dist'
+    skip_deploy_on_missing_secrets: true
+
 
 # =============================================================================
 # DEPLOYMENT STAGE
