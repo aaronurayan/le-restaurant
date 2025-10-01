@@ -31,8 +31,8 @@ stages:
 
         # Run only Reservation tests
         - script: |
-            cd $(frontendPath)
-            npx jest src/components/Reservation.test.tsx --ci --reporters=default --reporters=jest-junit
+            cd frontend
+            npx jest --config jest.config.cjs --ci --reporters=default --reporters=jest-junit
           displayName: 'Run Reservation Component Unit Tests'
           env:
             CI: true
