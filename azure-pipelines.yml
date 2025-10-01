@@ -136,3 +136,8 @@ stages:
           Write-Host "🚀 Deployment completed successfully!"
           Write-Host "🌐 Website should be available at your Azure Static Web App URL"
           # Add notification logic here (Slack, Teams, Email)
+    
+    # Post-job checkout to clean workspace
+    - checkout: self
+      clean: true
+      displayName: 'Post-job Checkout'
