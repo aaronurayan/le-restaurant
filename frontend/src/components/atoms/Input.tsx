@@ -1,8 +1,8 @@
-﻿import React, { forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { LucideIcon } from 'lucide-react';
 
 interface InputProps {
-  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'date' | 'time';
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'date' | 'time' | 'datetime-local';
   label?: string;
   placeholder?: string;
   error?: string;
@@ -16,6 +16,7 @@ interface InputProps {
   min?: string;
   max?: string;
   step?: string;
+  maxLength?: number;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(({
@@ -33,6 +34,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   min,
   max,
   step,
+  maxLength,
   ...props
 }, ref) => {
   const inputId = React.useId();
@@ -61,9 +63,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
+          required={required}
           min={min}
           max={max}
           step={step}
+          maxLength={maxLength}
           className={'w-full px-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent' + (icon ? ' pl-10' : '') + (error ? ' border-accent-red focus:ring-accent-red' : ' border-neutral-300 focus:border-transparent') + (disabled ? ' bg-neutral-100 cursor-not-allowed' : ' bg-white')}
           {...props}
         />
