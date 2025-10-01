@@ -13,6 +13,7 @@ interface HomeProps {
   onFavorite: (item: MenuItem) => void;
 }
 
+// Test
 export const Home: React.FC<HomeProps> = ({
   onAddToCart,
   favoritedItems,
