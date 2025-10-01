@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';  // Add this import
-import { Reservation } from '../src/pages/Reservation';
+import { Reservation } from '../pages/Reservation';
 
 describe('Reservation Form', () => {
   it('blocks past dates', () => {

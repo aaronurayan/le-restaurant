@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="6" failures="4" errors="0" time="3.309">
-  <testsuite name="Reservation Form" errors="0" failures="4" skipped="0" timestamp="2025-10-01T19:29:20" time="2.269" tests="6">
-    <testcase classname="Reservation Form blocks past dates" name="Reservation Form blocks past dates" time="0.168">
+<testsuites name="jest tests" tests="6" failures="4" errors="0" time="4.62">
+  <testsuite name="Reservation Form" errors="0" failures="4" skipped="0" timestamp="2025-10-01T19:40:22" time="3.586" tests="6">
+    <testcase classname="Reservation Form blocks past dates" name="Reservation Form blocks past dates" time="0.161">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -340,7 +340,7 @@ Ignored nodes: comments, script, style
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:76:38
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:52:17
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:95:19
-    at Object.&lt;anonymous&gt; (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\__tests__\Reservation.test.tsx:16:29)
+    at Object.&lt;anonymous&gt; (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\src\__tests__\Reservation.test.tsx:16:29)
     at Promise.finally.completed (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
     at new Promise (&lt;anonymous&gt;)
     at callAsyncCircusFn (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
@@ -356,9 +356,9 @@ Ignored nodes: comments, script, style
     at runTestInternal (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:275:16)
     at runTest (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:343:7)</failure>
     </testcase>
-    <testcase classname="Reservation Form accepts valid input" name="Reservation Form accepts valid input" time="0.065">
+    <testcase classname="Reservation Form accepts valid input" name="Reservation Form accepts valid input" time="0.07">
     </testcase>
-    <testcase classname="Reservation Form shows error for time before 12:00" name="Reservation Form shows error for time before 12:00" time="0.058">
+    <testcase classname="Reservation Form shows error for time before 12:00" name="Reservation Form shows error for time before 12:00" time="0.056">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -697,7 +697,7 @@ Ignored nodes: comments, script, style
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:76:38
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:52:17
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:95:19
-    at Object.&lt;anonymous&gt; (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\__tests__\Reservation.test.tsx:50:29)
+    at Object.&lt;anonymous&gt; (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\src\__tests__\Reservation.test.tsx:50:29)
     at Promise.finally.completed (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
     at new Promise (&lt;anonymous&gt;)
     at callAsyncCircusFn (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
@@ -713,7 +713,7 @@ Ignored nodes: comments, script, style
     at runTestInternal (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:275:16)
     at runTest (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:343:7)</failure>
     </testcase>
-    <testcase classname="Reservation Form shows error for too many people" name="Reservation Form shows error for too many people" time="0.056">
+    <testcase classname="Reservation Form shows error for too many people" name="Reservation Form shows error for too many people" time="0.051">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -1052,7 +1052,7 @@ Ignored nodes: comments, script, style
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:76:38
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:52:17
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:95:19
-    at Object.&lt;anonymous&gt; (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\__tests__\Reservation.test.tsx:68:29)
+    at Object.&lt;anonymous&gt; (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\src\__tests__\Reservation.test.tsx:68:29)
     at Promise.finally.completed (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
     at new Promise (&lt;anonymous&gt;)
     at callAsyncCircusFn (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
@@ -1068,7 +1068,7 @@ Ignored nodes: comments, script, style
     at runTestInternal (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:275:16)
     at runTest (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-runner\build\index.js:343:7)</failure>
     </testcase>
-    <testcase classname="Reservation Form shows error for too few people" name="Reservation Form shows error for too few people" time="0.06">
+    <testcase classname="Reservation Form shows error for too few people" name="Reservation Form shows error for too few people" time="0.048">
       <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
 
 Here are the accessible roles:
@@ -1407,7 +1407,7 @@ Ignored nodes: comments, script, style
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:76:38
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:52:17
     at C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\@testing-library\dom\dist\query-helpers.js:95:19
-    at Object.&lt;anonymous&gt; (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\__tests__\Reservation.test.tsx:86:29)
+    at Object.&lt;anonymous&gt; (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\src\__tests__\Reservation.test.tsx:86:29)
     at Promise.finally.completed (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
     at new Promise (&lt;anonymous&gt;)
     at callAsyncCircusFn (C:\Users\Damaq\OneDrive\Desktop\ASD\le-restaurant\frontend\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
