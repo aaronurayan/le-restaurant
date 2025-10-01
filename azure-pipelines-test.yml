@@ -1,0 +1,47 @@
+# Azure DevOps Pipeline for Frontend Reservation Component Unit Tests
+
+trigger: none  # Manual run only
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  nodeVersion: '20.x'
+  frontendPath: 'frontend'
+
+stages:
+- stage: UnitTests
+  displayName: 'Unit Tests - Reservation Component'
+  jobs:
+    - job: ReservationTests
+      displayName: 'Run Reservation.tsx Unit Tests'
+      steps:
+        # Install Node.js
+        - task: NodeTool@0
+          displayName: 'Install Node.js $(nodeVersion)'
+          inputs:
+            versionSpec: $(nodeVersion)
+
+        # Install frontend dependencies
+        - script: |
+            cd $(frontendPath)
+            rm -rf node_modules package-lock.json
+            npm install
+          displayName: 'Install Dependencies'
+
+        # Run only Reservation tests
+        - script: |
+            cd $(frontendPath)
+            npx jest src/components/Reservation.test.tsx --ci --reporters=default --reporters=jest-junit
+          displayName: 'Run Reservation Component Unit Tests'
+          env:
+            CI: true
+
+        # Publish test results
+        - task: PublishTestResults@2
+          displayName: 'Publish Reservation Test Results'
+          inputs:
+            testResultsFiles: '$(frontendPath)/test-results/jest/results.xml'
+            testResultsFormat: 'JUnit'
+            failTaskOnFailedTests: true
+            testRunTitle: 'Reservation Component Unit Tests'
