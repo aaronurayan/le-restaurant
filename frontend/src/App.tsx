@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home';
 import PaymentManagementPanel from './components/organisms/PaymentManagementPanel';
+import MenuManagementPanel from './components/organisms/MenuManagementPanel';
 import DeliveryManagement from './pages/DeliveryManagement';
 import DeliveryTracking from './pages/DeliveryTracking';
 import DeliveryDashboard from './pages/DeliveryDashboard';
@@ -13,7 +14,6 @@ import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
 import './index.css';
-import AdminMenuPage from './pages/AdminMenuPage';
 
 function App() {
   const {
@@ -75,8 +75,8 @@ function App() {
               <Route 
                 path="/admin/menu" 
                 element={
-                  <ProtectedRoute roles={[UserRole.ADMIN]}>
-                    <AdminMenuPage />
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <MenuManagementPanel />
                   </ProtectedRoute>
                 } 
               />

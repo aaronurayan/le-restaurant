@@ -22,6 +22,22 @@ export const useMenuApi = () => {
     }
   };
 
+  // Backend MenuItem을 Frontend MenuItem으로 변환
+  const adaptBackendMenuItem = (backendItem: any): MenuItem => {
+    return {
+      id: backendItem.id?.toString() || '',
+      categoryId: backendItem.category || '',
+      name: backendItem.name || '',
+      description: backendItem.description || '',
+      price: backendItem.price || 0,
+      image: backendItem.imageUrl || 'https://via.placeholder.com/400',
+      isAvailable: backendItem.available !== undefined ? backendItem.available : true,
+      dietaryTags: [], // Backend doesn't have this yet
+      preparationTime: 15, // Default value
+      allergens: [],
+    };
+  };
+
   // 메뉴 아이템 로드
   const loadMenuItems = async () => {
     setLoading(true);
@@ -32,7 +48,9 @@ export const useMenuApi = () => {
       
       if (isConnected) {
         const items = await menuApi.getAllItems();
-        setMenuItems(items);
+        // Backend 데이터를 Frontend 형식으로 변환
+        const adaptedItems = items.map(adaptBackendMenuItem);
+        setMenuItems(adaptedItems);
       } else {
         // 백엔드가 연결되지 않으면 mock data 사용
         const { mockMenuItems } = await import('../data/mockData');
