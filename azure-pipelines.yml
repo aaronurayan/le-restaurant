@@ -77,18 +77,23 @@ stages:
       displayName: 'TypeScript Check'
 
     # Run Jest Unit Tests
-    - script: |
-        cd frontend
-        npm test -- --ci --reporters=default --reporters=jest-junit
+    - task: Npm@1
       displayName: 'Run Jest Unit Tests'
+      inputs:
+        command: 'custom'
+        workingDir: 'frontend'
+        verbose: false
+        customCommand: 'test -- --ci --reporters=default --reporters=jest-junit'
 
     # Publish Jest Test Results
     - task: PublishTestResults@2
+      displayName: 'Publish Jest Test Results'
       inputs:
         testResultsFiles: 'frontend/test-results/jest/results.xml'
         testResultsFormat: 'JUnit'
         failTaskOnFailedTests: true
         testRunTitle: 'Frontend Unit Tests'
+
 
     # Build React Application
     - script: |
