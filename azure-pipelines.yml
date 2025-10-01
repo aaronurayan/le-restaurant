@@ -5,6 +5,7 @@ trigger:
   branches:
     include:
     - main
+    - F108TABLERESERVATION
   paths:
     exclude:
     - README.md
