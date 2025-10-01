@@ -43,10 +43,6 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
   }, [isOpen, loadPayments]);
 
   useEffect(() => {
-    filterPayments();
-  }, [payments, searchTerm, statusFilter, methodFilter]);
-
-  const filterPayments = () => {
     let filtered = payments;
 
     // Search filter
@@ -70,7 +66,7 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
     }
 
     setFilteredPayments(filtered);
-  };
+  }, [payments, searchTerm, statusFilter, methodFilter]);
 
   const handleStatusChange = async (paymentId: number, newStatus: PaymentStatus) => {
     try {
@@ -280,6 +276,8 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as PaymentStatus | 'all')}
                 className="form-input"
+                aria-label="Filter by payment status"
+                title="Filter by payment status"
               >
                 <option value="all">All Status</option>
                 <option value={PaymentStatus.COMPLETED}>Completed</option>
@@ -294,6 +292,8 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
                 value={methodFilter}
                 onChange={(e) => setMethodFilter(e.target.value as PaymentMethod | 'all')}
                 className="form-input"
+                aria-label="Filter by payment method"
+                title="Filter by payment method"
               >
                 <option value="all">All Methods</option>
                 <option value={PaymentMethod.CREDIT_CARD}>Credit Card</option>
@@ -390,6 +390,8 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
                             console.log('View payment details:', payment);
                           }}
                           className="text-primary-600 hover:text-primary-900 p-1"
+                          title="View payment details"
+                          aria-label="View payment details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -399,6 +401,7 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
                             onClick={() => handleRefund(payment.id)}
                             className="text-purple-600 hover:text-purple-900 p-1"
                             title="Process Refund"
+                            aria-label="Process Refund"
                           >
                             <TrendingUp className="w-4 h-4" />
                           </button>
