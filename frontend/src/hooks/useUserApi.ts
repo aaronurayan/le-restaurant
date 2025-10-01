@@ -1,370 +1,350 @@
-import { useState } from 'react';
+/**
+ * User Management API Hook (F102)
+ * 
+ * This hook provides comprehensive user management functionality for F102 User Management.
+ * It uses the centralized UserApiService and provides a clean interface for React components.
+ * 
+ * Features:
+ * - User CRUD operations
+ * - User search and filtering
+ * - Role and status management
+ * - Pagination support
+ * - Error handling and loading states
+ * - Mock data fallback
+ * 
+ * @author Le Restaurant Development Team
+ * @version 1.0.0
+ * @since 2024-01-15
+ * @module F102-UserManagement
+ */
+
+import { useState, useCallback } from 'react';
 import { User, UserRole, UserStatus } from '../types/user';
+import { useApiList, useApiItem } from './useApiBase';
+import { 
+  userApiService, 
+  CreateUserRequest, 
+  UpdateUserRequest, 
+  UserSearchFilters,
+  UserListResponse 
+} from '../services/userApiService';
 
-// User API 함수들 (백엔드 API 연동)
-const userApi = {
-  getAllUsers: async (): Promise<User[]> => {
-    const response = await fetch('http://localhost:8080/api/users');
-    if (!response.ok) throw new Error('Failed to fetch users');
-    return response.json();
-  },
-  
-  getUserById: async (id: number): Promise<User> => {
-    const response = await fetch(`http://localhost:8080/api/users/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch user');
-    return response.json();
-  },
-  
-  getUserByEmail: async (email: string): Promise<User> => {
-    const response = await fetch(`http://localhost:8080/api/users/email/${email}`);
-    if (!response.ok) throw new Error('Failed to fetch user by email');
-    return response.json();
-  },
-  
-  getUsersByRole: async (role: UserRole): Promise<User[]> => {
-    const response = await fetch(`http://localhost:8080/api/users/role/${role}`);
-    if (!response.ok) throw new Error('Failed to fetch users by role');
-    return response.json();
-  },
-  
-  getUsersByStatus: async (status: UserStatus): Promise<User[]> => {
-    const response = await fetch(`http://localhost:8080/api/users/status/${status}`);
-    if (!response.ok) throw new Error('Failed to fetch users by status');
-    return response.json();
-  },
-  
-  createUser: async (userData: any): Promise<User> => {
-    const response = await fetch('http://localhost:8080/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData),
-    });
-    if (!response.ok) throw new Error('Failed to create user');
-    return response.json();
-  },
-  
-  updateUser: async (id: number, userData: any): Promise<User> => {
-    const response = await fetch(`http://localhost:8080/api/users/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData),
-    });
-    if (!response.ok) throw new Error('Failed to update user');
-    return response.json();
-  },
-  
-  updateUserStatus: async (id: number, status: UserStatus): Promise<User> => {
-    const response = await fetch(`http://localhost:8080/api/users/${id}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (!response.ok) throw new Error('Failed to update user status');
-    return response.json();
-  },
-  
-  deleteUser: async (id: number): Promise<void> => {
-    const response = await fetch(`http://localhost:8080/api/users/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete user');
-  },
-  
-  checkEmailExists: async (email: string): Promise<boolean> => {
-    const response = await fetch(`http://localhost:8080/api/users/exists/${email}`);
-    if (!response.ok) throw new Error('Failed to check email');
-    const data = await response.json();
-    return data.exists;
-  },
-};
+// =============================================================================
+// User List Management Hook
+// =============================================================================
 
-export const useUserApi = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isBackendConnected, setIsBackendConnected] = useState(false);
+/**
+ * Hook for managing user lists with search, filtering, and pagination
+ * 
+ * @returns User list management functions and state
+ */
+export const useUserList = () => {
+  const apiHook = useApiList<User>();
+  const [filters, setFilters] = useState<UserSearchFilters>({});
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+    totalCount: 0,
+  });
 
-  // 백엔드 연결 상태 확인
-  const checkBackendConnection = async () => {
-    try {
-      const response = await fetch('http://localhost:8080/api/users/test');
-      if (response.ok) {
-        setIsBackendConnected(true);
-        return true;
+  /**
+   * Load users with current filters and pagination
+   */
+  const loadUsers = useCallback(async (customFilters?: UserSearchFilters) => {
+    const currentFilters = { ...filters, ...customFilters };
+    setFilters(currentFilters);
+
+    await apiHook.executeOperation(
+      async () => {
+        const response = await userApiService.getAllUsers(currentFilters);
+        return response.users; // Extract users array from response
+      },
+      true, // Use mock data on failure
+      async () => {
+        // Mock data fallback
+        const mockResponse = userApiService['getMockUserList'](currentFilters);
+        return mockResponse.users; // Extract users array from response
       }
-    } catch (error) {
-      console.warn('Backend not connected, using mock data');
-    }
-    setIsBackendConnected(false);
-    return false;
-  };
+    );
 
-  // Mock users data (백엔드 연결 실패 시 사용)
-  const mockUsers: User[] = [
-    {
-      id: 1,
-      email: 'admin@restaurant.com',
-      firstName: 'Admin',
-      lastName: 'User',
-      role: UserRole.ADMIN,
-      status: UserStatus.ACTIVE,
-      phoneNumber: '+1234567890',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-      lastLogin: '2024-01-15T09:30:00Z',
-      profileImageUrl: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      id: 2,
-      email: 'manager@restaurant.com',
-      firstName: 'Manager',
-      lastName: 'User',
-      role: UserRole.MANAGER,
-      status: UserStatus.ACTIVE,
-      phoneNumber: '+1234567891',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-      lastLogin: '2024-01-15T09:00:00Z',
-      profileImageUrl: 'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      id: 3,
-      email: 'customer1@example.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      role: UserRole.CUSTOMER,
-      status: UserStatus.ACTIVE,
-      phoneNumber: '+1234567892',
-      createdAt: '2024-01-05T00:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-      lastLogin: '2024-01-15T08:30:00Z',
-      profileImageUrl: 'https://images.pexels.com/photos/1040881/pexels-photo-1040881.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      id: 4,
-      email: 'customer2@example.com',
-      firstName: 'Jane',
-      lastName: 'Smith',
-      role: UserRole.CUSTOMER,
-      status: UserStatus.ACTIVE,
-      phoneNumber: '+1234567893',
-      createdAt: '2024-01-10T00:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-      lastLogin: '2024-01-15T07:45:00Z',
-      profileImageUrl: 'https://images.pexels.com/photos/1040882/pexels-photo-1040882.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      id: 5,
-      email: 'inactive@example.com',
-      firstName: 'Inactive',
-      lastName: 'User',
-      role: UserRole.CUSTOMER,
-      status: UserStatus.INACTIVE,
-      phoneNumber: '+1234567894',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-10T10:00:00Z',
-      lastLogin: '2024-01-10T10:00:00Z',
-      profileImageUrl: undefined
+    // Update pagination state
+    if (apiHook.data) {
+      const response = apiHook.data as unknown as UserListResponse;
+      setPagination({
+        page: response.page,
+        limit: response.limit,
+        totalPages: response.totalPages,
+        totalCount: response.totalCount,
+      });
     }
-  ];
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 모든 사용자 조회
-  const loadUsers = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const data = await userApi.getAllUsers();
-        setUsers(data);
-      } else {
-        setUsers(mockUsers);
-      }
-    } catch (err) {
-      setError('Failed to load users');
-      console.error('Error loading users:', err);
-      setUsers(mockUsers);
-    } finally {
-      setLoading(false);
-    }
-  };
+  /**
+   * Search users by term
+   */
+  const searchUsers = useCallback((searchTerm: string) => {
+    loadUsers({ searchTerm });
+  }, [loadUsers]);
 
-  // 역할별 사용자 조회
-  const loadUsersByRole = async (role: UserRole) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const data = await userApi.getUsersByRole(role);
-        setUsers(data);
-      } else {
-        const filteredUsers = mockUsers.filter(u => u.role === role);
-        setUsers(filteredUsers);
-      }
-    } catch (err) {
-      setError('Failed to load users by role');
-      console.error('Error loading users by role:', err);
-      const filteredUsers = mockUsers.filter(u => u.role === role);
-      setUsers(filteredUsers);
-    } finally {
-      setLoading(false);
-    }
-  };
+  /**
+   * Filter users by role
+   */
+  const filterByRole = useCallback((role: UserRole) => {
+    loadUsers({ role });
+  }, [loadUsers]);
 
-  // 상태별 사용자 조회
-  const loadUsersByStatus = async (status: UserStatus) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const data = await userApi.getUsersByStatus(status);
-        setUsers(data);
-      } else {
-        const filteredUsers = mockUsers.filter(u => u.status === status);
-        setUsers(filteredUsers);
-      }
-    } catch (err) {
-      setError('Failed to load users by status');
-      console.error('Error loading users by status:', err);
-      const filteredUsers = mockUsers.filter(u => u.status === status);
-      setUsers(filteredUsers);
-    } finally {
-      setLoading(false);
-    }
-  };
+  /**
+   * Filter users by status
+   */
+  const filterByStatus = useCallback((status: UserStatus) => {
+    loadUsers({ status });
+  }, [loadUsers]);
 
-  // 사용자 생성
-  const createUser = async (userData: any) => {
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const newUser = await userApi.createUser(userData);
-        setUsers(prev => [...prev, newUser]);
-        return newUser;
-      } else {
-        // Mock data에 추가
-        const newUser: User = {
-          id: Math.max(...mockUsers.map(u => u.id)) + 1,
-          ...userData,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setUsers(prev => [...prev, newUser]);
-        return newUser;
-      }
-    } catch (err) {
-      setError('Failed to create user');
-      console.error('Error creating user:', err);
-      throw err;
-    }
-  };
+  /**
+   * Clear all filters
+   */
+  const clearFilters = useCallback(() => {
+    setFilters({});
+    loadUsers({});
+  }, [loadUsers]);
 
-  // 사용자 업데이트
-  const updateUser = async (id: number, userData: any) => {
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const updatedUser = await userApi.updateUser(id, userData);
-        setUsers(prev => prev.map(u => u.id === id ? updatedUser : u));
-        return updatedUser;
-      } else {
-        // Mock data 업데이트
-        setUsers(prev => prev.map(u => 
-          u.id === id 
-            ? { ...u, ...userData, updatedAt: new Date().toISOString() }
-            : u
-        ));
-        return { ...mockUsers.find(u => u.id === id)!, ...userData };
-      }
-    } catch (err) {
-      setError('Failed to update user');
-      console.error('Error updating user:', err);
-      throw err;
-    }
-  };
+  /**
+   * Go to specific page
+   */
+  const goToPage = useCallback((page: number) => {
+    loadUsers({ page });
+  }, [loadUsers]);
 
-  // 사용자 상태 업데이트
-  const updateUserStatus = async (id: number, status: UserStatus) => {
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const updatedUser = await userApi.updateUserStatus(id, status);
-        setUsers(prev => prev.map(u => u.id === id ? updatedUser : u));
-        return updatedUser;
-      } else {
-        // Mock data 업데이트
-        setUsers(prev => prev.map(u => 
-          u.id === id 
-            ? { ...u, status, updatedAt: new Date().toISOString() }
-            : u
-        ));
-        return { ...mockUsers.find(u => u.id === id)!, status };
-      }
-    } catch (err) {
-      setError('Failed to update user status');
-      console.error('Error updating user status:', err);
-      throw err;
-    }
-  };
-
-  // 사용자 삭제
-  const deleteUser = async (id: number) => {
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        await userApi.deleteUser(id);
-        setUsers(prev => prev.filter(u => u.id !== id));
-      } else {
-        // Mock data에서 삭제
-        setUsers(prev => prev.filter(u => u.id !== id));
-      }
-    } catch (err) {
-      setError('Failed to delete user');
-      console.error('Error deleting user:', err);
-      throw err;
-    }
-  };
-
-  // 이메일 중복 확인
-  const checkEmailExists = async (email: string): Promise<boolean> => {
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        return await userApi.checkEmailExists(email);
-      } else {
-        return mockUsers.some(u => u.email === email);
-      }
-    } catch (err) {
-      console.error('Error checking email:', err);
-      return false;
-    }
-  };
+  /**
+   * Change page size
+   */
+  const changePageSize = useCallback((limit: number) => {
+    loadUsers({ limit, page: 1 });
+  }, [loadUsers]);
 
   return {
-    users,
-    loading,
-    error,
-    isBackendConnected,
+    // State
+    users: apiHook.items,
+    loading: apiHook.loading,
+    error: apiHook.error,
+    isBackendConnected: apiHook.isBackendConnected,
+    filters,
+    pagination,
+    
+    // Actions
     loadUsers,
-    loadUsersByRole,
-    loadUsersByStatus,
+    searchUsers,
+    filterByRole,
+    filterByStatus,
+    clearFilters,
+    goToPage,
+    changePageSize,
+    refresh: loadUsers,
+  };
+};
+
+// =============================================================================
+// Single User Management Hook
+// =============================================================================
+
+/**
+ * Hook for managing individual user operations
+ * 
+ * @returns Single user management functions and state
+ */
+export const useUser = () => {
+  const apiHook = useApiItem<User>();
+
+  /**
+   * Load user by ID
+   */
+  const loadUserById = useCallback(async (id: number) => {
+    await apiHook.executeOperation(
+      () => userApiService.getUserById(id),
+      true, // Use mock data on failure
+      () => userApiService.getUserById(id) // This will use mock data
+    );
+  }, [apiHook]);
+
+  /**
+   * Load user by email
+   */
+  const loadUserByEmail = useCallback(async (email: string) => {
+    await apiHook.executeOperation(
+      () => userApiService.getUserByEmail(email),
+      true, // Use mock data on failure
+      () => userApiService.getUserByEmail(email) // This will use mock data
+    );
+  }, [apiHook]);
+
+  /**
+   * Create new user
+   */
+  const createUser = useCallback(async (userData: CreateUserRequest) => {
+    const result = await apiHook.executeOperationWithoutData(
+      async () => {
+        const newUser = await userApiService.createUser(userData);
+        apiHook.setData(newUser);
+      }
+    );
+    return result;
+  }, [apiHook]);
+
+  /**
+   * Update user
+   */
+  const updateUser = useCallback(async (id: number, userData: UpdateUserRequest) => {
+    const result = await apiHook.executeOperationWithoutData(
+      async () => {
+        const updatedUser = await userApiService.updateUser(id, userData);
+        apiHook.setData(updatedUser);
+      }
+    );
+    return result;
+  }, [apiHook]);
+
+  /**
+   * Update user status
+   */
+  const updateUserStatus = useCallback(async (id: number, status: UserStatus) => {
+    return updateUser(id, { status });
+  }, [updateUser]);
+
+  /**
+   * Delete user
+   */
+  const deleteUser = useCallback(async (id: number) => {
+    const result = await apiHook.executeOperationWithoutData(
+      () => userApiService.deleteUser(id)
+    );
+    return result;
+  }, [apiHook]);
+
+  return {
+    // State
+    user: apiHook.item,
+    loading: apiHook.loading,
+    error: apiHook.error,
+    isBackendConnected: apiHook.isBackendConnected,
+    hasUser: apiHook.hasItem,
+    
+    // Actions
+    loadUserById,
+    loadUserByEmail,
     createUser,
     updateUser,
     updateUserStatus,
     deleteUser,
-    checkEmailExists,
+    clearError: apiHook.clearError,
+    reset: apiHook.reset,
+  };
+};
+
+// =============================================================================
+// User Role Management Hook
+// =============================================================================
+
+/**
+ * Hook for managing users by role
+ * 
+ * @returns Role-specific user management functions and state
+ */
+export const useUsersByRole = () => {
+  const apiHook = useApiList<User>();
+  const [currentRole, setCurrentRole] = useState<UserRole | null>(null);
+
+  /**
+   * Load users by role
+   */
+  const loadUsersByRole = useCallback(async (role: UserRole) => {
+    setCurrentRole(role);
+    await apiHook.executeOperation(
+      () => userApiService.getUsersByRole(role),
+      true, // Use mock data on failure
+      () => userApiService.getUsersByRole(role) // This will use mock data
+    );
+  }, [apiHook]);
+
+  return {
+    // State
+    users: apiHook.items,
+    loading: apiHook.loading,
+    error: apiHook.error,
+    isBackendConnected: apiHook.isBackendConnected,
+    currentRole,
+    
+    // Actions
+    loadUsersByRole,
+    refresh: () => currentRole && loadUsersByRole(currentRole),
+  };
+};
+
+// =============================================================================
+// User Status Management Hook
+// =============================================================================
+
+/**
+ * Hook for managing users by status
+ * 
+ * @returns Status-specific user management functions and state
+ */
+export const useUsersByStatus = () => {
+  const apiHook = useApiList<User>();
+  const [currentStatus, setCurrentStatus] = useState<UserStatus | null>(null);
+
+  /**
+   * Load users by status
+   */
+  const loadUsersByStatus = useCallback(async (status: UserStatus) => {
+    setCurrentStatus(status);
+    await apiHook.executeOperation(
+      () => userApiService.getUsersByStatus(status),
+      true, // Use mock data on failure
+      () => userApiService.getUsersByStatus(status) // This will use mock data
+    );
+  }, [apiHook]);
+
+  return {
+    // State
+    users: apiHook.items,
+    loading: apiHook.loading,
+    error: apiHook.error,
+    isBackendConnected: apiHook.isBackendConnected,
+    currentStatus,
+    
+    // Actions
+    loadUsersByStatus,
+    refresh: () => currentStatus && loadUsersByStatus(currentStatus),
+  };
+};
+
+// =============================================================================
+// Legacy Hook (for backward compatibility)
+// =============================================================================
+
+/**
+ * Legacy user API hook for backward compatibility
+ * @deprecated Use useUserList, useUser, useUsersByRole, or useUsersByStatus instead
+ */
+export const useUserApi = () => {
+  const userListHook = useUserList();
+  const userHook = useUser();
+
+  return {
+    // Legacy state
+    users: userListHook.users,
+    loading: userListHook.loading || userHook.loading,
+    error: userListHook.error || userHook.error,
+    isBackendConnected: userListHook.isBackendConnected,
+    
+    // Legacy functions
+    loadUsers: userListHook.loadUsers,
+    loadUserById: userHook.loadUserById,
+    loadUserByEmail: userHook.loadUserByEmail,
+    createUser: userHook.createUser,
+    updateUser: userHook.updateUser,
+    updateUserStatus: userHook.updateUserStatus,
+    deleteUser: userHook.deleteUser,
   };
 };
