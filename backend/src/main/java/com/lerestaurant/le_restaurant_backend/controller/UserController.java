@@ -31,6 +31,14 @@ public class UserController {
         try {
             UserDto user = userService.createUser(requestDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        } catch (IllegalArgumentException e) {
+            // Handle duplicate email or validation errors with 409 Conflict
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            if (e.getMessage().contains("already exists") || e.getMessage().contains("duplicate")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+            }
+            return ResponseEntity.badRequest().body(error);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
@@ -88,7 +96,7 @@ public class UserController {
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.notFound().build();
         }
     }
     
@@ -121,13 +129,11 @@ public class UserController {
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "User deleted successfully");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.notFound().build();
         }
     }
     
