@@ -28,6 +28,30 @@ variables:
   azureSubscription: 'le-restaurant-service-connection'
 
 stages:
+- stage: UnitTests
+  displayName: 'Run Jest Unit Tests'
+  jobs:
+  - job: JestTests
+    displayName: 'Run Jest Unit Tests'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '$(nodeVersion)'
+
+    - script: |
+        cd frontend
+        npm install
+        npm test -- --ci --reporters=default --reporters=jest-junit
+      displayName: 'Run Jest Tests'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFiles: 'frontend/test-results/jest/results.xml'
+        testResultsFormat: 'JUnit'
+        failTaskOnFailedTests: true
+        testRunTitle: 'Frontend Unit Tests'
 # =============================================================================
 # CONTINUOUS INTEGRATION STAGE
 # =============================================================================
