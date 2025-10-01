@@ -76,7 +76,8 @@ stages:
 
           - script: |
               cd $(FRONTEND_PATH)
-              npm ci
+              rm -rf node_modules package-lock.json
+              npm install
             displayName: '📦 Install Dependencies'
 
           - script: |
@@ -123,7 +124,8 @@ stages:
 
           - script: |
               cd $(FRONTEND_PATH)
-              npm ci
+              rm -rf node_modules package-lock.json
+              npm install
             displayName: '📦 Install Dependencies'
 
           - script: |
@@ -301,7 +303,8 @@ stages:
 
           - script: |
               cd $(FRONTEND_PATH)
-              npm ci
+              rm -rf node_modules package-lock.json
+              npm install
             displayName: '📦 Install Dependencies'
 
           - script: |
