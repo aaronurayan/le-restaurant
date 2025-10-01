@@ -6,7 +6,7 @@ interface ReservationProps {
   onCartClick?: () => void;
 }
 
-// Test
+// Test 2
 interface ReservationForm {
   date: string;
   time: string;
