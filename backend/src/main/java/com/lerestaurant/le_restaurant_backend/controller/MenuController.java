@@ -12,7 +12,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/menu")
-@CrossOrigin(origins = "http://localhost:5173") // 프론트엔드 연결 허용
+@CrossOrigin(origins = "http://localhost:5173")
+
 public class MenuController {
     
     private final MenuService menuService;
