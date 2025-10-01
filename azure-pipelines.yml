@@ -133,3 +133,11 @@ stages:
           Write-Host "🚀 Deployment completed successfully!"
           Write-Host "🌐 Website should be available at your Azure Static Web App URL"
           # Add notification logic here (Slack, Teams, Email)
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/test-results/junit.xml'
+        mergeTestResults: true
+        failTaskOnFailedTests: false
+        testRunTitle: 'Frontend Tests'
+      condition: succeededOrFailed()
