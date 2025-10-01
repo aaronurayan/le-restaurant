@@ -10,9 +10,8 @@ version = '0.0.1-SNAPSHOT'
 description = 'Le Restaurant Backend flow controls'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(23)
-	}
+	sourceCompatibility = '17'
+	targetCompatibility = '17'
 }
 
 repositories {

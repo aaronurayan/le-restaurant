@@ -68,15 +68,14 @@ public class PaymentController {
     }
     
     @PutMapping("/{id}/status")
-    public ResponseEntity<?> updatePaymentStatus(@PathVariable Long id, @RequestBody Map<String, Payment.PaymentStatus> statusRequest) {
+    public ResponseEntity<?> updatePaymentStatus(@PathVariable Long id, @RequestParam Payment.PaymentStatus status) {
         try {
-            Payment.PaymentStatus status = statusRequest.get("status");
             PaymentDto payment = paymentService.updatePaymentStatus(id, status);
             return ResponseEntity.ok(payment);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.notFound().build();
         }
     }
     
@@ -88,7 +87,7 @@ public class PaymentController {
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.notFound().build();
         }
     }
     
@@ -96,13 +95,11 @@ public class PaymentController {
     public ResponseEntity<?> deletePayment(@PathVariable Long id) {
         try {
             paymentService.deletePayment(id);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Payment deleted successfully");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.notFound().build();
         }
     }
     
