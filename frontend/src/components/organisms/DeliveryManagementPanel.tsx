@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Truck, 
-  Users, 
-  Package, 
-  Plus, 
-  Filter, 
+import {
+  Truck,
+  Users,
+  Package,
+  Plus,
+  Filter,
   Search,
   RefreshCw,
   AlertCircle,
@@ -63,7 +63,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
         getDeliveryPersons(),
         getDeliveryMetrics()
       ]);
-      
+
       setDeliveries(deliveriesData);
       setDeliveryPersons(personsData);
       setMetrics(metricsData);
@@ -132,7 +132,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
             Manage delivery assignments and track order progress
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           {isBackendConnected && (
             <div className="flex items-center text-green-700 text-sm">
@@ -140,7 +140,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
               <span>🟢 Backend Connected</span>
             </div>
           )}
-          
+
           <Button
             variant="outline"
             onClick={loadData}
@@ -150,7 +150,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
             <RefreshCw className="w-4 h-4" />
             Refresh
           </Button>
-          
+
           <Button
             variant="primary"
             onClick={() => setShowCreateForm(true)}
@@ -194,7 +194,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
               <Truck className="w-8 h-8 text-primary-600" />
             </div>
           </div>
-          
+
           <div className="p-4 bg-white rounded-lg shadow-sm border border-neutral-200">
             <div className="flex items-center justify-between">
               <div>
@@ -204,7 +204,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
           </div>
-          
+
           <div className="p-4 bg-white rounded-lg shadow-sm border border-neutral-200">
             <div className="flex items-center justify-between">
               <div>
@@ -214,7 +214,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
               <Clock className="w-8 h-8 text-blue-600" />
             </div>
           </div>
-          
+
           <div className="p-4 bg-white rounded-lg shadow-sm border border-neutral-200">
             <div className="flex items-center justify-between">
               <div>
@@ -253,11 +253,10 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
+              className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
-              }`}
+                }`}
             >
               <tab.icon className="w-4 h-4" />
               {tab.label}
@@ -361,7 +360,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
                     variant="compact"
                   />
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-neutral-600">Customer Satisfaction</span>
@@ -420,7 +419,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
                 ×
               </button>
             </div>
-            
+
             <div className="p-6">
               <DeliveryForm
                 orderId={selectedOrderId || 'ORDER-001'}

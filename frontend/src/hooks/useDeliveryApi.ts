@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  DeliveryPerson, 
-  DeliveryAssignment, 
-  DeliveryProgress, 
+import {
+  DeliveryPerson,
+  DeliveryAssignment,
+  DeliveryProgress,
   DeliveryRoute,
   DeliveryNotification,
   DeliveryMetrics,
@@ -166,7 +166,7 @@ export const useDeliveryApi = () => {
   const getDeliveryPersons = useCallback(async (): Promise<DeliveryPerson[]> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch('/api/delivery/persons');
@@ -190,12 +190,12 @@ export const useDeliveryApi = () => {
   }, [getDeliveryPersons]);
 
   const updateDeliveryPersonStatus = useCallback(async (
-    personId: string, 
+    personId: string,
     status: 'available' | 'busy' | 'offline'
   ): Promise<DeliveryPerson> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch(`/api/delivery/persons/${personId}/status`, {
@@ -225,7 +225,7 @@ export const useDeliveryApi = () => {
   const getDeliveries = useCallback(async (filter?: DeliveryFilter): Promise<DeliveryAssignment[]> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const params = new URLSearchParams();
@@ -233,7 +233,7 @@ export const useDeliveryApi = () => {
         if (filter?.deliveryPersonId) params.append('deliveryPersonId', filter.deliveryPersonId);
         if (filter?.priority) params.append('priority', filter.priority.join(','));
         if (filter?.search) params.append('search', filter.search);
-        
+
         const response = await fetch(`/api/delivery/assignments?${params}`);
         if (!response.ok) throw new Error('Failed to fetch deliveries');
         return await response.json();
@@ -264,7 +264,7 @@ export const useDeliveryApi = () => {
   ): Promise<DeliveryAssignment> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch('/api/delivery/assignments', {
@@ -299,7 +299,7 @@ export const useDeliveryApi = () => {
   ): Promise<DeliveryAssignment> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch(`/api/delivery/assignments/${deliveryId}/status`, {
@@ -333,7 +333,7 @@ export const useDeliveryApi = () => {
   ): Promise<DeliveryAssignment> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch(`/api/delivery/assignments/${request.deliveryId}/assign`, {
@@ -370,7 +370,7 @@ export const useDeliveryApi = () => {
   const getDeliveryProgress = useCallback(async (deliveryId: string): Promise<DeliveryProgress[]> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch(`/api/delivery/assignments/${deliveryId}/progress`);
@@ -392,7 +392,7 @@ export const useDeliveryApi = () => {
   const getDeliveryMetrics = useCallback(async (): Promise<DeliveryMetrics> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch('/api/delivery/metrics');
@@ -413,7 +413,7 @@ export const useDeliveryApi = () => {
   const getDeliveryNotifications = useCallback(async (): Promise<DeliveryNotification[]> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch('/api/delivery/notifications');
@@ -436,27 +436,27 @@ export const useDeliveryApi = () => {
     isBackendConnected,
     loading,
     error,
-    
+
     // Delivery Persons
     getDeliveryPersons,
     getAvailableDeliveryPersons,
     updateDeliveryPersonStatus,
-    
+
     // Deliveries
     getDeliveries,
     createDeliveryAssignment,
     updateDeliveryStatus,
     assignDeliveryPerson,
-    
+
     // Progress & Tracking
     getDeliveryProgress,
-    
+
     // Metrics & Analytics
     getDeliveryMetrics,
-    
+
     // Notifications
     getDeliveryNotifications,
-    
+
     // Constants
     deliveryStatuses: DELIVERY_STATUSES
   };

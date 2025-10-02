@@ -28,6 +28,7 @@ export interface DeliveryAssignment {
   status: 'assigned' | 'accepted' | 'picked_up' | 'in_transit' | 'delivered' | 'failed';
   notes?: string;
   priority: 'low' | 'normal' | 'high' | 'urgent';
+  updatedAt?: string;
 }
 
 export interface DeliveryStatus {
