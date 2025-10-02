@@ -19,6 +19,46 @@ stages:
   displayName: 'Continuous Integration for Reservation Management'
   jobs:
 
+  # Build Backend Reservation Management Feature
+  - job: BuildBackendReservationManagement
+    displayName: 'Build Backend Reservation Management Feature'
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    # Setup JDK
+    - task: JavaToolInstaller@1
+      displayName: 'Set up JDK $(javaVersion)'
+      inputs:
+        version: '$(javaVersion)'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+
+    # Cache Gradle Dependencies
+    - task: Cache@2
+      displayName: 'Cache Gradle Dependencies'
+      inputs:
+        key: 'gradle | "$(Agent.OS)" | backend/gradle/wrapper/gradle-wrapper.properties'
+        restoreKeys: |
+          gradle | "$(Agent.OS)"
+          gradle
+        path: '~/.gradle'
+
+    # Build Backend
+    - script: |
+        cd backend
+        chmod +x gradlew # Ensure gradlew is executable
+        ./gradlew build --stacktrace --info
+      displayName: 'Build Backend Reservation Management Feature'
+
+    # Publish Backend Build Artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Backend Build Artifacts'
+      inputs:
+        pathToPublish: 'backend/build/libs'
+        artifactName: 'le-restaurant-backend'
+        publishLocation: 'Container'
+
   # Build Frontend Reservation Management Feature
   - job: BuildFrontendReservationManagement
     displayName: 'Build Frontend Reservation Management Feature'
@@ -57,7 +97,7 @@ stages:
         npm run build
       displayName: 'Build Frontend Reservation Management Feature'
 
-    # Publish Build Artifacts
+    # Publish Frontend Build Artifacts
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Frontend Build Artifacts'
       inputs:
