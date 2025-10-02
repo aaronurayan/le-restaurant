@@ -97,10 +97,10 @@ stages:
 
     steps:
     # Setup JDK
-    - task: UseJavaVersion@1
+    - task: JavaToolInstaller@1
       displayName: 'Set up JDK 22'
       inputs:
-        versionSpec: '22'
+        version: '22'
         jdkArchitecture: 'x64'
 
     # Cache Gradle Dependencies
