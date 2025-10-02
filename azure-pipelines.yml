@@ -31,7 +31,9 @@ stages:
       displayName: 'Set up JDK $(javaVersion)'
       inputs:
         version: '$(javaVersion)'
-        jdkArchitectureOption: 'x64' # Add this line
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled' 
+        
 
     # Cache Gradle Dependencies
     - task: Cache@2
