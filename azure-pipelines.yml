@@ -26,12 +26,12 @@ stages:
       vmImage: 'ubuntu-latest'
 
     steps:
-    # Setup JDK
-    - task: UseJavaVersion@1
-      displayName: 'Set up JDK $(javaVersion)'
-      inputs:
-        versionSpec: '$(javaVersion)'
-        jdkArchitecture: 'x64'
+    # # Setup JDK
+    # - task: UseJavaVersion@1
+    #   displayName: 'Set up JDK $(javaVersion)'
+    #   inputs:
+    #     versionSpec: '$(javaVersion)'
+    #     jdkArchitecture: 'x64'
 
     # Cache Gradle Dependencies
     - task: Cache@2
