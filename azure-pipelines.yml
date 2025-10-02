@@ -1,16 +1,19 @@
 # Azure DevOps Pipeline for Le Restaurant Static Website
 # React/Vite frontend deployment to Azure Static Web Apps
+# ⚠️ NOTE: This is the AUTO-RUN pipeline. For Menu/Payment/User features, use azure-pipelines-testing.yml
 
 trigger:
   branches:
     include:
     - main
+    - Menu-feature
+    - F102*
+    - F106*
   paths:
     exclude:
     - README.md
     - docs/*
     - design-plan/*
-    - backend/*
 
 pr:
   branches:
@@ -20,7 +23,6 @@ pr:
     exclude:
     - README.md
     - docs/*
-    - backend/*
 
 variables:
   # Build Variables
