@@ -1,6 +1,7 @@
 trigger:
-  - main
   - juna
+  - main
+  
 
 pool:
   vmImage: 'ubuntu-latest'
