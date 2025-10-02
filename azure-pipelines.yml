@@ -48,6 +48,7 @@ stages:
     # Build Backend
     - script: |
         cd backend
+        chmod +x gradlew # Grant execute permissions to gradlew
         ./gradlew build
       displayName: 'Build Backend'
 
