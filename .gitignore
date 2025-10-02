@@ -1,0 +1,113 @@
+# ============================================================================
+# Le Restaurant - Root .gitignore
+# ============================================================================
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.npm
+.yarn
+.pnp.*
+
+# Dependencies
+**/node_modules/
+**/jspm_packages/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vuepress/dist
+.cache/
+.parcel-cache/
+
+# Test Coverage
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+junit.xml
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+.settings/
+*.iml
+*.ipr
+*.iws
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.swp
+*~.nib
+
+# Java / Gradle / Maven
+*.class
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+target/
+.mvn/
+
+# React / Vite specific
+.vite/
+*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+**/__tests__/__snapshots__/
+*.test.js.snap
+
+# Documentation
+*.pdf
+*.docx
+
+# Azure
+.azure/
+*.publishsettings
+
+# Misc
+*.orig
+.sass-cache/
+connect.lock
+typings/
+.angular/

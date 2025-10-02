@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, User, Menu as MenuIcon, Calendar, Truck, CreditCard } from 'lucide-react';
+import { ShoppingCart, User, Menu as MenuIcon, Calendar, Truck, CreditCard, CalendarCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
@@ -168,9 +168,18 @@ export const Header: React.FC<HeaderProps> = ({
                         <Link
                           to="/delivery"
                           className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                          onClick={closeDropdown}
                         >
                           <Truck className="w-4 h-4" />
                           Delivery Management
+                        </Link>
+                        <Link
+                          to="/reservations"
+                          className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                          onClick={closeDropdown}
+                        >
+                          <CalendarCheck className="w-4 h-4" />
+                          Reservation Management
                         </Link>
                       </>
                     )}
