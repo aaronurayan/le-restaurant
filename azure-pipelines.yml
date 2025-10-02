@@ -12,7 +12,7 @@ steps:
     mavenPomFile: 'backend/pom.xml'
     goals: 'clean test'
     publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    testResultsFiles: 'backend/target/surefire-reports/TEST-*.xml'
     testRunTitle: 'Backend Unit Tests'
     codeCoverageToolOption: 'JaCoCo'
 - task: PublishCodeCoverageResults@1
