@@ -1,31 +1,15 @@
-# Azure DevOps Pipeline for Le Restaurant Static Website
-# React/Vite frontend deployment to Azure Static Web Apps
+# Azure DevOps Pipeline for Le Restaurant
 
 trigger:
   branches:
     include:
-    - main
-  paths:
-    exclude:
-    - README.md
-    - docs/*
-    - design-plan/*
-
-pr:
-  branches:
-    include:
-    - main
-  paths:
-    exclude:
-    - README.md
-    - docs/*
+      - main
 
 variables:
-  # Build Variables
+  # Node.js version for frontend
   nodeVersion: '20.x'
-  
-  # Azure Variables
-  azureSubscription: 'le-restaurant-service-connection'
+  # Java version for backend
+  javaVersion: '22'
 
 stages:
 # =============================================================================
@@ -34,73 +18,19 @@ stages:
 - stage: CI
   displayName: 'Continuous Integration'
   jobs:
-  - job: BuildFrontend
-    displayName: 'Build and Test Frontend'
-    pool:
-      vmImage: 'ubuntu-latest'
-    
-    steps:
-    # Setup Node.js Environment
-    - task: NodeTool@0
-      displayName: 'Setup Node.js $(nodeVersion)'
-      inputs:
-        versionSpec: '$(nodeVersion)'
-    
-    # Cache Node Modules
-    - task: Cache@2
-      displayName: 'Cache Node Modules'
-      inputs:
-        key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
-        restoreKeys: |
-          npm | "$(Agent.OS)"
-          npm
-        path: 'frontend/node_modules'
-    
-    # Install Dependencies
-    - script: |
-        cd frontend
-        rm -rf node_modules package-lock.json
-        npm install
-      displayName: 'Clean and install dependencies'
 
-    # Run Linting
-    - script: |
-        cd frontend
-        npm run lint || echo "ESLint found issues, but continuing..."
-      displayName: 'Run ESLint (Non-blocking)'
-      continueOnError: true
-    
-    # Run TypeScript Check
-    - script: |
-        cd frontend
-        npx tsc --noEmit
-      displayName: 'TypeScript Check'
-    
-    # Build Application
-    - script: |
-        cd frontend
-        npm run build
-      displayName: 'Build React Application'
-    
-    # Publish Build Artifacts
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish Build Artifacts'
-      inputs:
-        pathToPublish: 'frontend/dist'
-        artifactName: 'le-restaurant-frontend'
-        publishLocation: 'Container'
-
-  - job: TestBackend
-    displayName: 'Test Backend'
+  # Build Backend Delivery Management Feature
+  - job: BuildBackendDeliveryManagement
+    displayName: 'Build Backend Delivery Management Feature'
     pool:
       vmImage: 'ubuntu-latest'
 
     steps:
     # Setup JDK
     - task: JavaToolInstaller@1
-      displayName: 'Set up JDK 22'
+      displayName: 'Set up JDK $(javaVersion)'
       inputs:
-        version: '22'
+        version: '$(javaVersion)'
         jdkArchitecture: 'x64'
 
     # Cache Gradle Dependencies
@@ -113,59 +43,133 @@ stages:
           gradle
         path: '~/.gradle'
 
-    # Run Tests
+    # Build Backend
     - script: |
         cd backend
-        ./gradlew test
-      displayName: 'Run Backend Tests'
+        ./gradlew build
+      displayName: 'Build Backend'
+
+  # Test Backend Delivery Management Feature
+  - job: TestBackendDeliveryManagement
+    displayName: 'Test Backend Delivery Management Feature'
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    # Setup JDK
+    - task: JavaToolInstaller@1
+      displayName: 'Set up JDK $(javaVersion)'
+      inputs:
+        version: '$(javaVersion)'
+        jdkArchitecture: 'x64'
+
+    # Cache Gradle Dependencies
+    - task: Cache@2
+      displayName: 'Cache Gradle Dependencies'
+      inputs:
+        key: 'gradle | "$(Agent.OS)" | backend/gradle/wrapper/gradle-wrapper.properties'
+        restoreKeys: |
+          gradle | "$(Agent.OS)"
+          gradle
+        path: '~/.gradle'
+
+    # Run Backend Tests
+    - script: |
+        cd backend
+        ./gradlew test --tests "com.lerestaurant.le_restaurant_backend.service.DeliveryServiceTest"
+      displayName: 'Run Backend Delivery Management Tests'
 
     # Publish Test Results
     - task: PublishTestResults@2
-      displayName: 'Publish JUnit Test Results'
+      displayName: 'Publish Backend Test Results'
       inputs:
         testResultsFormat: 'JUnit'
         testResultsFiles: '**/build/test-results/test/*.xml'
         failTaskOnFailedTests: true
 
-# =============================================================================
-# DEPLOYMENT STAGE
-# =============================================================================
-- stage: Deploy
-  displayName: 'Deploy to Azure Static Web Apps'
-  dependsOn: CI
-  condition: succeeded()
-  
-  jobs:
-  - job: DeployToAzure
-    displayName: 'Deploy to Azure Static Web Apps'
+  # Build Frontend Delivery Management Feature
+  - job: BuildFrontendDeliveryManagement
+    displayName: 'Build Frontend Delivery Management Feature'
     pool:
       vmImage: 'ubuntu-latest'
-    
+
     steps:
-    # Download Build Artifacts
-    - task: DownloadBuildArtifacts@0
-      displayName: 'Download Build Artifacts'
+    # Setup Node.js Environment
+    - task: NodeTool@0
+      displayName: 'Setup Node.js $(nodeVersion)'
       inputs:
-        buildType: 'current'
-        downloadType: 'single'
+        versionSpec: '$(nodeVersion)'
+
+    # Cache Node Modules
+    - task: Cache@2
+      displayName: 'Cache Node Modules'
+      inputs:
+        key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
+        restoreKeys: |
+          npm | "$(Agent.OS)"
+          npm
+        path: 'frontend/node_modules'
+
+    # Install Dependencies
+    - script: |
+        cd frontend
+        rm -rf node_modules package-lock.json
+        npm install
+      displayName: 'Clean and install dependencies'
+
+    # Build Frontend
+    - script: |
+        cd frontend
+        npm run build
+      displayName: 'Build Frontend Delivery Management Feature'
+
+    # Publish Build Artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Frontend Build Artifacts'
+      inputs:
+        pathToPublish: 'frontend/dist'
         artifactName: 'le-restaurant-frontend'
-        downloadPath: '$(System.ArtifactsDirectory)'
-    
-    # Deploy to Azure Static Web Apps
-    # - task: AzureStaticWebApp@0
-    #   displayName: 'Deploy to Azure Static Web Apps'
-    #   inputs:
-    #     azure_subscription: '$(azureSubscription)'
-    #     app_location: '$(System.ArtifactsDirectory)/le-restaurant-frontend'
-    #     skip_app_build: true
-    #     production_branch: 'main'
-    
-    # Run Basic Tests
-    - task: PowerShell@2
-      displayName: 'Run Basic Tests'
+        publishLocation: 'Container'
+
+  # Test Frontend Delivery Management Feature
+  - job: TestFrontendDeliveryManagement
+    displayName: 'Test Frontend Delivery Management Feature'
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    # Setup Node.js Environment
+    - task: NodeTool@0
+      displayName: 'Setup Node.js $(nodeVersion)'
       inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "🚀 Deployment completed successfully!"
-          Write-Host "🌐 Website should be available at your Azure Static Web App URL"
-          # Add notification logic here (Slack, Teams, Email)
+        versionSpec: '$(nodeVersion)'
+
+    # Cache Node Modules
+    - task: Cache@2
+      displayName: 'Cache Node Modules'
+      inputs:
+        key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
+        restoreKeys: |
+          npm | "$(Agent.OS)"
+          npm
+        path: 'frontend/node_modules'
+
+    # Install Dependencies
+    - script: |
+        cd frontend
+        npm install
+      displayName: 'Install Frontend Dependencies'
+
+    # Run Frontend Tests
+    - script: |
+        cd frontend
+        npm test -- DeliveryManagementPanel.test.tsx
+      displayName: 'Run Frontend Delivery Management Tests'
+
+    # Publish Test Results
+    - task: PublishTestResults@2
+      displayName: 'Publish Frontend Test Results'
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/test-results/*.xml'
+        failTaskOnFailedTests: true
