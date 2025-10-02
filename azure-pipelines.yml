@@ -10,7 +10,6 @@ trigger:
     - README.md
     - docs/*
     - design-plan/*
-    - backend/*
 
 pr:
   branches:
@@ -20,7 +19,6 @@ pr:
     exclude:
     - README.md
     - docs/*
-    - backend/*
 
 variables:
   # Build Variables
@@ -36,7 +34,7 @@ stages:
 - stage: CI
   displayName: 'Continuous Integration'
   jobs:
-  - job: Build
+  - job: BuildFrontend
     displayName: 'Build and Test Frontend'
     pool:
       vmImage: 'ubuntu-latest'
@@ -65,7 +63,6 @@ stages:
         npm install
       displayName: 'Clean and install dependencies'
 
-    
     # Run Linting
     - script: |
         cd frontend
@@ -93,6 +90,42 @@ stages:
         artifactName: 'le-restaurant-frontend'
         publishLocation: 'Container'
 
+  - job: TestBackend
+    displayName: 'Test Backend'
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    # Setup JDK
+    - task: UseJavaVersion@1
+      displayName: 'Set up JDK 22'
+      inputs:
+        versionSpec: '22'
+        jdkArchitecture: 'x64'
+
+    # Cache Gradle Dependencies
+    - task: Cache@2
+      displayName: 'Cache Gradle Dependencies'
+      inputs:
+        key: 'gradle | "$(Agent.OS)" | backend/gradle/wrapper/gradle-wrapper.properties'
+        restoreKeys: |
+          gradle | "$(Agent.OS)"
+          gradle
+        path: '~/.gradle'
+
+    # Run Tests
+    - script: |
+        cd backend
+        ./gradlew test
+      displayName: 'Run Backend Tests'
+
+    # Publish Test Results
+    - task: PublishTestResults@2
+      displayName: 'Publish JUnit Test Results'
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/build/test-results/test/*.xml'
+        failTaskOnFailedTests: true
 
 # =============================================================================
 # DEPLOYMENT STAGE
