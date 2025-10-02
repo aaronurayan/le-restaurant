@@ -82,6 +82,7 @@ stages:
     # Run Backend Unit Tests
     - script: |
         cd backend
+        chmod +x gradlew
         ./gradlew test
       displayName: 'Run Backend Unit Tests'
 
