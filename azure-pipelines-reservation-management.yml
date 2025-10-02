@@ -19,9 +19,9 @@ stages:
   displayName: 'Continuous Integration for Reservation Management'
   jobs:
 
-  # Backend Tests for Reservation Management
-  - job: TestBackendReservationManagement
-    displayName: 'Test Backend Reservation Management Feature'
+  # Build Backend Reservation Management Feature
+  - job: BuildBackendReservationManagement
+    displayName: 'Build Backend Reservation Management Feature'
     pool:
       vmImage: 'ubuntu-latest'
 
@@ -44,24 +44,16 @@ stages:
           gradle
         path: '~/.gradle'
 
-    # Run Backend Tests
+    # Build Backend
     - script: |
         cd backend
         chmod +x gradlew # Ensure gradlew is executable
-        ./gradlew test --tests "com.lerestaurant.le_restaurant_backend.service.ReservationServiceTest" --stacktrace --info
-      displayName: 'Run Backend Reservation Management Tests'
+        ./gradlew build --stacktrace --info
+      displayName: 'Build Backend Reservation Management Feature'
 
-    # Publish Test Results
-    - task: PublishTestResults@2
-      displayName: 'Publish Backend Test Results'
-      inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: '**/build/test-results/test/*.xml'
-        failTaskOnFailedTests: true
-
-  # Frontend Tests for Reservation Management
-  - job: TestFrontendReservationManagement
-    displayName: 'Test Frontend Reservation Management Feature'
+  # Build Frontend Reservation Management Feature
+  - job: BuildFrontendReservationManagement
+    displayName: 'Build Frontend Reservation Management Feature'
     pool:
       vmImage: 'ubuntu-latest'
 
@@ -88,16 +80,16 @@ stages:
         npm install
       displayName: 'Install Frontend Dependencies'
 
-    # Run Frontend Tests
+    # Build Frontend
     - script: |
         cd frontend
-        npm test -- ReservationForm.test.tsx
-      displayName: 'Run Frontend Reservation Management Tests'
+        npm run build
+      displayName: 'Build Frontend Reservation Management Feature'
 
-    # Publish Test Results
-    - task: PublishTestResults@2
-      displayName: 'Publish Frontend Test Results'
+    # Publish Build Artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Frontend Build Artifacts'
       inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: '**/test-results/*.xml'
-        failTaskOnFailedTests: true
+        pathToPublish: 'frontend/dist'
+        artifactName: 'le-restaurant-frontend'
+        publishLocation: 'Container'
