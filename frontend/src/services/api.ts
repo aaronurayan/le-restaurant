@@ -109,27 +109,27 @@ async function apiRequest<T>(
 export const menuApi = {
   // 모든 메뉴 아이템 조회
   getAllItems: (): Promise<MenuItem[]> => 
-    apiRequest<MenuItem[]>('/menu/items'),
+    apiRequest<MenuItem[]>('/menu-items'),
   
   // 카테고리별 메뉴 조회
   getItemsByCategory: (category: string): Promise<MenuItem[]> => 
-    apiRequest<MenuItem[]>(`/menu/items/category/${category}`),
+    apiRequest<MenuItem[]>(`/menu-items?category=${category}`),
   
   // 메뉴 아이템 상세 조회
   getItemById: (id: string): Promise<MenuItem> => 
-    apiRequest<MenuItem>(`/menu/items/${id}`),
+    apiRequest<MenuItem>(`/menu-items/${id}`),
   
   // 모든 카테고리 조회
   getAllCategories: (): Promise<string[]> => 
-    apiRequest<string[]>('/menu/categories'),
+    apiRequest<string[]>('/menu-items/categories'),
   
   // 메뉴 검색
   searchItems: (keyword: string): Promise<MenuItem[]> => 
-    apiRequest<MenuItem[]>(`/menu/search?keyword=${encodeURIComponent(keyword)}`),
+    apiRequest<MenuItem[]>(`/menu-items?search=${encodeURIComponent(keyword)}`),
   
   // 백엔드 연결 테스트
-  testConnection: (): Promise<string> => 
-    apiRequest<string>('/menu/test'),
+  testConnection: (): Promise<{ message: string }> => 
+    apiRequest<{ message: string }>('/menu-items'),
 };
 
 // 주문 관련 API

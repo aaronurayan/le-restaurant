@@ -4,7 +4,6 @@ import com.lerestaurant.le_restaurant_backend.entity.MenuItem;
 import com.lerestaurant.le_restaurant_backend.repository.MenuItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.Arrays;

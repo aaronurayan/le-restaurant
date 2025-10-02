@@ -2,6 +2,7 @@ package com.lerestaurant.le_restaurant_backend.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "menu_items")
@@ -28,6 +29,23 @@ public class MenuItem {
     
     @Column(nullable = false)
     private boolean available = true;
+    
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+    
+    @Column(name = "updated_at", nullable = false)
+    private OffsetDateTime updatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = OffsetDateTime.now();
+        updatedAt = OffsetDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = OffsetDateTime.now();
+    }
     
     // Constructors
     public MenuItem() {}
@@ -94,5 +112,21 @@ public class MenuItem {
     
     public void setAvailable(boolean available) {
         this.available = available;
+    }
+    
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

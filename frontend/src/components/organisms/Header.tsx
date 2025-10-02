@@ -67,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
-              Menu
+              {/* Menu */}
             </Link>
             <a href="#about" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               About
@@ -147,7 +147,17 @@ export const Header: React.FC<HeaderProps> = ({
                     <Calendar className="w-4 h-4" />
                     Book Table
                   </button>
-                  
+
+                  {/* Menu Managing (Admin only) */}
+                  {(user?.role === 'admin') && (
+                    <Link
+                      to="/admin/menu"
+                      className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    >
+                      Manage Menu
+                    </Link>
+                  )}
+
                   {/* User Management (Admin/Manager only) */}
                   {(user?.role === 'admin' || user?.role === 'manager') && (
                     <button

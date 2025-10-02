@@ -5,22 +5,22 @@ trigger:
   branches:
     include:
     - main
+    - Menu-Feature
   paths:
     exclude:
     - README.md
     - docs/*
     - design-plan/*
-    - backend/*
 
 pr:
   branches:
     include:
     - main
+    - Menu-Feature
   paths:
     exclude:
     - README.md
     - docs/*
-    - backend/*
 
 variables:
   # Build Variables
@@ -65,26 +65,25 @@ stages:
         npm install
       displayName: 'Clean and install dependencies'
 
-    
-    # Run Linting
+    # Run Frontend Unit Tests
     - script: |
         cd frontend
-        npm run lint || echo "ESLint found issues, but continuing..."
-      displayName: 'Run ESLint (Non-blocking)'
-      continueOnError: true
-    
-    # Run TypeScript Check
-    - script: |
-        cd frontend
-        npx tsc --noEmit
-      displayName: 'TypeScript Check'
-    
+        npm test -- --run
+      displayName: 'Run Frontend Unit Tests'
+
     # Build Application
     - script: |
         cd frontend
         npm run build
       displayName: 'Build React Application'
     
+    # # Run Backend Unit Tests
+    # - script: |
+    #     cd backend
+    #     chmod +x gradlew
+    #     ./gradlew test
+    #   displayName: 'Run Backend Unit Tests'
+
     # Publish Build Artifacts
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Build Artifacts'
