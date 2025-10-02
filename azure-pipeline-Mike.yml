@@ -5,6 +5,7 @@ trigger:
   branches:
     include:
     - main
+    - Menu-Feature
   paths:
     exclude:
     - README.md
@@ -16,6 +17,7 @@ pr:
   branches:
     include:
     - main
+    - Menu-Feature
   paths:
     exclude:
     - README.md
