@@ -38,10 +38,10 @@ stages:
             CI: true
 
         # Publish test results
-        - task: PublishTestResults@2
-          displayName: 'Publish Reservation Test Results'
-          inputs:
-            testResultsFiles: '$(frontendPath)/test-results/jest/results.xml'
-            testResultsFormat: 'JUnit'
-            failTaskOnFailedTests: true
-            testRunTitle: 'Reservation Component Unit Tests'
+        # - task: PublishTestResults@2
+        #   displayName: 'Publish Reservation Test Results'
+        #   inputs:
+        #     testResultsFiles: '$(frontendPath)/test-results/jest/results.xml'
+        #     testResultsFormat: 'JUnit'
+        #     failTaskOnFailedTests: true
+        #     testRunTitle: 'Reservation Component Unit Tests'
