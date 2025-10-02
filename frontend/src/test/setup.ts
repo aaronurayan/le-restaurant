@@ -9,6 +9,27 @@ import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 
+// Fix for webidl-conversions error in Node.js environment
+if (typeof globalThis.WeakRef === 'undefined') {
+  // @ts-expect-error - Polyfill for WeakRef
+  globalThis.WeakRef = class WeakRef {
+    constructor(target: any) {
+      this._target = target;
+    }
+    deref() {
+      return this._target;
+    }
+  };
+}
+
+if (typeof globalThis.FinalizationRegistry === 'undefined') {
+  // @ts-expect-error - Polyfill for FinalizationRegistry
+  globalThis.FinalizationRegistry = class FinalizationRegistry {
+    register() {}
+    unregister() {}
+  };
+}
+
 // Extend Vitest's expect with jest-dom matchers
 expect.extend(matchers);
 

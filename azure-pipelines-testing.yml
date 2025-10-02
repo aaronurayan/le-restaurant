@@ -130,15 +130,10 @@ stages:
 
           - script: |
               cd $(FRONTEND_PATH)
-              npm run test:ci
-            displayName: '🧪 Run Unit Tests'
+              npm run test:coverage
+            displayName: '🧪 Run Unit Tests with Coverage'
             env:
               CI: true
-
-          - script: |
-              cd $(FRONTEND_PATH)
-              npm run test:coverage
-            displayName: '📊 Generate Coverage Report'
 
           - task: PublishCodeCoverageResults@1
             displayName: '📈 Publish Coverage Results'
@@ -161,10 +156,11 @@ stages:
 
           - task: PublishBuildArtifacts@1
             displayName: '📦 Publish Coverage Artifacts'
-            condition: always()
+            condition: and(always(), or(succeeded(), failed()))
             inputs:
               pathToPublish: '$(System.DefaultWorkingDirectory)/$(FRONTEND_PATH)/coverage'
               artifactName: 'frontend-coverage'
+            continueOnError: true
 
       # ----------------------------------------------------------------------
       # Backend Unit Tests (F102 & F106)
