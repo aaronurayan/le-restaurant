@@ -21,6 +21,7 @@ export const Reservation: React.FC<ReservationProps> = ({ cartItemCount }) => {
   });
 
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   // Generate time options every 30 minutes from 12:00 to 22:00
   const generateTimeOptions = () => {
@@ -40,6 +41,8 @@ export const Reservation: React.FC<ReservationProps> = ({ cartItemCount }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(false);
 
     const today = new Date();
     const selectedDate = new Date(`${form.date}T${form.time}`);
@@ -50,7 +53,7 @@ export const Reservation: React.FC<ReservationProps> = ({ cartItemCount }) => {
       return;
     }
 
-    if (hour < 12 || hour >= 22) {
+    if (!form.time || hour < 12 || hour >= 22) {
       setError('Please choose a time between 12:00 and 22:00.');
       return;
     }
@@ -60,10 +63,8 @@ export const Reservation: React.FC<ReservationProps> = ({ cartItemCount }) => {
       return;
     }
 
-    setError(null);
+    setSuccess(true);
     console.log('Reservation submitted:', form);
-    alert(`Reservation for ${form.people} people on ${form.date} at ${form.time} submitted!`);
-    // TODO: send to backend
   };
 
   const timeOptions = generateTimeOptions();
@@ -77,7 +78,22 @@ export const Reservation: React.FC<ReservationProps> = ({ cartItemCount }) => {
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {success && (
+        <div 
+          className="mb-4 p-4 bg-green-100 text-green-700 rounded"
+          role="alert"
+          data-testid="success-message"
+        >
+          Reservation successful!
+        </div>
+      )}
+
+      <form 
+        onSubmit={handleSubmit} 
+        className="flex flex-col gap-4"
+        role="form"
+        data-testid="reservation-form"
+      >
         <label className="flex flex-col">
           <span>Date:</span>
           <input
@@ -87,6 +103,7 @@ export const Reservation: React.FC<ReservationProps> = ({ cartItemCount }) => {
             onChange={handleChange}
             className="border p-2 w-full mt-1"
             min={new Date().toISOString().split('T')[0]}
+            data-testid="date-input"
           />
         </label>
 
@@ -97,6 +114,7 @@ export const Reservation: React.FC<ReservationProps> = ({ cartItemCount }) => {
             value={form.time}
             onChange={handleChange}
             className="border p-2 w-full mt-1"
+            data-testid="time-select"
           >
             <option value="" disabled>Select a time</option>
             {timeOptions.map((t) => (
@@ -115,14 +133,24 @@ export const Reservation: React.FC<ReservationProps> = ({ cartItemCount }) => {
             value={form.people}
             onChange={handleChange}
             className="border p-2 w-full mt-1"
+            data-testid="people-input"
           />
         </label>
 
-        {error && <p className="text-red-600">{error}</p>}
+        {error && (
+          <p 
+            className="text-red-600"
+            role="alert"
+            data-testid="error-message"
+          >
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
           className="bg-primary-600 text-white p-2 rounded-md hover:bg-primary-700 transition"
+          data-testid="submit-button"
         >
           Reserve
         </button>
