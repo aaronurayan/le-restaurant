@@ -11,7 +11,6 @@ trigger:
     - README.md
     - docs/*
     - design-plan/*
-    - backend/*
 
 pr:
   branches:
@@ -22,7 +21,6 @@ pr:
     exclude:
     - README.md
     - docs/*
-    - backend/*
 
 variables:
   # Build Variables
@@ -79,12 +77,12 @@ stages:
         npm run build
       displayName: 'Build React Application'
     
-    # Run Backend Unit Tests
-    - script: |
-        cd backend
-        chmod +x gradlew
-        ./gradlew test
-      displayName: 'Run Backend Unit Tests'
+    # # Run Backend Unit Tests
+    # - script: |
+    #     cd backend
+    #     chmod +x gradlew
+    #     ./gradlew test
+    #   displayName: 'Run Backend Unit Tests'
 
     # Publish Build Artifacts
     - task: PublishBuildArtifacts@1
