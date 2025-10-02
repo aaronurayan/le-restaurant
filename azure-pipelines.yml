@@ -31,7 +31,7 @@ stages:
       displayName: 'Set up JDK $(javaVersion)'
       inputs:
         version: '$(javaVersion)'
-        jdkArchitecture: 'x64'
+        jdkArchitectureOption: 'x64' # Add this line
 
     # Cache Gradle Dependencies
     - task: Cache@2
@@ -61,7 +61,7 @@ stages:
       displayName: 'Set up JDK $(javaVersion)'
       inputs:
         version: '$(javaVersion)'
-        jdkArchitecture: 'x64'
+        jdkArchitectureOption: 'x64' # Add this line
 
     # Cache Gradle Dependencies
     - task: Cache@2
