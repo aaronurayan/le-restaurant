@@ -79,6 +79,13 @@ stages:
         npm run build
       displayName: 'Build React Application'
     
+    # Set up Java 17
+    - task: UseJavaVersion@1
+      displayName: 'Set up Java 17'
+      inputs:
+        versionSpec: '17'
+        architecture: 'x64'
+
     # Run Backend Unit Tests
     - script: |
         cd backend
