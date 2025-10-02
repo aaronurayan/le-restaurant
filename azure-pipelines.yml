@@ -26,12 +26,13 @@ stages:
       vmImage: 'ubuntu-latest'
 
     steps:
-    # # Setup JDK
-    # - task: UseJavaVersion@1
-    #   displayName: 'Set up JDK $(javaVersion)'
-    #   inputs:
-    #     versionSpec: '$(javaVersion)'
-    #     jdkArchitecture: 'x64'
+    # Setup JDK
+    - task: JavaToolInstaller@1
+      displayName: 'Set up JDK $(javaVersion)'
+      inputs:
+        version: '$(javaVersion)'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
 
     # Cache Gradle Dependencies
     - task: Cache@2
@@ -47,7 +48,7 @@ stages:
     - script: |
         cd backend
         chmod +x gradlew # Ensure gradlew is executable
-        ./gradlew build
+        ./gradlew build --stacktrace --info
       displayName: 'Build Backend'
 
   # Test Backend Delivery Management Feature
@@ -59,9 +60,9 @@ stages:
     steps:
     # Setup JDK
     - task: JavaToolInstaller@1
-      displayName: 'Set up JDK 11'
+      displayName: 'Set up JDK $(javaVersion)'
       inputs:
-        version: '11'
+        version: '$(javaVersion)'
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled' 
 
@@ -78,7 +79,8 @@ stages:
     # Run Backend Tests
     - script: |
         cd backend
-        ./gradlew test --tests "com.lerestaurant.le_restaurant_backend.service.DeliveryServiceTest"
+        chmod +x gradlew # Ensure gradlew is executable
+        ./gradlew test --tests "com.lerestaurant.le_restaurant_backend.service.DeliveryServiceTest" --stacktrace --info
       displayName: 'Run Backend Delivery Management Tests'
 
     # Publish Test Results
