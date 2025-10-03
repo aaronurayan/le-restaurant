@@ -1,15 +1,116 @@
 # 🔍 AI-Powered Merge Review & Conflict Prevention Guide
 
-> **Author Role**: 20-Year Senior Software Architecture Designer  
-> **Document Type**: Pre-Merge Review Protocol & Conflict Prevention Strategy  
-> **Target Audience**: AI Code Review Agents, Senior Developers, DevOps Engineers  
+> **Primary Goal**: Enable ALL 10 features (F100-F109) to merge to main **WITHOUT conflicts**  
+> **Document Type**: ZERO-CONFLICT Merge Protocol with Predictive Conflict Detection  
+> **Target Audience**: AI Coding Assistants (GitHub Copilot), Team Developers  
+> **Version**: 1.1 (Team-Enabled with Conflict Prediction)  
 > **Last Updated**: 2025-10-03  
+
+---
+
+## 🎯 AI Quick Reference - Read This First
+
+**When developer asks: "Merge my feature branch to main"**
+
+### Step 1: Identify Feature & Owner (2 seconds)
+```
+Feature: F[100-109] from branch name
+Owner: Check "Feature Ownership Table" in Section 1.2
+```
+
+### Step 2: Check Shared File Conflicts (5 seconds)
+```
+Scan "Critical Shared Files Matrix" in Section 2.3
+Files to watch: SecurityConfig.java, AuthContext.tsx, Header.tsx, User.java
+```
+
+### Step 3: Check Feature Conflicts (5 seconds)
+```
+Scan "Feature Conflict Matrix" in Section 3.4
+Look for: CRITICAL or HIGH severity conflicts with this feature
+```
+
+### Step 4: Decision Tree
+```
+✅ NO CONFLICTS FOUND → Proceed to 6-Phase Review (Sections 4-9)
+⚠️ LOW/MEDIUM CONFLICTS → Proceed with caution, notify developer
+🔴 HIGH/CRITICAL CONFLICTS → STOP! Request coordination with other owner
+```
+
+### Step 5: Execute & Score
+```
+Run Phases 1-6 → Calculate Score (0-100) → Decision:
+- Score ≥ 90 + No conflicts = APPROVE
+- Score 70-89 + No CRITICAL conflicts = APPROVE WITH CONDITIONS  
+- Score < 70 OR CRITICAL conflicts = REJECT + Provide coordination plan
+```
 
 ---
 
 ## 📋 Executive Summary
 
-This document provides a comprehensive AI-powered merge review protocol designed to **prevent merge conflicts** before they occur when merging feature branches into the main branch. The protocol is based on 20 years of software architecture experience and leverages AI capabilities to perform deep structural analysis, dependency tracking, and proactive conflict detection.
+This document provides a comprehensive AI-powered merge review protocol designed to **prevent merge conflicts** before they occur when merging feature branches into the main branch. The protocol uses predictive conflict detection across 10 features (F100-F109) managed by 5 developers, with automated identification of shared file conflicts and feature interaction risks.
+
+---
+
+## 🚀 Quick Start for Team Members
+
+### For Individual Feature Developers
+
+**Before you start merging your feature to main, follow these steps:**
+
+1. **Identify Your Feature**
+   ```
+   Your Feature Number: F[100-109]
+   Your Name: [Check table below]
+   Your Branch: F[NUMBER][FEATURENAME]
+   ```
+
+2. **Run Pre-Merge Checklist with AI**
+   ```markdown
+   Ask your AI assistant:
+   "Based on 06-Merge-review-prompt.md, review my feature branch F[YOUR_NUMBER] 
+   for merging into main. I am [YOUR_NAME] working on [FEATURE_NAME]."
+   ```
+
+3. **AI Will Check**
+   - ✅ Your code follows architecture patterns
+   - ✅ No conflicts with other features
+   - ✅ Tests are passing (80%+ coverage)
+   - ✅ Documentation is complete
+   - ✅ Ready to merge safely
+
+4. **Execute Merge**
+   ```bash
+   # AI will guide you through:
+   git checkout main
+   git pull origin main
+   git merge F[YOUR_NUMBER][FEATURE] --no-ff
+   git push origin main
+   ```
+
+### Team Feature Assignments
+
+| Owner | Features | Potential Conflicts With |
+|-------|----------|--------------------------|
+| **Junayeed Halim** | F100 (Registration), F101 (Authentication) | ⚠️ Jungwook (F102 User Mgmt - AuthContext) |
+| **Jungwook Van** | F102 (User Mgmt), F106 (Payment) | ⚠️ Junayeed (F101 Auth), Damaq (F105 Order) |
+| **Mikhail Zhelnin** | F103 (Menu Display), F104 (Menu Mgmt) | ⚠️ Damaq (F105 Order - MenuItem FK) |
+| **Damaq Zain** | F105 (Order), F108 (Reservation) | ⚠️ Jungwook (F106 Payment), Aaron (F107, F109) |
+| **Aaron Urayan** | F107 (Delivery), F109 (Res Mgmt) | ⚠️ Damaq (F108 Reservation) |
+
+### Coordination Protocol
+
+**High-Priority Coordination Required:**
+1. **Junayeed ↔ Jungwook**: AuthContext.tsx structure
+2. **Jungwook ↔ Damaq**: Order-Payment relationship (orderId FK)
+3. **Mikhail ↔ Damaq**: MenuItem in Order entity
+4. **Aaron ↔ Damaq**: Reservation entity structure, Header.tsx navigation
+
+**When to Communicate:**
+- 🔴 **Before starting**: Post in team channel when working on shared files
+- 🟡 **During development**: Coordinate if modifying SecurityConfig, AuthContext, Header
+- 🟢 **Before merge**: Run AI review and share results with conflicting feature owners
 
 ---
 
@@ -100,7 +201,73 @@ frontend/src/
 
 ---
 
-## 🔍 Pre-Merge Review Checklist (AI Agent Instructions)
+## � Critical Shared Files Matrix (Check FIRST for Conflicts)
+
+**AI: Scan this matrix BEFORE starting Phase 1 review**
+
+### Backend Shared Files (High Conflict Risk)
+
+| File Path | Features Using It | Conflict Type | Coordination Required |
+|-----------|-------------------|---------------|----------------------|
+| `SecurityConfig.java` | F100, F101, F102, F106 | Authentication & Authorization | ✅ Junayeed + Jungwook must coordinate |
+| `User.java` (Entity) | F100, F101, F102 | User model structure | ✅ Junayeed + Jungwook must coordinate |
+| `MenuItem.java` (Entity) | F103, F104, F105 | Menu-Order relationship | ✅ Mikhail + Damaq must coordinate |
+| `Order.java` (Entity) | F105, F106, F108 | Order-Payment-Reservation FK | ✅ Damaq + Jungwook must coordinate |
+| `Payment.java` (Entity) | F105, F106 | Payment fields & orderId FK | ✅ Damaq + Jungwook CRITICAL |
+| `Reservation.java` (Entity) | F107, F108, F109 | Reservation structure | ✅ Aaron + Damaq must coordinate |
+| `CorsConfig.java` | ALL (F100-F109) | CORS policy | ⚠️ Low risk - additive changes only |
+| `application.properties` | ALL (F100-F109) | Database/Port config | ⚠️ Low risk - usually no conflicts |
+
+### Frontend Shared Files (High Conflict Risk)
+
+| File Path | Features Using It | Conflict Type | Coordination Required |
+|-----------|-------------------|---------------|----------------------|
+| `AuthContext.tsx` | F100, F101, F102 | Auth state management | ✅ Junayeed + Jungwook CRITICAL |
+| `Header.tsx` | F102, F105, F107, F108, F109 | Navigation links | ✅ All managers coordinate |
+| `api.ts` (services) | ALL (F100-F109) | API base URL & helpers | ⚠️ Low risk - additive changes |
+| `App.tsx` | F100-F109 | Route definitions | ⚠️ Medium risk - new routes OK |
+| `types/user.ts` | F100, F101, F102 | User TypeScript types | ✅ Junayeed + Jungwook must sync |
+| `types/order.ts` | F105, F106 | Order TypeScript types | ✅ Damaq + Jungwook must sync |
+| `types/reservation.ts` | F107, F108, F109 | Reservation types | ✅ Aaron + Damaq must sync |
+
+### AI Conflict Detection Rules
+
+**When feature branch touches these files:**
+
+1. **CRITICAL FILES** (Stop & Coordinate):
+   - `SecurityConfig.java` → Check if F100, F101, F102, or F106 in progress
+   - `AuthContext.tsx` → Check if F100, F101, or F102 in progress
+   - `Payment.java` OR `Order.java` → Check if F105 or F106 in progress
+
+2. **HIGH-RISK FILES** (Review Changes Carefully):
+   - `Header.tsx` → Check if any manager features (F102, F104, F105, F107, F109) in progress
+   - Entity files (`User.java`, `MenuItem.java`, `Reservation.java`) → Check related features
+
+3. **SAFE FILES** (Low Conflict Risk):
+   - New controller files (e.g., `PaymentController.java`)
+   - New component files (e.g., `PaymentManagementPanel.tsx`)
+   - New service files (feature-specific)
+   - Test files (usually isolated)
+
+**AI Decision Logic:**
+```
+IF feature touches CRITICAL file:
+  → CHECK if other feature owner has open PR/branch
+  → IF yes: REJECT merge, request coordination
+  → IF no: Proceed with caution
+
+IF feature touches HIGH-RISK file:
+  → ANALYZE changes (additive vs. modifying)
+  → IF modifying existing code: Request review
+  → IF only adding new code: Proceed
+
+IF feature only touches SAFE files:
+  → Fast-track review (lower scrutiny)
+```
+
+---
+
+## �🔍 Pre-Merge Review Checklist (AI Agent Instructions)
 
 ### Phase 1: Initial Assessment (5 minutes)
 
@@ -108,15 +275,29 @@ frontend/src/
 ```prompt
 ANALYZE the following about the feature branch:
 - Branch name pattern: F[NUMBER][FEATURE_NAME] (e.g., F102USERMANAGEMENT, F106PAYMENTMANAGEMENT)
-- Feature owner identification from README.md
+- Feature owner identification (see table below)
 - Last commit date and commit message quality
 - Number of commits (prefer squashed/clean history)
 - Divergence from main branch (commit count behind main)
 
+FEATURE OWNERSHIP TABLE:
+| Feature # | Name | Description | Owner |
+|-----------|------|-------------|-------|
+| F100 | User Registration | Customers create account with email/password | Junayeed Halim |
+| F101 | User Authentication | Login system for registered customers | Junayeed Halim |
+| F102 | User Management (Manager) | Managers view/edit/delete customer accounts | Jungwook Van |
+| F103 | Menu Display | View items by category, search, filter | Mikhail Zhelnin |
+| F104 | Menu Management (Manager) | Create/update/delete menu items | Mikhail Zhelnin |
+| F105 | Order Management | Create orders with payment and confirmation | Damaq Zain |
+| F106 | Payment Management | Handle payments and transaction processing | Jungwook Van |
+| F107 | Delivery Management | Manage deliveries, track status, assign drivers | Aaron Urayan |
+| F108 | Table Reservation | Customers book tables with availability check | Damaq Zain |
+| F109 | Reservation Management | Managers approve/deny/manage reservations | Aaron Urayan |
+
 OUTPUT FORMAT:
 - Branch: [name]
-- Feature: [feature description]
-- Owner: [team member name]
+- Feature: [feature description from table]
+- Owner: [team member name from table]
 - Commits: [count]
 - Behind main by: [count] commits
 - Status: [READY/NEEDS_REBASE/NEEDS_REVIEW]
@@ -303,15 +484,73 @@ FRONTEND DEPENDENCIES:
    - Verify endpoints exist in backend
    - Check if payload structures match DTOs
 
-OUTPUT CONFLICT MATRIX:
-Feature A | Feature B | Conflict Type | Severity | Resolution
-----------|-----------|---------------|----------|------------
-F102 User | F106 Pay  | Shared Entity | CRITICAL | Need Payment.userId FK
-F106 Pay  | F109 Res  | API Path      | WARNING  | Different paths, OK
-F109 Res  | F102 User | Type Conflict | CRITICAL | User type mismatch
+OUTPUT: AI CONFLICT DETECTION MATRIX (Priority-Sorted)
+
+### 🔴 CRITICAL CONFLICTS (Must Coordinate Before Merge)
+
+| Feature A | Feature B | Conflict Point | Action Required | Owner A | Owner B |
+|-----------|-----------|----------------|-----------------|---------|---------|
+| F105 Order | F106 Payment | `Payment.java` needs `orderId` FK | ⚠️ Damaq merge F105 first, then Jungwook adds orderId in F106 | Damaq Zain | Jungwook Van |
+| F101 Auth | F102 User Mgmt | `AuthContext.tsx` state structure | ⚠️ Junayeed & Jungwook sync on user state shape before merging | Junayeed Halim | Jungwook Van |
+| F100 Registration | F102 User Mgmt | `User.java` entity fields | ⚠️ Junayeed defines base fields, Jungwook adds manager fields | Junayeed Halim | Jungwook Van |
+| F102 User | F106 Payment | `User.java` needs `userId` for Payment FK | ⚠️ Jungwook owns both - coordinate in single session | Jungwook Van | Jungwook Van |
+
+**AI Decision:** IF current feature is in CRITICAL conflict → **REJECT merge** → Request coordination call
+
+### 🟡 HIGH CONFLICTS (Review Changes Carefully)
+
+| Feature A | Feature B | Conflict Point | Action Required | Owner A | Owner B |
+|-----------|-----------|----------------|-----------------|---------|---------|
+| F103 Menu | F105 Order | `Order.java` needs `menuItemId` FK | ⚠️ Mikhail merge F103 first, Damaq references MenuItem | Mikhail Zhelnin | Damaq Zain |
+| F107 Delivery | F108 Reservation | `Header.tsx` navigation links | ⚠️ Aaron & Damaq coordinate on menu item order | Aaron Urayan | Damaq Zain |
+| F108 Reservation | F109 Res Mgmt | `Reservation.java` entity structure | ⚠️ Damaq defines customer fields, Aaron adds manager fields | Damaq Zain | Aaron Urayan |
+
+**AI Decision:** IF current feature is in HIGH conflict → **PROCEED WITH CAUTION** → Add warning message
+
+### 🟢 LOW CONFLICTS (Same Owner - Easy Coordination)
+
+| Feature A | Feature B | Conflict Point | Resolution | Owner |
+|-----------|-----------|----------------|------------|-------|
+| F100 Registration | F101 Auth | `User.java` & `AuthContext` | Same developer - merge in sequence | Junayeed Halim |
+| F103 Menu Display | F104 Menu Mgmt | `MenuItem.java` & `MenuService` | Same developer - shared understanding | Mikhail Zhelnin |
+| F107 Delivery | F109 Res Mgmt | `Header.tsx` manager menu | Same developer - consistent navigation | Aaron Urayan |
+
+**AI Decision:** IF current feature is in LOW conflict (same owner) → **APPROVE** → Note coordination
+
+---
+
+### AI Conflict Resolution Workflow
+
+**For CRITICAL Conflicts:**
+```
+1. IDENTIFY conflicting features from matrix
+2. CHECK if other feature already merged to main:
+   - IF YES: Current feature must adapt to merged changes
+   - IF NO: STOP merge, request coordination meeting
+3. PROVIDE coordination script:
+   "⚠️ F[X] conflicts with F[Y] on [FILE]. Contact [OWNER_Y] before merging."
+4. SUGGEST merge order:
+   "Recommended: Merge F[X] first (has base entity), then F[Y] (has FK)"
+```
+
+**For HIGH Conflicts:**
+```
+1. ANALYZE change type:
+   - Additive changes (new fields/methods) → Lower risk
+   - Modifying changes (rename/remove) → Higher risk
+2. IF additive only: APPROVE with monitoring
+3. IF modifying: REQUEST review from other owner
+```
+
+**For LOW Conflicts:**
+```
+1. NOTE in merge report: "Same owner as F[X]"
+2. SUGGEST: "Consider merging F[X] and F[Y] together for consistency"
+3. APPROVE merge
+```
 
 RESOLUTION RECOMMENDATIONS:
-[For each CRITICAL conflict, provide step-by-step resolution]
+[AI will auto-generate specific steps based on detected conflicts]
 ```
 
 #### 3.2 Breaking Change Detection
@@ -682,14 +921,14 @@ SHARED AREAS (High Conflict Risk):
 DESIGN features to minimize overlap:
 
 GOOD EXAMPLE (Low Conflict Risk):
-F106 Payment Management:
+F106 Payment Management (Jungwook Van):
   - PaymentController (new file)
   - PaymentService (new file)
   - PaymentRepository (new file)
   - Payment entity (new file)
   - PaymentManagementPanel (new component)
   
-F109 Reservation Management:
+F109 Reservation Management (Aaron Urayan):
   - ReservationController (new file)
   - ReservationService (new file)
   - ReservationRepository (new file)
@@ -698,15 +937,48 @@ F109 Reservation Management:
 
 CONFLICT: None! Completely separate modules.
 
-BAD EXAMPLE (High Conflict Risk):
-F102 User Management:
-  - Modifies SecurityConfig.java (auth rules)
+F103 Menu Display (Mikhail Zhelnin):
+  - MenuController (read-only endpoints)
+  - MenuService (display logic)
+  - MenuGrid component (new)
+  - MenuCard component (new)
   
-F106 Payment Management:
-  - Modifies SecurityConfig.java (payment endpoints)
+F105 Order Management (Damaq Zain):
+  - OrderController (new file)
+  - OrderService (new file)
+  - Order entity (new file)
+  - OrderManagementPanel (new)
+
+CONFLICT: None! Different domains.
+
+BAD EXAMPLE (High Conflict Risk):
+F102 User Management (Jungwook Van):
+  - Modifies SecurityConfig.java (auth rules for user endpoints)
+  
+F106 Payment Management (Jungwook Van):
+  - Modifies SecurityConfig.java (auth rules for payment endpoints)
 
 CONFLICT: Both modify same file!
 SOLUTION: Coordinate SecurityConfig changes, merge one at a time.
+NOTE: Same owner (Jungwook Van) - easier to coordinate!
+
+F101 User Authentication (Junayeed Halim):
+  - Modifies AuthContext.tsx (login/logout state)
+  
+F102 User Management (Jungwook Van):
+  - Modifies AuthContext.tsx (user profile state)
+
+CONFLICT: Both modify same frontend context!
+SOLUTION: Coordinate context changes between Junayeed and Jungwook.
+
+F107 Delivery Management (Aaron Urayan):
+  - Modifies Header.tsx (adds Delivery menu item)
+  
+F108 Table Reservation (Damaq Zain):
+  - Modifies Header.tsx (adds Reservation menu item)
+
+CONFLICT: Both modify navigation!
+SOLUTION: Coordinate Header.tsx changes between Aaron and Damaq.
 ```
 
 ### Strategy 4: API Versioning for Breaking Changes
@@ -1082,10 +1354,17 @@ stages:
 4. `frontend/frontend-view-explain-doc.md`
 5. `TEST_STRATEGY.md`
 
-### Team Contacts
-- **F102 User Management**: [Owner Name]
-- **F106 Payment Management**: [Owner Name]
-- **F109 Reservation Management**: [Owner Name]
+### Team Contacts & Feature Ownership
+- **F100 User Registration**: Junayeed Halim
+- **F101 User Authentication**: Junayeed Halim
+- **F102 User Management (Manager)**: Jungwook Van
+- **F103 Menu Display**: Mikhail Zhelnin
+- **F104 Menu Management (Manager)**: Mikhail Zhelnin
+- **F105 Order Management**: Damaq Zain
+- **F106 Payment Management**: Jungwook Van
+- **F107 Delivery Management**: Aaron Urayan
+- **F108 Table Reservation**: Damaq Zain
+- **F109 Reservation Management (Manager)**: Aaron Urayan
 
 ### Tool Versions
 - **Java**: 17
@@ -1159,8 +1438,139 @@ stages:
 
 ---
 
-**Document Version**: 1.0  
+## 📇 AI Quick Reference Card (Print & Keep Visible)
+
+### 🎯 Merge Request Processing (10-Second Decision)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  DEVELOPER ASKS: "Merge F[XXX] to main"                    │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 1: Extract Info (2 sec)                              │
+│  ✓ Feature: F[100-109] from branch name                    │
+│  ✓ Owner: Lookup in Feature Ownership Table (line 278)     │
+│  ✓ Files: Run `git diff --name-only main...F[XXX]`         │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 2: Check Shared Files Matrix (3 sec)                 │
+│  📍 Location: Line 206 "Critical Shared Files Matrix"      │
+│  🔍 Search for files in changed list:                       │
+│     - SecurityConfig.java → CRITICAL                        │
+│     - AuthContext.tsx → CRITICAL                            │
+│     - User.java / Order.java / Payment.java → CRITICAL     │
+│     - Header.tsx → HIGH                                     │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 3: Check Conflict Matrix (3 sec)                     │
+│  📍 Location: Line 489 "AI Conflict Detection Matrix"      │
+│  🔍 Find this feature in matrix:                            │
+│     🔴 CRITICAL → REJECT + Request coordination             │
+│     🟡 HIGH → Proceed with caution warnings                 │
+│     🟢 LOW → Fast-track approval                            │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 4: Execute 6-Phase Review (2-5 min)                  │
+│  Phase 1: Branch metadata (lines 278-320)                  │
+│  Phase 2: Structural integrity (lines 322-450)             │
+│  Phase 3: Dependency analysis (lines 452-585)              │
+│  Phase 4: Testing verification (lines 652-820)             │
+│  Phase 5: Documentation check (lines 1012-1120)            │
+│  Phase 6: Merge simulation (lines 1122-1280)               │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 5: Calculate Score & Decide (1 sec)                  │
+│  Score Formula: (Phase1×15 + Phase2×25 + Phase3×20 +       │
+│                  Phase4×25 + Phase5×10 + Phase6×5) / 100   │
+│                                                              │
+│  Decision Matrix:                                           │
+│  ✅ Score ≥ 90 + No CRITICAL conflicts = APPROVE            │
+│  ⚠️ Score 70-89 + No CRITICAL = APPROVE WITH CONDITIONS     │
+│  🔴 Score < 70 OR CRITICAL conflicts = REJECT               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 🚨 Critical File Quick Lookup
+
+**IF feature touches these → STOP & CHECK:**
+- `SecurityConfig.java` → Check F100, F101, F102, F106
+- `AuthContext.tsx` → Check F100, F101, F102
+- `User.java` → Check F100, F101, F102
+- `Payment.java` → Check F105, F106 (CRITICAL: orderId FK)
+- `Order.java` → Check F105, F106, F108
+- `MenuItem.java` → Check F103, F104, F105
+- `Reservation.java` → Check F107, F108, F109
+- `Header.tsx` → Check F102, F105, F107, F108, F109
+
+### 🎯 Merge Order Recommendations (Dependency-Based)
+
+```
+Layer 1 (Merge First - Foundation):
+├─ F100 User Registration (Junayeed)
+├─ F103 Menu Display (Mikhail)
+└─ F107 Delivery Management (Aaron)
+
+Layer 2 (Merge Second - Auth & Core Features):
+├─ F101 User Authentication (Junayeed) [depends on F100]
+├─ F104 Menu Management (Mikhail) [depends on F103]
+└─ F108 Table Reservation (Damaq) [depends on F107]
+
+Layer 3 (Merge Third - Manager Features):
+├─ F102 User Management (Jungwook) [depends on F100, F101]
+├─ F105 Order Management (Damaq) [depends on F103]
+└─ F109 Reservation Management (Aaron) [depends on F108]
+
+Layer 4 (Merge Last - Complex Integrations):
+└─ F106 Payment Management (Jungwook) [depends on F102, F105]
+```
+
+### 📞 Emergency Contact Protocol
+
+**When CRITICAL conflict detected:**
+```
+1. STOP merge process
+2. IDENTIFY conflicting features from matrix (line 489)
+3. LOOKUP owner names from table (line 278)
+4. GENERATE coordination message:
+   
+   "🔴 MERGE BLOCKED: F[XXX] conflicts with F[YYY]
+    
+    Conflict Point: [FILE/ENTITY NAME]
+    Your Feature: F[XXX] ([OWNER_X])
+    Conflicting Feature: F[YYY] ([OWNER_Y])
+    
+    Action Required:
+    1. Contact [OWNER_Y] to discuss [CONFLICT POINT]
+    2. Agree on merge order (recommend F[YYY] first)
+    3. Update your feature to accommodate merged changes
+    
+    Estimated Coordination Time: 15-30 minutes"
+```
+
+### 🔢 Scoring Quick Reference
+
+| Phase | Weight | Pass Criteria | Common Issues |
+|-------|--------|---------------|---------------|
+| 1. Metadata | 15% | Clean branch name, <50 commits behind | Stale branch, unclear naming |
+| 2. Structural | 25% | Follows patterns, proper layers | Mixed concerns, wrong file locations |
+| 3. Dependency | 20% | No circular deps, clean imports | Tight coupling, shared entity mods |
+| 4. Testing | 25% | 80%+ coverage, all tests pass | Low coverage, flaky tests |
+| 5. Documentation | 10% | API docs, component docs updated | Missing docs, outdated README |
+| 6. Merge Simulation | 5% | 0 conflicts, clean merge | File conflicts, diverged history |
+
+**Minimum Passing Score**: 70/100 (with no CRITICAL conflicts)  
+**Recommended Score**: 90+/100 for immediate approval
+
+---
+
+**Document Version**: 1.1 (Team-Enabled with Conflict Prediction)  
 **Last Updated**: 2025-10-03  
-**Next Review Date**: 2025-11-03  
-**Maintained By**: Senior Architecture Team  
-**Status**: Active - Production Use
+**Next Review Date**: After all 10 features merged  
+**Maintained By**: Le Restaurant Development Team  
+**Primary Goal**: ZERO-CONFLICT integration of F100-F109 to main  
+**Status**: ✅ Active - Production Use - Team-Enabled
