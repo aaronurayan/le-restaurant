@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   CreditCard, 
   DollarSign, 
@@ -20,7 +20,6 @@ interface PaymentManagementPanelProps {
 }
 
 const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen, onClose }) => {
-  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [methodFilter, setMethodFilter] = useState<PaymentMethod | 'all'>('all');
@@ -42,7 +41,8 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
     }
   }, [isOpen, loadPayments]);
 
-  useEffect(() => {
+  // Use useMemo to prevent infinite loop
+  const filteredPayments = useMemo(() => {
     let filtered = payments;
 
     // Search filter
@@ -65,7 +65,7 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
       filtered = filtered.filter(payment => payment.method === methodFilter);
     }
 
-    setFilteredPayments(filtered);
+    return filtered;
   }, [payments, searchTerm, statusFilter, methodFilter]);
 
   const handleStatusChange = async (paymentId: number, newStatus: PaymentStatus) => {
