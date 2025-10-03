@@ -5,7 +5,7 @@ import { Button } from '../atoms/Button';
 import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
 import AuthModal from './AuthModal';
 import UserManagementPanel from './UserManagementPanel';
-import { ReservationModal } from './ReservationModal';
+import ReservationModal from './ReservationModal';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
