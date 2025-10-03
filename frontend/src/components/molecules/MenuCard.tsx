@@ -83,7 +83,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         </p>
         
         {/* Dietary Tags */}
-        {item.dietaryTags.length > 0 && (
+        {item.dietaryTags && item.dietaryTags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {item.dietaryTags.map((tag) => (
               <Badge key={tag} variant="secondary" size="sm">

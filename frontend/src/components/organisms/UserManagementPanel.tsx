@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Users, 
   Plus, 
@@ -22,7 +22,6 @@ interface UserManagementPanelProps {
 }
 
 const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClose }) => {
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all');
@@ -49,7 +48,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
     }
   }, [isOpen, loadUsers]);
 
-  useEffect(() => {
+  // Use useMemo to prevent infinite loop
+  const filteredUsers = useMemo(() => {
     let filtered = users;
 
     // Search filter
@@ -71,7 +71,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
       filtered = filtered.filter(user => user.status === statusFilter);
     }
 
-    setFilteredUsers(filtered);
+    return filtered;
   }, [users, searchTerm, roleFilter, statusFilter]);
 
   const handleCreateUser = async (userData: CreateUserRequest | UpdateUserRequest) => {
