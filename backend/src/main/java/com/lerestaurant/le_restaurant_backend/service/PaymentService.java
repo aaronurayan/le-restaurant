@@ -9,15 +9,39 @@ import com.lerestaurant.le_restaurant_backend.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.UUID;
 
+/**
+ * Payment Management Service (F106)
+ * 
+ * This service handles all payment-related business logic for F106 Payment Management.
+ * It provides comprehensive payment processing, status management, and transaction tracking.
+ * 
+ * Features:
+ * - Payment CRUD operations
+ * - Payment processing and validation
+ * - Transaction ID generation
+ * - Payment status management
+ * - Order validation
+ * - Transaction management
+ * - Comprehensive logging
+ * 
+ * @author Le Restaurant Development Team
+ * @version 1.0.0
+ * @since 2024-01-15
+ * @module F106-PaymentManagement
+ */
 @Service
 @Transactional
 public class PaymentService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
     
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
@@ -28,12 +52,27 @@ public class PaymentService {
         this.orderRepository = orderRepository;
     }
     
+    /**
+     * Create a new payment
+     * 
+     * This method creates a new payment for the specified order.
+     * It validates the order existence, generates a transaction ID, and sets initial status.
+     * 
+     * @param requestDto Payment creation request data
+     * @return PaymentDto Created payment data
+     * @throws RuntimeException if order not found
+     */
     public PaymentDto createPayment(PaymentRequestDto requestDto) {
-        // 주문 존재 확인
-        Order order = orderRepository.findById(requestDto.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + requestDto.getOrderId()));
+        logger.info("Creating new payment for order ID: {}", requestDto.getOrderId());
         
-        // 결제 생성
+        // Validate order existence
+        Order order = orderRepository.findById(requestDto.getOrderId())
+                .orElseThrow(() -> {
+                    logger.error("Payment creation failed: order not found - {}", requestDto.getOrderId());
+                    return new RuntimeException("Order not found with id: " + requestDto.getOrderId());
+                });
+        
+        // Create payment entity
         Payment payment = new Payment();
         payment.setOrder(order);
         payment.setAmount(requestDto.getAmount());
@@ -43,7 +82,11 @@ public class PaymentService {
         payment.setPaymentDetails(requestDto.getPaymentDetails());
         payment.setPaymentTime(OffsetDateTime.now());
         
+        // Save payment to database
         Payment savedPayment = paymentRepository.save(payment);
+        logger.info("Payment created successfully with ID: {} and transaction ID: {}", 
+                   savedPayment.getId(), savedPayment.getTransactionId());
+        
         return convertToDto(savedPayment);
     }
     
