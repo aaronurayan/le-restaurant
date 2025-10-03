@@ -10,7 +10,7 @@ interface ReservationModalProps {
   onClose: () => void;
 }
 
-export const ReservationModal: React.FC<ReservationModalProps> = ({
+const ReservationModal: React.FC<ReservationModalProps> = ({
   isOpen,
   onClose,
 }) => {
@@ -148,3 +148,5 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
     </div>
   );
 };
+
+export default ReservationModal;

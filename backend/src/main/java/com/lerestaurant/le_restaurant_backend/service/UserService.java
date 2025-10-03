@@ -9,14 +9,37 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * User Management Service (F102)
+ * 
+ * This service handles all user-related business logic for F102 User Management.
+ * It provides comprehensive user CRUD operations, role management, and status control.
+ * 
+ * Features:
+ * - User CRUD operations
+ * - User role and status management
+ * - Email validation and uniqueness checking
+ * - Password encryption and security
+ * - Transaction management
+ * - Comprehensive logging
+ * 
+ * @author Le Restaurant Development Team
+ * @version 1.0.0
+ * @since 2024-01-15
+ * @module F102-UserManagement
+ */
 @Service
 @Transactional
 public class UserService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -27,12 +50,26 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
     
+    /**
+     * Create a new user
+     * 
+     * This method creates a new user with the provided information.
+     * It validates email uniqueness, encrypts the password, and sets default values.
+     * 
+     * @param requestDto User creation request data
+     * @return UserDto Created user data
+     * @throws RuntimeException if email already exists
+     */
     public UserDto createUser(UserCreateRequestDto requestDto) {
-        // 이메일 중복 확인
+        logger.info("Creating new user with email: {}", requestDto.getEmail());
+        
+        // Check email uniqueness
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
+            logger.warn("User creation failed: email already exists - {}", requestDto.getEmail());
             throw new RuntimeException("User with email already exists: " + requestDto.getEmail());
         }
         
+        // Create new user entity
         User user = new User();
         user.setEmail(requestDto.getEmail());
         user.setPasswordHash(passwordEncoder.encode(requestDto.getPassword()));
@@ -43,7 +80,10 @@ public class UserService {
         user.setStatus(User.UserStatus.ACTIVE);
         user.setCreatedAt(OffsetDateTime.now());
         
+        // Save user to database
         User savedUser = userRepository.save(user);
+        logger.info("User created successfully with ID: {}", savedUser.getId());
+        
         return convertToDto(savedUser);
     }
     
