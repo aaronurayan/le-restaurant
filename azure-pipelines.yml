@@ -1,23 +1,127 @@
+# Le-Restaurant CI/CD Pipeline
+# Triggers on main branch and feature branches with test changes
+
 trigger:
-  - juna
-  - main
-  
+  branches:
+    include:
+      
+      - juna
+      - main
+      
+  paths:
+    include:
+      - backend/**
+      - azure-pipelines.yml
+
+# Also trigger on pull requests
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - backend/**
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-latest
 
-steps:
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'backend/pom.xml'
-    goals: 'clean test'
-    publishJUnitResults: true
-    testResultsFiles: 'backend/target/surefire-reports/TEST-*.xml'
-    testRunTitle: 'Backend Unit Tests'
-    codeCoverageToolOption: 'JaCoCo'
-- task: PublishCodeCoverageResults@1
-  inputs:
-    codeCoverageTool: 'JaCoCo'
-    summaryFileLocation: 'backend/build/reports/jacoco/test/jacocoTestReport.xml'
-    reportDirectory: 'backend/build/reports/jacoco/test/html'
-    failIfCoverageEmpty: true
+stages:
+  # Backend Test Stage - Runs on all branches
+  - stage: BackendTests
+    displayName: 'Backend Unit Tests'
+    jobs:
+      - job: RunBackendTests
+        displayName: 'Run Gradle Tests'
+        steps:
+          # Checkout source code
+          - checkout: self
+            displayName: 'Checkout Code'
+
+          # Set up Java 17
+          - task: JavaToolInstaller@0
+            displayName: 'Install Java 17'
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          # Grant execute permission to gradlew
+          - script: |
+              cd backend
+              chmod +x gradlew
+            displayName: 'Make gradlew executable'
+
+          # Run Gradle tests using wrapper
+          - script: |
+              cd backend
+              ./gradlew clean test jacocoTestReport --info
+            displayName: 'Run Gradle Tests'
+
+          # Publish JUnit test results
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results'
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'backend/build/test-results/test/TEST-*.xml'
+              failTaskOnFailedTests: true
+              testRunTitle: 'Backend Unit Tests'
+            condition: always()
+
+          # Publish JaCoCo Code Coverage
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish Code Coverage'
+            inputs:
+              codeCoverageTool: 'JaCoCo'
+              summaryFileLocation: 'backend/build/reports/jacoco/test/jacocoTestReport.xml'
+              reportDirectory: 'backend/build/reports/jacoco/test/html'
+              failIfCoverageEmpty: false
+            condition: always()
+
+          # Publish test results summary
+          - script: |
+              echo "====================================="
+              echo "Backend Test Results Summary"
+              echo "====================================="
+              cd backend
+              ./gradlew test --info | grep "tests completed"
+            displayName: 'Test Summary'
+            condition: always()
+
+  # Build Stage - Only runs on main branch after tests pass
+  - stage: Build
+    displayName: 'Build Application'
+    dependsOn: BackendTests
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: BuildBackend
+        displayName: 'Build Backend JAR'
+        steps:
+          - checkout: self
+            displayName: 'Checkout Code'
+
+          - task: JavaToolInstaller@0
+            displayName: 'Install Java 17'
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          - script: |
+              cd backend
+              chmod +x gradlew
+              ./gradlew build -x test
+            displayName: 'Build Backend with Gradle'
+
+          - task: CopyFiles@2
+            displayName: 'Copy JAR files'
+            inputs:
+              SourceFolder: 'backend/build/libs'
+              Contents: '*.jar'
+              TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Artifacts'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'backend-jar'
+              publishLocation: 'Container'
