@@ -16,7 +16,12 @@ import toast from 'react-hot-toast';
  * 
  * @author Le Restaurant Development Team
  */
-const MenuManagementPanel: React.FC = () => {
+interface MenuManagementPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
   const { 
     menuItems, 
     loading, 

@@ -272,14 +272,14 @@ Update `azure-pipeline-Mike.yml`:
 - script: |
     cd backend
     ./gradlew test --tests MenuServiceTest
-  displayName: '🍽️ Test Menu Service (F103/F104)'
+  displayName: 'Unit Test Menu Service (F103/F104)'
   continueOnError: false
 
 # Frontend Menu Tests  
 - script: |
     cd frontend
     npm run test -- --run src/components/organisms/__tests__/MenuManagementPanel.test.tsx
-  displayName: '🍽️ Test Menu Management Panel (F103/F104)'
+  displayName: 'Unit Test Menu Management Panel (F103/F104)'
   continueOnError: false
 ```
 
