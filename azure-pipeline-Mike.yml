@@ -78,19 +78,17 @@ stages:
         npm test -- --run
       displayName: 'Simple Frontend Unit Test'
 
-    # # Backend Menu Tests
-    # - script: |
-    #    cd backend
-    #    ./gradlew test --tests MenuServiceTest
-    #   displayName: 'Unit Test Menu Service (F103/F104)'
-    #   continueOnError: false
+    # Backend Menu Tests
+    - script: |
+       cd backend
+       ./gradlew test --tests MenuServiceTest
+      displayName: 'Unit Test Menu Service (F103/F104)'
 
     # Frontend Menu Tests  
     - script: |
        cd frontend
        npm run test -- --run src/components/organisms/__tests__/MenuManagementPanel.test.tsx
       displayName: 'Unit Test Menu Management Panel (F103/F104)'
-      continueOnError: false
 
     # Build Application
     - script: |
