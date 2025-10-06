@@ -65,28 +65,24 @@ stages:
         npm install
       displayName: 'Clean and install dependencies'
 
-    # # Run Backend Unit Tests
-    # - script: |
-    #     cd backend
-    #     chmod +x gradlew
-    #     ./gradlew test
-    #   displayName: 'Run Backend Unit Tests'
-
     # Run Frontend Unit Tests
     - script: |
         cd frontend
         npm test -- --run
       displayName: 'Simple Frontend Unit Test'
 
-    # Backend Menu Tests
+    # Set up Java
+    - task: UseJavaVersion@1
+      displayName: 'Set up Java 17'
+      inputs:
+        versionSpec: '17'
+        architecture: 'x64'
+
+    # Run Backend Unit Tests
     - script: |
         cd backend
-        if [ -f gradlew ]; then
-          chmod +x gradlew
-          ./gradlew test --tests MenuServiceTest
-        else
-          gradlew.bat test --tests MenuServiceTest
-        fi
+        chmod +x gradlew
+        ./gradlew test --tests MenuServiceTest
       displayName: 'Unit Test Menu Service (F103/F104)'
       continueOnError: true
 
