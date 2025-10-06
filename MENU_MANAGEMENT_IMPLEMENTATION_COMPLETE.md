@@ -268,12 +268,12 @@ Update `azure-pipeline-Mike.yml`:
 ```yaml
 # Add after existing test stages
 
-# # Backend Menu Tests
-# - script: |
-#     cd backend
-#     ./gradlew test --tests MenuServiceTest
-#   displayName: 'Unit Test Menu Service (F103/F104)'
-#   continueOnError: false
+# Backend Menu Tests
+- script: |
+    cd backend
+    ./gradlew test --tests MenuServiceTest
+  displayName: 'Unit Test Menu Service (F103/F104)'
+  continueOnError: false
 
 # Frontend Menu Tests  
 - script: |
