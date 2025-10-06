@@ -35,7 +35,6 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MenuService Tests (F103/F104)")
-@SpringBootTest
 class MenuServiceTest {
     
     @Mock
