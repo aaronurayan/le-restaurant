@@ -262,6 +262,7 @@ describe('MenuManagementPanel (F103/F104)', () => {
 ```
 
 ### **Azure Pipeline Integration**
+### **DONE**
 
 Update `azure-pipeline-Mike.yml`:
 
