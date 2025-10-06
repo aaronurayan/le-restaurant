@@ -71,13 +71,6 @@ stages:
         npm test -- --run
       displayName: 'Simple Frontend Unit Test'
 
-    # Set up Java
-    - task: UseJavaVersion@1
-      displayName: 'Set up Java 17'
-      inputs:
-        versionSpec: '17'
-        architecture: 'x64'
-
     # Run Backend Unit Tests
     - script: |
         cd backend
