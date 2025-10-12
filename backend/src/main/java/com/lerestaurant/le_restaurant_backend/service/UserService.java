@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.lerestaurant.le_restaurant_backend.util.PasswordValidator;
 
 @Service
 @Transactional
@@ -34,6 +35,11 @@ public class UserService {
         }
         if (requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) {
             throw new IllegalArgumentException("Password must not be null or empty");
+        }
+
+        // Validate password strength (must meet minimum complexity requirements)
+        if (!PasswordValidator.isStrong(requestDto.getPassword())) {
+            throw new IllegalArgumentException("Password does not meet strength requirements");
         }
 
         // 이메일 중복 확인 (한 번만 조회)
@@ -182,4 +188,5 @@ public class UserService {
                 user.getLastLogin(),
                 user.getProfileImageUrl());
     }
+
 }

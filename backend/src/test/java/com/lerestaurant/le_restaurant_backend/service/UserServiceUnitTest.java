@@ -56,7 +56,8 @@ public class UserServiceUnitTest {
     public void createUser_duplicateEmail_throws() {
         UserCreateRequestDto req = new UserCreateRequestDto();
         req.setEmail("dup@example.com");
-        req.setPassword("Password1");
+        // ensure password meets strength policy so the duplicate-email check is reached
+        req.setPassword("Password1!");
 
         when(userRepository.findByEmail("dup@example.com")).thenReturn(Optional.of(new User()));
 
@@ -105,10 +106,11 @@ public class UserServiceUnitTest {
     public void createUser_success_savesUser() {
         UserCreateRequestDto req = new UserCreateRequestDto();
         req.setEmail("new@example.com");
-        req.setPassword("Secret123");
+        // use a password that meets the new strength rules (includes special char)
+        req.setPassword("Secret123!");
 
         when(userRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("Secret123")).thenReturn("encodedSecret");
+        when(passwordEncoder.encode("Secret123!")).thenReturn("encodedSecret");
         when(userRepository.save(ArgumentMatchers.any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
             u.setId(42L);
@@ -121,5 +123,20 @@ public class UserServiceUnitTest {
         assertThat(dto.getEmail()).isEqualTo("new@example.com");
 
         verify(userRepository).save(ArgumentMatchers.any(User.class));
+    }
+
+    @Test
+    public void createUser_weakPassword_throws() {
+        UserCreateRequestDto req = new UserCreateRequestDto();
+        req.setEmail("weak@example.com");
+        // missing special character -> weak according to policy
+        req.setPassword("Secret123");
+
+        when(userRepository.findByEmail("weak@example.com")).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            userService.createUser(req);
+        });
+        assertThat(ex.getMessage()).contains("Password does not meet strength requirements");
     }
 }
