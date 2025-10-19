@@ -72,3 +72,5 @@ spring-boot-starter-parent/
 # Test results
 test-results/
 junit/
+
+.fake
