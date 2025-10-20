@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
+import { placeOrder } from "./services/orderService";
 import './index.css';
 
 function App() {
@@ -39,10 +40,28 @@ function App() {
     setIsCartOpen(true);
   };
 
-  const handleCheckout = () => {
-    // TODO: Integrate with Payment Management flow
-    alert('Proceeding to checkout (mock)');
-    setIsCartOpen(false);
+  const handleCheckout = async () => {
+    try {
+      const orderPayload = {
+        orderType: "DINE_IN", // or TAKEOUT/DELIVERY
+        customer: { id: 1 },  
+        specialInstructions: "",
+        items: cartItems.map(ci => ({
+          name: ci.menuItem.name,
+          quantity: ci.quantity,
+          price: ci.menuItem.price
+        }))
+      };
+
+      const response = await placeOrder(orderPayload);
+      alert(`Order placed! Order ID: ${response.data.id}`);
+
+      clearCart(); // empty the cart after successful order
+      setIsCartOpen(false);
+    } catch (err) { 
+      console.error(err);
+      alert("Failed to place order. Please try again.");
+    }
   };
 
   return (
