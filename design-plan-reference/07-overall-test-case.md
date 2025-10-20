@@ -484,31 +484,31 @@ SELECT * FROM menu_items WHERE name = 'Steak';
 ### **API Response Assertions**
 
 ```
-POST /api/auth/register
+POST /api/v1/users
 Response: HTTP 201
 Body: { userId: '...', email: 'alice@example.com', status: 'ACTIVE' }
 
-POST /api/auth/login
+POST /api/v1/auth/login
 Response: HTTP 200
 Body: { token: 'jwt_token...', user: { id: '...', email: 'alice@example.com' } }
 
-GET /api/menu?category=MAINS
+GET /api/v1/menu/items/category/MAINS
 Response: HTTP 200
 Body: { items: [ { name: 'Truffle Pasta', price: 45.99 }, ... ] }
 
-POST /api/orders
+POST /api/v1/orders
 Response: HTTP 201
 Body: { orderId: 'ORD-789456', status: 'PENDING', total: 59.99 }
 
-POST /api/payments
+POST /api/v1/payments
 Response: HTTP 200
 Body: { transactionId: 'TXN-555888', status: 'COMPLETED' }
 
-PUT /api/reservations/RES-123456
+PUT /api/v1/reservations/RES-123456
 Response: HTTP 200
 Body: { reservationId: 'RES-123456', status: 'APPROVED' }
 
-PUT /api/deliveries/ORD-789456/status
+PUT /api/v1/deliveries/ORD-789456/status
 Response: HTTP 200
 Body: { orderId: 'ORD-789456', status: 'DELIVERED' }
 ```
