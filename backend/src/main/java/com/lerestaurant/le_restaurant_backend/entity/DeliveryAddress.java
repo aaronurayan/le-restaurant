@@ -46,6 +46,9 @@ public class DeliveryAddress {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
+    @Column(name = "updated_at")
+    private OffsetDateTime updatedAt;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public User getUser() { return user; }
@@ -68,10 +71,12 @@ public class DeliveryAddress {
     public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
     public AddressType getAddressType() { return addressType; }
     public void setAddressType(AddressType addressType) { this.addressType = addressType; }
-    public Boolean getDefault() { return isDefault; }
-    public void setDefault(Boolean aDefault) { isDefault = aDefault; }
+    public Boolean getIsDefault() { return isDefault; }
+    public void setIsDefault(Boolean isDefault) { this.isDefault = isDefault; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+    public OffsetDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
 
 
