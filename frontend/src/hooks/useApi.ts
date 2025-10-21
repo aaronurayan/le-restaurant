@@ -219,7 +219,7 @@ export const useApiHealth = () => {
   // 컴포넌트 마운트 시 상태 확인
   useEffect(() => {
     checkBackendStatus();
-  }, [checkBackendStatus]);
+  }, []); // Remove checkBackendStatus from dependencies to prevent infinite loop
 
   return {
     isBackendHealthy,

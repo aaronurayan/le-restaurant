@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="47" failures="0" errors="0" time="9.7755549">
+    <testsuite name="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" timestamp="2025-10-02T00:57:30.191Z" hostname="LAPTOP-1BFINNRJ-SALIERI009" tests="29" failures="0" errors="0" skipped="0" time="3.5449447">
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Rendering &gt; should render panel when isOpen is true" time="0.0756276">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Rendering &gt; should not render panel when isOpen is false" time="0.0070573">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Rendering &gt; should display loading spinner while fetching data" time="0.0274738">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Rendering &gt; should show error message when API fails" time="0.0396905">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Rendering &gt; should display all payments in table" time="0.0836669">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Statistics &gt; should display total revenue correctly" time="0.0704712">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Statistics &gt; should display completed payments amount" time="0.0704888">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Statistics &gt; should display pending payments amount" time="0.0942023">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Filtering &gt; should filter payments by search term" time="0.3023492">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Filtering &gt; should filter payments by transaction ID" time="0.3900065">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Filtering &gt; should filter payments by status" time="0.18545">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Filtering &gt; should filter payments by method" time="0.1845082">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Filtering &gt; should combine multiple filters" time="0.4006474">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Payment Operations &gt; should open payment details on view button click" time="0.1561788">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Payment Operations &gt; should show refund button only for completed payments" time="0.0775504">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Payment Operations &gt; should process refund with confirmation" time="0.1406276">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Payment Operations &gt; should not process refund if confirmation cancelled" time="0.1704537">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Status Badges &gt; should display correct status badge for completed payment" time="0.0577058">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Status Badges &gt; should display correct status badge for pending payment" time="0.0648606">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Status Badges &gt; should display correct status badge for failed payment" time="0.0643139">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Accessibility &gt; should have proper ARIA labels" time="0.0620437">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Accessibility &gt; should have accessible table structure" time="0.2767898">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Accessibility &gt; should have descriptive button labels" time="0.2394919">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Edge Cases &gt; should handle empty payment list" time="0.0268855">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Edge Cases &gt; should handle very large payment amounts" time="0.0483609">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Edge Cases &gt; should handle missing transaction ID" time="0.0416696">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Currency Formatting &gt; should format USD currency correctly" time="0.0554587">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Currency Formatting &gt; should format decimal places correctly" time="0.0652472">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/PaymentManagementPanel.test.tsx" name="PaymentManagementPanel (F106) &gt; Date Formatting &gt; should display formatted dates" time="0.0638479">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/organisms/__tests__/UserManagementPanel.test.tsx" timestamp="2025-10-02T00:57:30.215Z" hostname="LAPTOP-1BFINNRJ-SALIERI009" tests="18" failures="0" errors="0" skipped="0" time="6.2306102">
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; Rendering &gt; should render panel when isOpen is true" time="0.2331974">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; Rendering &gt; should not render panel when isOpen is false" time="0.0032412">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; Rendering &gt; should display loading spinner while fetching data" time="0.0572834">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; Rendering &gt; should show error message when API fails" time="0.0357528">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; Rendering &gt; should display all users in table" time="0.0763856">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; User Interactions &gt; should filter users by search term" time="0.4827469">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; User Interactions &gt; should filter users by role" time="0.2123809">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; User Interactions &gt; should filter users by status" time="0.1540337">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; User Interactions &gt; should open create modal on add button click" time="0.465023">
+            <system-err>
+Warning: validateDOMNesting(...): &lt;svg&gt; cannot appear as a child of &lt;option&gt;.
+    at svg
+    at D:\UTS\2025-02\Advanced Software development\Assignment\Projects\le-restaurant\frontend\node_modules\lucide-react\dist\cjs\lucide-react.js:28:7
+    at option
+    at select
+    at div
+    at form
+    at div
+    at div
+    at UserFormModal (D:\UTS\2025-02\Advanced Software development\Assignment\Projects\le-restaurant\frontend\src\components\organisms\UserFormModal.tsx:11:3)
+    at div
+    at UserManagementPanel (D:\UTS\2025-02\Advanced Software development\Assignment\Projects\le-restaurant\frontend\src\components\organisms\UserManagementPanel.tsx:14:32)
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; User Interactions &gt; should call onClose when close button clicked" time="0.457905">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; CRUD Operations &gt; should create new user successfully" time="2.3403309">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; CRUD Operations &gt; should update existing user" time="1.116752">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; CRUD Operations &gt; should delete user with confirmation" time="0.149099">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; CRUD Operations &gt; should not delete user if confirmation cancelled" time="0.1261301">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; Accessibility &gt; should have proper ARIA labels" time="0.0407617">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; Accessibility &gt; should have accessible table structure" time="0.2073272">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; Edge Cases &gt; should handle empty user list" time="0.025308">
+        </testcase>
+        <testcase classname="src/components/organisms/__tests__/UserManagementPanel.test.tsx" name="UserManagementPanel (F102) &gt; Edge Cases &gt; should handle very long user names" time="0.0415271">
+        </testcase>
+    </testsuite>
+</testsuites>

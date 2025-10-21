@@ -1,27 +1,31 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
- * ReservationApprovalRequestDto
- * F109 - Reservation Management Feature
+ * Reservation Approval Request DTO (F109)
  * 
- * Request DTO for approving a reservation.
+ * This DTO is used for manager approval/rejection of reservations.
  * 
  * @author Le Restaurant Development Team
+ * @version 1.0.0
+ * @since 2025-10-20
+ * @module F108-F109-ReservationManagement
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ReservationApprovalRequestDto {
     
-    private Long tableId;
+    private Boolean approved;
+    private String rejectionReason; // Required if approved=false
+    private Long approverId; // Manager ID
     
-    private String adminNotes;
+    // Constructors
+    public ReservationApprovalRequestDto() {}
     
-    @NotBlank(message = "Confirmed by user ID is required")
-    private Long confirmedByUserId;
+    // Getters and Setters
+    public Boolean getApproved() { return approved; }
+    public void setApproved(Boolean approved) { this.approved = approved; }
+    
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+    
+    public Long getApproverId() { return approverId; }
+    public void setApproverId(Long approverId) { this.approverId = approverId; }
 }

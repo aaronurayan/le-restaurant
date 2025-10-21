@@ -1,113 +1,76 @@
-# ============================================================================
-# Le Restaurant - Root .gitignore
-# ============================================================================
+# IDE and Editor
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
 
-# Node.js
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node modules
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
-.npm
-.yarn
-.pnp.*
-
-# Dependencies
-**/node_modules/
-**/jspm_packages/
 
 # Build outputs
-dist/
 build/
-out/
-.next/
-.nuxt/
-.vuepress/dist
-.cache/
-.parcel-cache/
+dist/
+target/
+*.jar
+*.war
+*.class
 
-# Test Coverage
-coverage/
-*.lcov
-.nyc_output/
-test-results/
-junit.xml
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
 
-# Environment Variables
+# Maven
+!.mvn/wrapper/maven-wrapper.jar
+
+# Environment files
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env.*.local
-
-# IDE / Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-.project
-.classpath
-.settings/
-*.iml
-*.ipr
-*.iws
 
 # Logs
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
 
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
 
 # Temporary files
 tmp/
 temp/
 *.tmp
-*.temp
 *.bak
-*.swp
-*~.nib
+*.cache
 
-# Java / Gradle / Maven
-*.class
-.gradle/
-gradle-app.setting
-!gradle-wrapper.jar
-.gradletasknamecache
-target/
-.mvn/
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
-# React / Vite specific
+# Spring Boot
+HELP.md
+.springBeans
+spring-boot-starter-parent/
+
+# React/Vite
 .vite/
 *.local
 
-# TypeScript
-*.tsbuildinfo
+# Test results
+test-results/
+junit/
 
-# Testing
-**/__tests__/__snapshots__/
-*.test.js.snap
-
-# Documentation
-*.pdf
-*.docx
-
-# Azure
-.azure/
-*.publishsettings
-
-# Misc
-*.orig
-.sass-cache/
-connect.lock
-typings/
-.angular/
+.fake
