@@ -100,13 +100,13 @@ class OrderServiceTest {
         testOrder.setSubtotal(new BigDecimal("12.50"));
         testOrder.setTaxAmount(new BigDecimal("1.25"));
         testOrder.setTotalAmount(new BigDecimal("13.75"));
-        testOrder.setCreatedAt(OffsetDateTime.now());
+        testOrder.setOrderTime(OffsetDateTime.now());
 
         // Setup request DTO
         testOrderCreateRequest = new OrderCreateRequestDto();
         testOrderCreateRequest.setCustomerId(1L);
         testOrderCreateRequest.setTableId(1L);
-        testOrderCreateRequest.setOrderType("DINE_IN");
+        testOrderCreateRequest.setOrderType(Order.OrderType.DINE_IN);
         testOrderCreateRequest.setItems(Arrays.asList(
             new OrderItemRequestDto(100L, 1)
         ));
@@ -134,7 +134,7 @@ class OrderServiceTest {
             // Then
             assertThat(createdOrder).isNotNull();
             assertThat(createdOrder.getId()).isEqualTo(1L);
-            assertThat(createdOrder.getStatus()).isEqualTo("PENDING");
+            assertThat(createdOrder.getStatus()).isEqualTo(Order.OrderStatus.PENDING);
             verify(orderRepository, times(1)).save(any(Order.class));
         }
 
@@ -197,7 +197,7 @@ class OrderServiceTest {
             OrderDto createdOrder = orderService.createOrder(testOrderCreateRequest);
 
             // Then
-            assertThat(createdOrder.getStatus()).isEqualTo("PENDING");
+            assertThat(createdOrder.getStatus()).isEqualTo(Order.OrderStatus.PENDING);
         }
     }
 
@@ -279,7 +279,7 @@ class OrderServiceTest {
             // Then
             assertThat(orders).isNotNull();
             assertThat(orders).hasSize(1);
-            assertThat(orders.get(0).getStatus()).isEqualTo("PENDING");
+            assertThat(orders.get(0).getStatus()).isEqualTo(Order.OrderStatus.PENDING);
         }
     }
 
@@ -300,10 +300,10 @@ class OrderServiceTest {
             when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
 
             // When
-            OrderDto updatedOrder = orderService.updateOrderStatus(1L, "COMPLETED");
+            OrderDto updatedOrder = orderService.updateOrderStatus(1L, Order.OrderStatus.COMPLETED);
 
             // Then
-            assertThat(updatedOrder.getStatus()).isEqualTo("COMPLETED");
+            assertThat(updatedOrder.getStatus()).isEqualTo(Order.OrderStatus.COMPLETED);
             assertThat(updatedOrder.getCompletedAt()).isNotNull();
             verify(orderRepository, times(1)).save(any(Order.class));
         }
@@ -315,7 +315,7 @@ class OrderServiceTest {
             when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
             // When & Then
-            assertThatThrownBy(() -> orderService.updateOrderStatus(99L, "COMPLETED"))
+            assertThatThrownBy(() -> orderService.updateOrderStatus(99L, Order.OrderStatus.COMPLETED))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Order not found");
 
@@ -336,12 +336,14 @@ class OrderServiceTest {
             // Given
             testOrder.setStatus(Order.OrderStatus.PENDING);
             when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
+            when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
 
             // When
             orderService.deleteOrder(1L);
 
             // Then
-            verify(orderRepository, times(1)).deleteById(1L);
+            verify(orderRepository, times(1)).save(any(Order.class));
+            verify(orderRepository, never()).deleteById(anyLong());
         }
 
         @Test
@@ -354,8 +356,9 @@ class OrderServiceTest {
             // When & Then
             assertThatThrownBy(() -> orderService.deleteOrder(1L))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("Cannot delete");
+                    .hasMessageContaining("Cannot cancel");
 
+            verify(orderRepository, never()).save(any(Order.class));
             verify(orderRepository, never()).deleteById(anyLong());
         }
 
