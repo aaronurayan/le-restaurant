@@ -139,9 +139,9 @@
 
 ---
 
-## 📋 Next Steps (TODO)
 
 ### **Unit Tests for Frontend**
+### **DONE**
 
 Create `frontend/src/components/organisms/__tests__/MenuManagementPanel.test.tsx`:
 
