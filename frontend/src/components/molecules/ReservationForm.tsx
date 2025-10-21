@@ -33,7 +33,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   const [availableTables, setAvailableTables] = useState<Table[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [selectedTable, setSelectedTable] = useState<string>('');
-  const [errors, setErrors] = useState<Partial<ReservationFormData>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof ReservationFormData, string>>>({});
 
   // 날짜가 변경될 때 시간대 업데이트
   useEffect(() => {
@@ -71,7 +71,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<ReservationFormData> = {};
+    const newErrors: Partial<Record<keyof ReservationFormData, string>> = {};
 
     if (!formData.date) newErrors.date = 'Date is required';
     if (!formData.time) newErrors.time = 'Time is required';
