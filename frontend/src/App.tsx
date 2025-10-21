@@ -5,6 +5,8 @@ import PaymentManagementPanel from './components/organisms/PaymentManagementPane
 import DeliveryManagement from './pages/DeliveryManagement';
 import DeliveryTracking from './pages/DeliveryTracking';
 import DeliveryDashboard from './pages/DeliveryDashboard';
+import AdminDashboard from './components/organisms/AdminDashboard';
+import CustomerDashboard from './components/organisms/CustomerDashboard';
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import { UserRole } from './types/user';
@@ -71,6 +73,27 @@ function App() {
                   />
                 } 
               />
+              
+              {/* Admin Dashboard */}
+              <Route 
+                path="/admin/dashboard" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Customer Dashboard */}
+              <Route 
+                path="/customer/dashboard" 
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <CustomerDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
               <Route 
                 path="/payments" 
                 element={

@@ -1,6 +1,24 @@
+/**
+ * Menu API Hook (Legacy)
+ * 
+ * This hook provides menu management functionality with backward compatibility.
+ * It uses the centralized MenuApiService and provides a clean interface for React components.
+ * 
+ * Features:
+ * - Menu item CRUD operations
+ * - Category management
+ * - Menu search and filtering
+ * - Error handling and loading states
+ * - Mock data fallback
+ * 
+ * @author Le Restaurant Development Team
+ * @version 1.0.0
+ * @since 2024-01-15
+ */
+
 import { useState, useEffect } from 'react';
 import { MenuItem } from '../types';
-import { menuApi } from '../services/api';
+import { menuApiService } from '../services/menuApiService';
 
 export const useMenuApi = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -12,9 +30,9 @@ export const useMenuApi = () => {
   // 백엔드 연결 상태 확인
   const checkBackendConnection = async () => {
     try {
-      const isConnected = await menuApi.testConnection();
-      setIsBackendConnected(true);
-      return true;
+      const isConnected = await menuApiService.testConnection();
+      setIsBackendConnected(isConnected);
+      return isConnected;
     } catch (error) {
       console.warn('Backend not connected, using mock data');
       setIsBackendConnected(false);
@@ -31,12 +49,14 @@ export const useMenuApi = () => {
       const isConnected = await checkBackendConnection();
       
       if (isConnected) {
-        const items = await menuApi.getAllItems();
-        setMenuItems(items);
+        const response = await menuApiService.getAllMenuItems();
+        setMenuItems(response.items);
+        setCategories(response.categories);
       } else {
         // 백엔드가 연결되지 않으면 mock data 사용
-        const { mockMenuItems } = await import('../data/mockData');
-        setMenuItems(mockMenuItems);
+        const response = menuApiService['getMockMenuList']({});
+        setMenuItems(response.items);
+        setCategories(response.categories);
       }
     } catch (err) {
       setError('Failed to load menu items');
@@ -44,8 +64,9 @@ export const useMenuApi = () => {
       
       // 에러 발생 시 mock data 사용
       try {
-        const { mockMenuItems } = await import('../data/mockData');
-        setMenuItems(mockMenuItems);
+        const response = menuApiService['getMockMenuList']({});
+        setMenuItems(response.items);
+        setCategories(response.categories);
       } catch (mockError) {
         console.error('Failed to load mock data:', mockError);
       }
@@ -60,22 +81,20 @@ export const useMenuApi = () => {
       const isConnected = await checkBackendConnection();
       
       if (isConnected) {
-        const cats = await menuApi.getAllCategories();
+        const cats = await menuApiService.getAllCategories();
         setCategories(cats);
       } else {
         // 백엔드가 연결되지 않으면 mock data에서 카테고리 추출
-        const { mockMenuItems } = await import('../data/mockData');
-        const uniqueCategories = [...new Set(mockMenuItems.map(item => item.categoryId))];
-        setCategories(uniqueCategories);
+        const response = menuApiService['getMockMenuList']({});
+        setCategories(response.categories);
       }
     } catch (err) {
       console.error('Error loading categories:', err);
       
       // 에러 발생 시 mock data에서 카테고리 추출
       try {
-        const { mockMenuItems } = await import('../data/mockData');
-        const uniqueCategories = [...new Set(mockMenuItems.map(item => item.categoryId))];
-        setCategories(uniqueCategories);
+        const response = menuApiService['getMockMenuList']({});
+        setCategories(response.categories);
       } catch (mockError) {
         console.error('Failed to load mock categories:', mockError);
       }
@@ -91,13 +110,12 @@ export const useMenuApi = () => {
       const isConnected = await checkBackendConnection();
       
       if (isConnected) {
-        const items = await menuApi.getItemsByCategory(category);
+        const items = await menuApiService.getMenuItemsByCategory(category);
         setMenuItems(items);
       } else {
         // 백엔드가 연결되지 않으면 mock data에서 필터링
-        const { mockMenuItems } = await import('../data/mockData');
-        const filteredItems = mockMenuItems.filter(item => item.categoryId === category);
-        setMenuItems(filteredItems);
+        const response = menuApiService['getMockMenuList']({ category });
+        setMenuItems(response.items);
       }
     } catch (err) {
       setError('Failed to load menu items by category');
@@ -105,9 +123,8 @@ export const useMenuApi = () => {
       
       // 에러 발생 시 mock data에서 필터링
       try {
-        const { mockMenuItems } = await import('../data/mockData');
-        const filteredItems = mockMenuItems.filter(item => item.categoryId === category);
-        setMenuItems(filteredItems);
+        const response = menuApiService['getMockMenuList']({ category });
+        setMenuItems(response.items);
       } catch (mockError) {
         console.error('Failed to load mock data by category:', mockError);
       }
@@ -125,16 +142,12 @@ export const useMenuApi = () => {
       const isConnected = await checkBackendConnection();
       
       if (isConnected) {
-        const items = await menuApi.searchItems(keyword);
+        const items = await menuApiService.searchMenuItems(keyword);
         setMenuItems(items);
       } else {
         // 백엔드가 연결되지 않으면 mock data에서 검색
-        const { mockMenuItems } = await import('../data/mockData');
-        const filteredItems = mockMenuItems.filter(item => 
-          item.name.toLowerCase().includes(keyword.toLowerCase()) ||
-          item.description.toLowerCase().includes(keyword.toLowerCase())
-        );
-        setMenuItems(filteredItems);
+        const response = menuApiService['getMockMenuList']({ searchTerm: keyword });
+        setMenuItems(response.items);
       }
     } catch (err) {
       setError('Failed to search menu items');
@@ -142,12 +155,8 @@ export const useMenuApi = () => {
       
       // 에러 발생 시 mock data에서 검색
       try {
-        const { mockMenuItems } = await import('../data/mockData');
-        const filteredItems = mockMenuItems.filter(item => 
-          item.name.toLowerCase().includes(keyword.toLowerCase()) ||
-          item.description.toLowerCase().includes(keyword.toLowerCase())
-        );
-        setMenuItems(filteredItems);
+        const response = menuApiService['getMockMenuList']({ searchTerm: keyword });
+        setMenuItems(response.items);
       } catch (mockError) {
         console.error('Failed to search mock data:', mockError);
       }
@@ -160,7 +169,7 @@ export const useMenuApi = () => {
   useEffect(() => {
     loadMenuItems();
     loadCategories();
-  }, []);
+  }, []); // Empty dependency array to run only once on mount
 
   return {
     menuItems,
