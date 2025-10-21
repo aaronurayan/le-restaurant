@@ -1,6 +1,15 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home';
+import PaymentManagementPanel from './components/organisms/PaymentManagementPanel';
+import DeliveryManagement from './pages/DeliveryManagement';
+import DeliveryTracking from './pages/DeliveryTracking';
+import DeliveryDashboard from './pages/DeliveryDashboard';
+import AdminDashboard from './components/organisms/AdminDashboard';
+import CustomerDashboard from './components/organisms/CustomerDashboard';
 import { MainLayout } from './components/templates/MainLayout';
+import ProtectedRoute from './components/routes/ProtectedRoute';
+import { UserRole } from './types/user';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
@@ -16,11 +25,11 @@ function App() {
     addToCart,
     updateQuantity,
     removeFromCart,
-    clearCart,
   } = useCart();
 
   const [favoritedItems, setFavoritedItems] = React.useState<Set<string>>(new Set());
   const [isCartOpen, setIsCartOpen] = React.useState(false);
+  const [redirectToPayments, setRedirectToPayments] = React.useState(false);
 
   const handleAddToCart = (item: MenuItem, quantity: number) => {
     addToCart(item, quantity);
@@ -40,54 +49,98 @@ function App() {
     setIsCartOpen(true);
   };
 
-  const handleCheckout = async () => {
-    try {
-      const orderPayload = {
-        orderType: "DINE_IN", // or TAKEOUT/DELIVERY
-        customer: { id: 1 },  
-        specialInstructions: "",
-        items: cartItems.map(ci => ({
-          name: ci.menuItem.name,
-          quantity: ci.quantity,
-          price: ci.menuItem.price
-        }))
-      };
-
-      const response = await placeOrder(orderPayload);
-      alert(`Order placed! Order ID: ${response.data.id}`);
-
-      clearCart(); // empty the cart after successful order
-      setIsCartOpen(false);
-    } catch (err) { 
-      console.error(err);
-      alert("Failed to place order. Please try again.");
-    }
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    setRedirectToPayments(true);
   };
 
   return (
     <AuthProvider>
-      <div className="App">
-        <MainLayout
-          cartItemCount={cartItemCount}
-          onCartClick={handleCartClick}
-        >
-          <Home
-            onAddToCart={handleAddToCart}
-            favoritedItems={favoritedItems}
-            onFavorite={handleFavorite}
-          />
-        </MainLayout>
+      <Router>
+        <div className="App">
+          <MainLayout
+            cartItemCount={cartItemCount}
+            onCartClick={handleCartClick}
+          >
+            {redirectToPayments && <Navigate to="/payments" replace />}
+            <Routes>
+              <Route 
+                path="/" 
+                element={
+                  <Home
+                    onAddToCart={handleAddToCart}
+                    favoritedItems={favoritedItems}
+                    onFavorite={handleFavorite}
+                  />
+                } 
+              />
+              
+              {/* Admin Dashboard */}
+              <Route 
+                path="/admin/dashboard" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Customer Dashboard */}
+              <Route 
+                path="/customer/dashboard" 
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <CustomerDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/payments" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <PaymentManagementPanel isOpen={true} onClose={() => window.history.back()} />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/delivery" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <DeliveryManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/delivery/dashboard" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <DeliveryDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/delivery/tracking/:deliveryId" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <DeliveryTracking />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+          </MainLayout>
 
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cartItems={cartItems}
-          cartTotal={cartTotal}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
-        />
-      </div>
+          <CartSidebar
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            cartItems={cartItems}
+            cartTotal={cartTotal}
+            onUpdateQuantity={updateQuantity}
+            onRemoveItem={removeFromCart}
+            onCheckout={handleCheckout}
+          />
+        </div>
+      </Router>
     </AuthProvider>
   );
 }

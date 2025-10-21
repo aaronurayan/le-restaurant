@@ -43,11 +43,17 @@ public class Reservation {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
+    @Column(name = "updated_at")
+    private OffsetDateTime updatedAt;
+
     @Column(name = "confirmed_at")
     private OffsetDateTime confirmedAt;
 
     @Column(name = "checked_in_at")
     private OffsetDateTime checkedInAt;
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
 
     @ManyToOne
     @JoinColumn(name = "confirmed_by_user_id")
@@ -71,12 +77,32 @@ public class Reservation {
     public void setStatus(ReservationStatus status) { this.status = status; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+    public OffsetDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
     public OffsetDateTime getConfirmedAt() { return confirmedAt; }
     public void setConfirmedAt(OffsetDateTime confirmedAt) { this.confirmedAt = confirmedAt; }
     public OffsetDateTime getCheckedInAt() { return checkedInAt; }
     public void setCheckedInAt(OffsetDateTime checkedInAt) { this.checkedInAt = checkedInAt; }
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
     public User getConfirmedBy() { return confirmedBy; }
     public void setConfirmedBy(User confirmedBy) { this.confirmedBy = confirmedBy; }
+    public User getApprovedBy() { return confirmedBy; }
+    public void setApprovedBy(User approvedBy) { this.confirmedBy = approvedBy; }
+    public Integer getNumberOfGuests() { return partySize; }
+    public void setNumberOfGuests(Integer numberOfGuests) { this.partySize = numberOfGuests; }
+    public OffsetDateTime getReservationDateTime() {
+        if (reservationDate != null && reservationTime != null) {
+            return OffsetDateTime.of(reservationDate.atTime(reservationTime), OffsetDateTime.now().getOffset());
+        }
+        return null;
+    }
+    public void setReservationDateTime(OffsetDateTime dateTime) {
+        if (dateTime != null) {
+            this.reservationDate = dateTime.toLocalDate();
+            this.reservationTime = dateTime.toLocalTime();
+        }
+    }
 }
 
 

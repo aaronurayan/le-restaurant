@@ -21,10 +21,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.disable())
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/**").permitAll()
-                .anyRequest().authenticated()
-            );
+                .requestMatchers("/h2-console/**").permitAll()
+                .anyRequest().permitAll()
+            )
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()));
         
         return http.build();
     }
