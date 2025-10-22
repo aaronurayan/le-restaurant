@@ -4,6 +4,23 @@ import { OrderDto, OrderCreateRequestDto, OrderUpdateRequestDto, OrderStatus } f
 const API_BASE_URL = 'http://localhost:8080/api';
 
 /**
+ * Helper to get auth headers
+ * Note: Backend OrderController has @CrossOrigin but may require auth in production
+ */
+const getAuthHeaders = (): HeadersInit => {
+  const token = localStorage.getItem('authToken');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+};
+
+/**
  * Hook for Order API operations (F105)
  * Manages state for order CRUD and filtering operations
  */
@@ -18,7 +35,9 @@ export const useOrderApi = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders`);
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to fetch orders');
       const data = await response.json();
       setOrders(data);
@@ -37,7 +56,9 @@ export const useOrderApi = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to fetch order');
       const data = await response.json();
       setCurrentOrder(data);
@@ -56,7 +77,9 @@ export const useOrderApi = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/customer/${customerId}`);
+      const response = await fetch(`${API_BASE_URL}/orders/customer/${customerId}`, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to fetch customer orders');
       const data = await response.json();
       setOrders(data);
@@ -75,7 +98,9 @@ export const useOrderApi = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/status/${status}`);
+      const response = await fetch(`${API_BASE_URL}/orders/status/${status}`, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to fetch orders by status');
       const data = await response.json();
       setOrders(data);
@@ -96,7 +121,7 @@ export const useOrderApi = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(orderData),
       });
       if (!response.ok) throw new Error('Failed to create order');
@@ -119,7 +144,7 @@ export const useOrderApi = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(updateData),
       });
       if (!response.ok) throw new Error('Failed to update order');
@@ -142,7 +167,7 @@ export const useOrderApi = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status }),
       });
       if (!response.ok) throw new Error('Failed to update order status');
@@ -165,6 +190,7 @@ export const useOrderApi = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       if (!response.ok) throw new Error('Failed to delete order');
       setCurrentOrder(null);

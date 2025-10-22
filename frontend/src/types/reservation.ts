@@ -74,7 +74,7 @@ export interface TimeSlot {
 export interface ReservationFormData {
   date: string;
   time: string;
-  partySize: string;
+  partySize: number;
   specialRequests: string;
   customerName: string;
   customerEmail: string;

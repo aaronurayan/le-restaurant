@@ -16,7 +16,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
-import { placeOrder } from "./services/orderService";
 import './index.css';
 
 function App() {
@@ -54,18 +53,6 @@ function App() {
   const handleCheckout = () => {
     setIsCartOpen(false);
     setRedirectToPayments(true);
-  };
-
-  const handleLogin = (email: string) => {
-    setUser(email);
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-  };
-
-  const handleRegister = (email: string) => {
-    setUser(email);
   };
 
   return (
@@ -123,7 +110,7 @@ function App() {
                 path="/admin/menu"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
-                    <MenuManagementPanel />
+                    <MenuManagementPanel isOpen={true} onClose={() => window.history.back()} />
                   </ProtectedRoute>
                 }
               />
