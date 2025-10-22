@@ -19,16 +19,19 @@
 
 # Trigger Configuration
 trigger:
+  batch: true
   branches:
     include:
       - main
       - develop
+      - F*
   paths:
     exclude:
       - README.md
-      - docs/**
+      - docs
       - .gitignore
-      - '**/*.md'
+      - '*.md'
+      - 'Actual-design-plan'
 
 # Pull Request Validation
 pr:
@@ -36,6 +39,12 @@ pr:
     include:
       - main
       - develop
+  autoCancel: true
+  paths:
+    exclude:
+      - README.md
+      - docs
+      - '*.md'
 
 # Pipeline Resources
 pool:
@@ -58,14 +67,18 @@ variables:
   BACKEND_COVERAGE_THRESHOLD: 80
   
   # Azure Resource Names (Update these with your Azure resources)
-  AZURE_SUBSCRIPTION: 'YOUR_AZURE_SUBSCRIPTION_NAME'
-  BACKEND_APP_NAME: 'le-restaurant-backend'
+  AZURE_SUBSCRIPTION: 'le-restaurant-azure-connection'
+  BACKEND_APP_NAME: 'le-restaurant-backend-prod'
   FRONTEND_APP_NAME: 'le-restaurant-frontend'
   RESOURCE_GROUP: 'le-restaurant-rg'
   
   # Build Configuration
   BACKEND_JAR_NAME: 'le-restaurant-backend-0.0.1-SNAPSHOT.jar'
   FRONTEND_BUILD_OUTPUT: 'dist'
+  
+  # Test Configuration
+  JUNIT_TEST_RESULTS_DIR: '$(BACKEND_PATH)/build/test-results/test'
+  JACOCO_REPORT_DIR: '$(BACKEND_PATH)/build/reports/jacoco/test'
 
 # ==============================================================================
 # STAGE 1: CODE QUALITY & LINTING
@@ -173,8 +186,18 @@ stages:
             displayName: '🧪 Run Tests with Coverage'
             continueOnError: false
 
+          - task: PublishTestResults@2
+            displayName: '📊 Publish Frontend Test Results'
+            condition: always()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '$(FRONTEND_PATH)/test-results/junit.xml'
+              failTaskOnFailedTests: true
+              testRunTitle: 'Frontend Unit Tests'
+
           - task: PublishCodeCoverageResults@2
             displayName: '📊 Publish Frontend Coverage'
+            condition: always()
             inputs:
               codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(FRONTEND_PATH)/coverage/cobertura-coverage.xml'
@@ -183,11 +206,22 @@ stages:
 
           - script: |
               cd $(FRONTEND_PATH)
-              COVERAGE=$(grep -oP '(?<=lines>)[0-9.]+' coverage/cobertura-coverage.xml | head -1)
-              echo "Coverage: $COVERAGE%"
-              if (( $(echo "$COVERAGE < $(FRONTEND_COVERAGE_THRESHOLD)" | bc -l) )); then
-                echo "##vso[task.logissue type=error]Coverage $COVERAGE% is below threshold $(FRONTEND_COVERAGE_THRESHOLD)%"
-                exit 1
+              echo "📊 Analyzing Frontend Test Coverage..."
+              if [ -f coverage/coverage-summary.json ]; then
+                LINES=$(node -pe "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json', 'utf8')).total.lines.pct")
+                BRANCHES=$(node -pe "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json', 'utf8')).total.branches.pct")
+                FUNCTIONS=$(node -pe "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json', 'utf8')).total.functions.pct")
+                STATEMENTS=$(node -pe "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json', 'utf8')).total.statements.pct")
+                
+                echo "Lines: $LINES% | Branches: $BRANCHES% | Functions: $FUNCTIONS% | Statements: $STATEMENTS%"
+                
+                if (( $(echo "$LINES < $(FRONTEND_COVERAGE_THRESHOLD)" | bc -l) )); then
+                  echo "##vso[task.logissue type=error]Line coverage $LINES% is below threshold $(FRONTEND_COVERAGE_THRESHOLD)%"
+                  exit 1
+                fi
+                echo "✅ Coverage threshold met: $LINES%"
+              else
+                echo "##vso[task.logissue type=warning]Coverage summary file not found"
               fi
             displayName: '✅ Verify Coverage Threshold'
             condition: always()
@@ -229,28 +263,42 @@ stages:
           - script: |
               cd $(BACKEND_PATH)
               chmod +x gradlew
-              ./gradlew clean test jacocoTestReport --stacktrace
+              echo "🧪 Running Backend Tests with Coverage..."
+              ./gradlew clean test jacocoTestReport --stacktrace --info
             displayName: '🧪 Run Tests with Coverage'
+            continueOnError: false
 
           - task: PublishTestResults@2
             displayName: '📊 Publish Test Results'
+            condition: always()
             inputs:
               testResultsFormat: 'JUnit'
-              testResultsFiles: '$(BACKEND_PATH)/build/test-results/test/*.xml'
+              testResultsFiles: '$(JUNIT_TEST_RESULTS_DIR)/*.xml'
               failTaskOnFailedTests: true
               testRunTitle: 'Backend Unit Tests'
+              mergeTestResults: true
 
           - task: PublishCodeCoverageResults@2
             displayName: '📊 Publish Backend Coverage'
+            condition: always()
             inputs:
               codeCoverageTool: 'JaCoCo'
-              summaryFileLocation: '$(BACKEND_PATH)/build/reports/jacoco/test/jacocoTestReport.xml'
+              summaryFileLocation: '$(JACOCO_REPORT_DIR)/jacocoTestReport.xml'
+              reportDirectory: '$(JACOCO_REPORT_DIR)/html'
               pathToSources: '$(BACKEND_PATH)/src/main/java'
               failIfCoverageEmpty: true
 
           - script: |
               cd $(BACKEND_PATH)
-              ./gradlew jacocoTestCoverageVerification
+              echo "📊 Verifying Backend Coverage Threshold..."
+              ./gradlew jacocoTestCoverageVerification --stacktrace
+              
+              if [ $? -eq 0 ]; then
+                echo "✅ Backend coverage threshold ($(BACKEND_COVERAGE_THRESHOLD)%) met"
+              else
+                echo "##vso[task.logissue type=error]Backend coverage below threshold $(BACKEND_COVERAGE_THRESHOLD)%"
+                exit 1
+              fi
             displayName: '✅ Verify Coverage Threshold'
             condition: always()
 
@@ -350,7 +398,8 @@ stages:
                     appName: '$(BACKEND_APP_NAME)'
                     package: '$(Pipeline.Workspace)/backend/$(BACKEND_JAR_NAME)'
                     runtimeStack: 'JAVA|17-java17'
-                    startUpCommand: 'java -jar /home/site/wwwroot/$(BACKEND_JAR_NAME)'
+                    startUpCommand: 'java -Dserver.port=8080 -Dspring.profiles.active=prod -jar /home/site/wwwroot/$(BACKEND_JAR_NAME)'
+                    deploymentMethod: 'auto'
 
                 - task: AzureAppServiceSettings@1
                   displayName: '⚙️ Configure App Settings'
@@ -369,8 +418,39 @@ stages:
                           "name": "SERVER_PORT",
                           "value": "8080",
                           "slotSetting": false
+                        },
+                        {
+                          "name": "JAVA_OPTS",
+                          "value": "-Xms512m -Xmx1024m",
+                          "slotSetting": false
+                        },
+                        {
+                          "name": "WEBSITES_PORT",
+                          "value": "8080",
+                          "slotSetting": false
                         }
                       ]
+                
+                - script: |
+                    echo "⏳ Waiting for backend to start..."
+                    sleep 30
+                    
+                    BACKEND_URL="https://$(BACKEND_APP_NAME).azurewebsites.net/actuator/health"
+                    echo "Checking: $BACKEND_URL"
+                    
+                    for i in {1..10}; do
+                      RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $BACKEND_URL || echo "000")
+                      if [ "$RESPONSE" = "200" ]; then
+                        echo "✅ Backend deployed successfully and is healthy"
+                        exit 0
+                      fi
+                      echo "Attempt $i/10: Got response $RESPONSE, retrying..."
+                      sleep 10
+                    done
+                    
+                    echo "⚠️ Backend health check inconclusive"
+                  displayName: '🏥 Post-Deploy Health Check'
+                  continueOnError: true
 
       # Deploy Frontend to Azure Static Web Apps
       - deployment: DeployFrontend
