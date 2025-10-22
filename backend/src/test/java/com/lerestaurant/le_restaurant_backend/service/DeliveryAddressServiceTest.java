@@ -27,7 +27,8 @@ import static org.mockito.Mockito.*;
 /**
  * Unit Tests for DeliveryAddressService (F107 - Delivery Management)
  * 
- * This test suite validates the business logic for delivery address management operations
+ * This test suite validates the business logic for delivery address management
+ * operations
  * including address creation, retrieval, updates, and deletion.
  * 
  * @author Le Restaurant Development Team
@@ -141,7 +142,8 @@ class DeliveryAddressServiceTest {
             deliveryAddressService.createAddress(testAddressCreateRequest);
 
             // Then
-            verify(deliveryAddressRepository, times(2)).save(any(DeliveryAddress.class)); // Once for unset, once for new
+            verify(deliveryAddressRepository, times(2)).save(any(DeliveryAddress.class)); // Once for unset, once for
+                                                                                          // new
             assertThat(existingDefaultAddress.getIsDefault()).isFalse();
         }
 
@@ -152,7 +154,7 @@ class DeliveryAddressServiceTest {
             testAddressCreateRequest.setIsDefault(false);
             testAddress.setIsDefault(false);
             when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-            when(deliveryAddressRepository.findByUserId(1L)).thenReturn(Arrays.asList());
+            // Note: No need to stub findByUserId when isDefault is false
             when(deliveryAddressRepository.save(any(DeliveryAddress.class))).thenReturn(testAddress);
 
             // When

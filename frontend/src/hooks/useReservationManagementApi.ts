@@ -241,7 +241,7 @@ export const useReservationManagementApi = () => {
       );
 
       const transformedReservation = transformReservation(response.data);
-      
+
       // Update local state
       setReservations(prev =>
         prev.map(res => res.id === id ? transformedReservation : res)
