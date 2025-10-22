@@ -3,7 +3,7 @@ import { ShoppingBag, Search, Filter } from 'lucide-react';
 import { useOrderApi } from '../hooks/useOrderApi';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from '../components/atoms/LoadingSpinner';
-import { EmptyState } from '../components/atoms/EmptyState';
+import { EmptyState } from '../components/molecules/EmptyState';
 import OrderDetailsPanel from '../components/organisms/OrderDetailsPanel';
 import { OrderStatus } from '../types/order';
 import { OrderStatusBadge } from '../components/atoms/OrderStatusBadge';

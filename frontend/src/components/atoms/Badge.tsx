@@ -34,14 +34,14 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const baseClasses = 'inline-flex items-center gap-1.5 font-semibold rounded-full border';
   
-  // Design System Colors (05-frontend-design.md)
+  // Design System Colors (05-frontend-design.md with Tailwind tokens)
   const variantClasses = {
-    primary: 'bg-primary-orange-light text-primary-orange-dark border-primary-orange',
-    secondary: 'bg-secondary-green-light text-secondary-green-dark border-secondary-green',
-    success: 'bg-status-success-light text-status-success-dark border-status-success',
-    warning: 'bg-status-warning-light text-status-warning-dark border-status-warning',
-    error: 'bg-status-error-light text-status-error-dark border-status-error',
-    neutral: 'bg-neutral-gray-100 text-neutral-gray-700 border-neutral-gray-300',
+    primary: 'bg-primary-100 text-primary-700 border-primary-600',
+    secondary: 'bg-secondary-100 text-secondary-700 border-secondary-600',
+    success: 'bg-secondary-100 text-secondary-700 border-secondary-600', // Using green for success
+    warning: 'bg-accent-yellow/20 text-neutral-800 border-accent-yellow',
+    error: 'bg-accent-red/20 text-accent-red border-accent-red',
+    neutral: 'bg-neutral-100 text-neutral-700 border-neutral-300',
   };
   
   const sizeClasses = {
@@ -51,12 +51,12 @@ export const Badge: React.FC<BadgeProps> = ({
   };
 
   const dotClasses = {
-    primary: 'bg-primary-orange',
-    secondary: 'bg-secondary-green',
-    success: 'bg-status-success',
-    warning: 'bg-status-warning',
-    error: 'bg-status-error',
-    neutral: 'bg-neutral-gray-500',
+    primary: 'bg-primary-600',
+    secondary: 'bg-secondary-600',
+    success: 'bg-secondary-600', // Using green for success
+    warning: 'bg-accent-yellow',
+    error: 'bg-accent-red',
+    neutral: 'bg-neutral-500',
   };
   
   return (

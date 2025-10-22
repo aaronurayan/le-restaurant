@@ -3,7 +3,7 @@ import { DollarSign, Package, Calendar, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { StatCard } from '../molecules/StatCard';
 import { LoadingSpinner } from '../atoms/LoadingSpinner';
-import { ErrorMessage } from '../atoms/ErrorMessage';
+import { ErrorMessage } from '../molecules/ErrorMessage';
 import UserManagementPanel from './UserManagementPanel';
 import ReservationModal from './ReservationModal';
 
