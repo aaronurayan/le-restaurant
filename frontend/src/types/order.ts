@@ -4,7 +4,7 @@
  */
 
 export type OrderType = 'DINE_IN' | 'TAKEOUT' | 'DELIVERY';
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'IN_PREPARATION' | 'READY_FOR_PICKUP' | 'OUT_FOR_DELIVERY' | 'COMPLETED' | 'CANCELLED';
 
 export interface OrderItemDto {
   id: number;

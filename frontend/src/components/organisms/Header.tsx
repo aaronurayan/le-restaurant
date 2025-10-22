@@ -20,6 +20,7 @@ import AuthModal from './AuthModal';
 import UserManagementPanel from './UserManagementPanel';
 import ReservationModal from './ReservationModal';
 import { useAuth } from '../../contexts/AuthContext';
+import { UserRole } from '../../types/user';
 
 interface HeaderProps {
   cartItemCount: number;
@@ -113,9 +114,6 @@ export const Header: React.FC<HeaderProps> = ({
             <Link to="/" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               Menu
             </Link>
-            <a href="/orders" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
-              Orders
-            </a>
             
             <a href="#about" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
               About

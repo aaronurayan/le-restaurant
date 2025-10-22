@@ -24,6 +24,8 @@ export interface LoadingSpinnerProps {
   variant?: 'primary' | 'secondary' | 'white';
   /** Center the spinner in its container */
   centered?: boolean;
+  /** Additional CSS classes */
+  className?: string;
 }
 
 const sizeClasses = {
@@ -43,10 +45,11 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   text,
   variant = 'primary',
   centered = true,
+  className = '',
 }) => {
-  const containerClass = centered 
+  const containerClass = `${centered 
     ? 'flex flex-col items-center justify-center gap-3' 
-    : 'flex flex-col items-start gap-3';
+    : 'flex flex-col items-start gap-3'} ${className}`;
 
   return (
     <div className={containerClass} role="status" aria-live="polite">

@@ -5,7 +5,8 @@ import { StatCard } from '../molecules/StatCard';
 import { LoadingSpinner } from '../atoms/LoadingSpinner';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { EmptyState } from '../atoms/EmptyState';
-import ReservationModal from './ReservationModal';
+import { Badge } from '../atoms/Badge';
+import { OrderDto } from '../../types/order';
 
 export interface CustomerDashboardProps {
   /** Loading state */
@@ -21,14 +22,8 @@ export interface CustomerDashboardProps {
     loyaltyPoints: number;
     rewardsTier: string;
   };
-  /** Recent orders */
-  recentOrders?: Array<{
-    id: number;
-    date: string;
-    items: string;
-    total: number;
-    status: string;
-  }>;
+  /** Recent orders to display */
+  recentOrders?: OrderDto[];
 }
 
 /**
@@ -65,8 +60,6 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   },
   recentOrders = [],
 }) => {
-  const [showReservationModal, setShowReservationModal] = React.useState(false);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -97,14 +90,15 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
 
       {/* Statistics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Total Orders"
-          value={stats.totalOrders}
-          icon={<ShoppingBag className="w-6 h-6" />}
-          trend="neutral"
-          change={`${stats.totalOrders} orders`}
-          description="All time"
-        />
+        <Link to="/customer/orders" className="transform transition-transform hover:scale-105 hover:shadow-lg block">
+          <StatCard
+            title="Total Orders"
+            value={stats.totalOrders}
+            icon={<ShoppingBag className="w-6 h-6" />}
+            trend="up"
+            change="View History"
+          />
+        </Link>
         
         <StatCard
           title="Active Reservations"
@@ -112,8 +106,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           icon={<Calendar className="w-6 h-6" />}
           trend={stats.activeReservations > 0 ? 'up' : 'neutral'}
           change={stats.activeReservations > 0 ? 'Upcoming' : 'None'}
-          description={stats.activeReservations > 0 ? 'View details' : 'Book now'}
-          variant={stats.activeReservations > 0 ? 'primary' : 'default'}
+          description="View details"
         />
         
         <StatCard
@@ -123,7 +116,6 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           trend="up"
           change="+50 pts"
           description="This month"
-          variant="secondary"
         />
         
         <StatCard
@@ -131,109 +123,81 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           value={stats.rewardsTier}
           icon={<Award className="w-6 h-6" />}
           trend="neutral"
-          description="Current membership"
-          variant="secondary"
+          description="Current tier"
         />
       </div>
 
       {/* Recent Orders */}
       <div className="bg-white rounded-lg border-2 border-neutral-gray-200 p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-neutral-gray-800">
-            Recent Orders
-          </h2>
-          <a
-            href="/customer/orders"
-            className="text-primary-orange hover:text-primary-orange-dark font-semibold"
-          >
-            View All →
-          </a>
+          <h2 className="text-xl font-semibold text-neutral-gray-800">Recent Orders</h2>
+          <Link to="/customer/orders" className="text-primary-600 hover:text-primary-700 font-medium">
+            View all orders →
+          </Link>
         </div>
-
-        {recentOrders.length === 0 ? (
-          <EmptyState
-            message="No orders yet"
-            description="Start ordering delicious meals from our menu"
-            actionText="Browse Menu"
-            onAction={() => window.location.href = '/menu'}
-          />
-        ) : (
-          <div className="space-y-3">
-            {recentOrders.slice(0, 5).map((order) => (
-              <div
+        
+        {recentOrders && recentOrders.length > 0 ? (
+          <div className="space-y-4">
+            {recentOrders.slice(0, 3).map((order) => (
+              <Link
                 key={order.id}
-                className="flex items-center justify-between p-4 border border-neutral-gray-200 rounded-lg hover:bg-neutral-gray-50 transition-colors"
+                to={`/customer/orders/${order.id}`}
+                className="block bg-neutral-gray-50 rounded-lg p-4 hover:bg-neutral-gray-100 transition-colors"
               >
-                <div className="flex-1">
-                  <div className="font-semibold text-neutral-gray-800">
-                    Order #{order.id}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-medium text-neutral-gray-900">Order #{order.id}</div>
+                    <div className="text-sm text-neutral-gray-600">
+                      {new Date(order.createdAt).toLocaleDateString()} •{' '}
+                      {order.items.length} {order.items.length === 1 ? 'item' : 'items'} •{' '}
+                      ${order.totalAmount.toFixed(2)}
+                    </div>
                   </div>
-                  <div className="text-sm text-neutral-gray-600">
-                    {order.items} • {order.date}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-neutral-gray-800">
-                    ${order.total.toFixed(2)}
-                  </div>
-                  <div
-                    className={`text-xs font-semibold ${
-                      order.status === 'Delivered'
-                        ? 'text-secondary-green'
-                        : 'text-primary-orange'
-                    }`}
+                  <Badge 
+                    variant={order.status === 'COMPLETED' ? 'success' : 'primary'}
+                    size="sm"
                   >
                     {order.status}
-                  </div>
+                  </Badge>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
+        ) : (
+          <EmptyState
+            message="You haven't placed any orders yet"
+            actionText="View menu"
+          />
         )}
       </div>
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg border-2 border-neutral-gray-200 p-6">
-        <h2 className="text-xl font-bold text-neutral-gray-800 mb-4">
-          Quick Actions
-        </h2>
+        <h2 className="text-xl font-bold text-neutral-gray-800 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
-            to="/"
-            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"
+            to="/menu"
+            className="flex items-center justify-center p-4 bg-primary-orange-light text-primary-orange-dark rounded-lg hover:bg-primary-orange-100 transition-colors"
           >
-            <Utensils className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
-            <div className="font-semibold text-neutral-gray-800">Order Now</div>
-            <div className="text-sm text-neutral-gray-600">Browse our menu</div>
+            <Utensils className="w-5 h-5 mr-2" />
+            <span>View Menu</span>
           </Link>
-          
-          <button
-            onClick={() => setShowReservationModal(true)}
-            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group text-left"
-          >
-            <Calendar className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
-            <div className="font-semibold text-neutral-gray-800">Make Reservation</div>
-            <div className="text-sm text-neutral-gray-600">Book a table</div>
-          </button>
-          
           <Link
-            to="/"
-            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"
+            to="/profile"
+            className="flex items-center justify-center p-4 bg-secondary-green-light text-secondary-green-dark rounded-lg hover:bg-secondary-green-100 transition-colors"
           >
-            <User className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
-            <div className="font-semibold text-neutral-gray-800">My Profile</div>
-            <div className="text-sm text-neutral-gray-600">View account details</div>
+            <User className="w-5 h-5 mr-2" />
+            <span>My Profile</span>
+          </Link>
+          <Link
+            to="/customer/orders"
+            className="flex items-center justify-center p-4 bg-neutral-gray-100 text-neutral-gray-800 rounded-lg hover:bg-neutral-gray-200 transition-colors"
+          >
+            <ShoppingBag className="w-5 h-5 mr-2" />
+            <span>Order History</span>
           </Link>
         </div>
       </div>
-
-      {/* Reservation Modal */}
-      {showReservationModal && (
-        <ReservationModal
-          isOpen={showReservationModal}
-          onClose={() => setShowReservationModal(false)}
-        />
-      )}
     </div>
   );
 };

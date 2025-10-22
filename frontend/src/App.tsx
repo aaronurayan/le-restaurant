@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { MainLayout } from './components/templates/MainLayout';
-import { CartSidebar } from './components/organisms/CartSidebar';
-import { NotificationContainer } from './components/organisms/NotificationContainer';
-import { Home } from './pages/Home';
-import { Orders } from './pages/Orders'; // import your Orders page
-=======
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home';
@@ -16,12 +7,13 @@ import DeliveryTracking from './pages/DeliveryTracking';
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import AdminDashboard from './components/organisms/AdminDashboard';
 import CustomerDashboard from './components/organisms/CustomerDashboard';
+import { Orders } from './pages/Orders';
+import { Checkout } from './pages/Checkout';
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import { UserRole } from './types/user';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
->>>>>>> main
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
 import './index.css';
@@ -38,20 +30,24 @@ function App() {
 
   const [favoritedItems, setFavoritedItems] = React.useState<Set<string>>(new Set());
   const [isCartOpen, setIsCartOpen] = React.useState(false);
-  const [redirectToPayments, setRedirectToPayments] = React.useState(false);
+  const [redirectToCheckout, setRedirectToCheckout] = React.useState(false);
+
+  // ✅ Normalize ID to string for safe handling
+  const handleFavorite = (item: MenuItem) => {
+    const id = String(item.id);
+    const newFavoritedItems = new Set(favoritedItems);
+
+    if (newFavoritedItems.has(id)) {
+      newFavoritedItems.delete(id);
+    } else {
+      newFavoritedItems.add(id);
+    }
+
+    setFavoritedItems(newFavoritedItems);
+  };
 
   const handleAddToCart = (item: MenuItem, quantity: number) => {
     addToCart(item, quantity);
-  };
-
-  const handleFavorite = (item: MenuItem) => {
-    const newFavoritedItems = new Set(favoritedItems);
-    if (newFavoritedItems.has(item.id)) {
-      newFavoritedItems.delete(item.id);
-    } else {
-      newFavoritedItems.add(item.id);
-    }
-    setFavoritedItems(newFavoritedItems);
   };
 
   const handleCartClick = () => {
@@ -60,54 +56,10 @@ function App() {
 
   const handleCheckout = () => {
     setIsCartOpen(false);
-    setRedirectToPayments(true);
+    setRedirectToCheckout(true);
   };
 
   return (
-<<<<<<< HEAD
-    <Router>
-      <div className="App">
-        <MainLayout
-          cartItemCount={cartItemCount}
-          onCartClick={() => setIsCartOpen(true)}
-        >
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <Home
-                  onAddToCart={handleAddToCart}
-                  favoritedItems={favoritedItems}
-                  onFavorite={handleFavorite}
-                />
-              }
-            />
-            <Route
-              path="/orders"
-              element={
-                <Orders
-                  cartItemCount={cartItemCount}   // pass cart count
-                  onCartClick={() => setIsCartOpen(true)} // pass cart toggle
-                />
-              }
-            />
-          </Routes>
-        </MainLayout>
-        
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cartItems={cartItems}
-          cartTotal={cartTotal}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
-        />
-        
-        <NotificationContainer />
-      </div>
-    </Router>
-=======
     <AuthProvider>
       <Router>
         <div className="App">
@@ -115,70 +67,99 @@ function App() {
             cartItemCount={cartItemCount}
             onCartClick={handleCartClick}
           >
-            {redirectToPayments && <Navigate to="/payments" replace />}
+            {redirectToCheckout && <Navigate to="/checkout" replace />}
+            <CartSidebar
+              isOpen={isCartOpen}
+              onClose={() => setIsCartOpen(false)}
+              cartItems={cartItems}
+              cartTotal={cartTotal}
+              onUpdateQuantity={updateQuantity}
+              onRemoveItem={removeFromCart}
+              onCheckout={handleCheckout}
+            />
             <Routes>
-              <Route 
-                path="/" 
+              <Route
+                path="/"
                 element={
                   <Home
                     onAddToCart={handleAddToCart}
                     favoritedItems={favoritedItems}
                     onFavorite={handleFavorite}
                   />
-                } 
+                }
               />
-              
+
               {/* Admin Dashboard */}
-              <Route 
-                path="/admin/dashboard" 
+              <Route
+                path="/admin/dashboard"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <AdminDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
+
               {/* Customer Dashboard */}
-              <Route 
-                path="/customer/dashboard" 
+              <Route
+                path="/customer/dashboard"
                 element={
                   <ProtectedRoute roles={[UserRole.CUSTOMER]}>
                     <CustomerDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/payments" 
+
+              <Route
+                path="/payments"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
-                    <PaymentManagementPanel isOpen={true} onClose={() => window.history.back()} />
+                    <PaymentManagementPanel
+                      isOpen={true}
+                      onClose={() => window.history.back()}
+                    />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/delivery" 
+              <Route
+                path="/delivery"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <DeliveryManagement />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/delivery/dashboard" 
+              <Route
+                path="/delivery/dashboard"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <DeliveryDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/delivery/tracking/:deliveryId" 
+              <Route
+                path="/delivery/tracking/:deliveryId"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <DeliveryTracking />
                   </ProtectedRoute>
-                } 
+                }
+              />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route
+                path="/customer/orders"
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <Orders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/customer/orders/:orderId"
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <Orders />
+                  </ProtectedRoute>
+                }
               />
             </Routes>
           </MainLayout>
@@ -195,7 +176,6 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
->>>>>>> main
   );
 }
 

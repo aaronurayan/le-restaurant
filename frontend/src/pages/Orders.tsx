@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { OrderStatus } from '../components/organisms/OrderStatus';
-import { mockOrders } from '../data/mockData';
+import { useOrderApi } from '../hooks/useOrderApi';
+import { useAuth } from '../contexts/AuthContext';
 
 interface OrdersProps {
-  // You can keep these if needed for the header in MainLayout
   cartItemCount?: number;
   onCartClick?: () => void;
 }
 
 export const Orders: React.FC<OrdersProps> = () => {
+  const { user } = useAuth();
+  const { orders, getOrdersByCustomer, loading, error } = useOrderApi();
+
+  useEffect(() => {
+    if (user && user.id) {
+      getOrdersByCustomer(user.id).catch(console.error);
+    }
+  }, [user, getOrdersByCustomer]);
+
   return (
     <section className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,7 +31,13 @@ export const Orders: React.FC<OrdersProps> = () => {
         </div>
 
         <div className="space-y-8 max-w-3xl mx-auto">
-          {mockOrders.map((order) => (
+          {loading && <p>Loading orders...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+          {!loading && !error && orders && orders.length === 0 && (
+            <p className="text-neutral-600">No orders found.</p>
+          )}
+
+          {!loading && !error && orders && orders.length > 0 && orders.map((order) => (
             <OrderStatus key={order.id} order={order} />
           ))}
         </div>
