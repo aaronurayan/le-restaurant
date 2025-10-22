@@ -8,12 +8,7 @@ import DeliveryTracking from './pages/DeliveryTracking';
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import AdminDashboard from './components/organisms/AdminDashboard';
 import CustomerDashboard from './components/organisms/CustomerDashboard';
-<<<<<<< HEAD
-import { Orders } from './pages/Orders';
-import { Checkout } from './pages/Checkout';
-=======
 import CustomerReservationsPage from './pages/CustomerReservationsPage';
->>>>>>> origin
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import { UserRole } from './types/user';
@@ -21,7 +16,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
-import { placeOrder } from "./services/orderService";
 import './index.css';
 
 function App() {
@@ -63,18 +57,6 @@ function App() {
   const handleCheckout = () => {
     setIsCartOpen(false);
     setRedirectToCheckout(true);
-  };
-
-  const handleLogin = (email: string) => {
-    setUser(email);
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-  };
-
-  const handleRegister = (email: string) => {
-    setUser(email);
   };
 
   return (
@@ -127,8 +109,6 @@ function App() {
                 }
               />
 
-<<<<<<< HEAD
-=======
               {/* Customer Reservations (F108) */}
               <Route
                 path="/customer/reservations"
@@ -143,11 +123,10 @@ function App() {
                 path="/admin/menu"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
-                    <MenuManagementPanel />
+                    <MenuManagementPanel isOpen={true} onClose={() => window.history.back()} />
                   </ProtectedRoute>
                 }
               />
->>>>>>> origin
               <Route
                 path="/payments"
                 element={
@@ -182,26 +161,6 @@ function App() {
                     <DeliveryTracking />
                   </ProtectedRoute>
                 }
-<<<<<<< HEAD
-              />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route
-                path="/customer/orders"
-                element={
-                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
-                    <Orders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/customer/orders/:orderId"
-                element={
-                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
-                    <Orders />
-                  </ProtectedRoute>
-                }
-=======
->>>>>>> origin
               />
             </Routes>
           </MainLayout>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, CheckCircle, ChefHat, Truck } from 'lucide-react';
+import { Clock, CheckCircle, ChefHat } from 'lucide-react';
 import { OrderDto, OrderItemDto, OrderStatus as OrderStatusType } from '../../types/order';
 
 interface OrderStatusProps {
@@ -27,26 +27,19 @@ const statusConfig: Record<OrderStatusType, {
     title: 'Order Confirmed',
     description: 'Your order has been confirmed by the restaurant',
   },
-  IN_PREPARATION: {
+  PREPARING: {
     icon: <ChefHat className="w-5 h-5" />,
     color: 'text-primary-600',
     bgColor: 'bg-primary-100',
     title: 'Being Prepared',
     description: 'Our chefs are preparing your delicious meal',
   },
-  READY_FOR_PICKUP: {
+  READY: {
     icon: <CheckCircle className="w-5 h-5" />,
     color: 'text-secondary-600',
     bgColor: 'bg-secondary-100',
-    title: 'Ready for Pickup',
-    description: 'Your order is ready! Please come pick it up',
-  },
-  OUT_FOR_DELIVERY: {
-    icon: <Truck className="w-5 h-5" />,
-    color: 'text-accent-blue',
-    bgColor: 'bg-blue-100',
-    title: 'Out for Delivery',
-    description: 'Your order is on its way to you',
+    title: 'Ready',
+    description: 'Your order is ready!',
   },
   COMPLETED: {
     icon: <CheckCircle className="w-5 h-5" />,

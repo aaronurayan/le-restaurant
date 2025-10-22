@@ -224,10 +224,18 @@ describe('Order Flow Integration Tests (F105)', () => {
 
     render(<Checkout />, { wrapper: TestWrapper });
 
-    // Fill form and place order
-    await user.selectOptions(screen.getByLabelText(/order type/i), 'TAKEOUT');
-    await user.type(screen.getByLabelText(/tip amount/i), '3');
-    await user.type(screen.getByLabelText(/special instructions/i), 'Extra hot please');
+    // Click Takeout button (now using button-based selection)
+    const takeoutButton = screen.getByText('Takeout');
+    await user.click(takeoutButton);
+
+    // Enter tip amount
+    const tipInput = screen.getByPlaceholderText(/0.00/i);
+    await user.clear(tipInput);
+    await user.type(tipInput, '3');
+    
+    // Enter special instructions
+    const instructionsTextarea = screen.getByPlaceholderText(/any special requests/i);
+    await user.type(instructionsTextarea, 'Extra hot please');
     
     // Verify Place Order button is enabled
     const placeOrderButton = screen.getByRole('button', { name: /place order/i });
@@ -249,24 +257,29 @@ describe('Order Flow Integration Tests (F105)', () => {
   // ✅ Test 2: Reflect order status changes
   // ============================================================
   it('should reflect order status changes in history', async () => {
-    const updatedOrder = { ...mockOrder, status: 'IN_PREPARATION' as OrderStatus };
+    const updatedOrder = { ...mockOrder, status: 'PREPARING' as OrderStatus };
     updateMockApi([mockOrder]); // initial state
 
     render(<Orders />, { wrapper: TestWrapper });
 
-    // Find the order status by text directly
+    // Find the order card with order ID
     await waitFor(() => {
-      expect(screen.getByText('Order Received')).toBeInTheDocument();
+      expect(screen.getByText(/Order #1/)).toBeInTheDocument();
     });
+
+    // Verify initial status badge is present
+    const badges = screen.getAllByText('Pending');
+    expect(badges.length).toBeGreaterThan(0);
 
     // Simulate status update
     updateMockApi([updatedOrder]);
 
+    // Re-render with new data
     render(<Orders />, { wrapper: TestWrapper });
 
-    // Check that the status has been updated - looking for the text directly
+    // Check that the status has been updated
     await waitFor(() => {
-      expect(screen.getByText('Being Prepared')).toBeInTheDocument();
+      expect(screen.getAllByText('Preparing').length).toBeGreaterThan(0);
     });
   });
 

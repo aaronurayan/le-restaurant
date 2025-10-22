@@ -38,11 +38,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
 
   const [availableTables, setAvailableTables] = useState<Table[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-<<<<<<< HEAD
-  const [selectedTable, setSelectedTable] = useState<string>('');
-=======
   const [selectedTable, setSelectedTable] = useState<number | undefined>(undefined);
->>>>>>> origin
   const [errors, setErrors] = useState<Partial<Record<keyof ReservationFormData, string>>>({});
 
   // 날짜가 변경될 때 시간대 업데이트
