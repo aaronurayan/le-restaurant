@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Hero } from '../components/organisms/Hero';
 import { CategoryFilter } from '../components/organisms/CategoryFilter';
 import { MenuGrid } from '../components/molecules/MenuGrid';
@@ -13,7 +13,7 @@ interface HomeProps {
   onFavorite: (item: MenuItem) => void;
 }
 
-// Test
+//This is a comment in the order management branch
 export const Home: React.FC<HomeProps> = ({
   onAddToCart,
   favoritedItems,
@@ -21,7 +21,7 @@ export const Home: React.FC<HomeProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
-  // API 훅 사용
+  // API hook usage
   const {
     menuItems,
     categories,
@@ -29,7 +29,6 @@ export const Home: React.FC<HomeProps> = ({
     error,
     isBackendConnected,
     loadMenuItemsByCategory,
-    searchMenuItems
   } = useMenuApi();
 
   const filteredItems = useMemo(() => {
@@ -96,24 +95,6 @@ export const Home: React.FC<HomeProps> = ({
               favoritedItems={favoritedItems}
               loading={loading}
             />
-          </div>
-        </div>
-      </section>
-      
-      {/* Sample Order Status */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-serif font-bold text-neutral-900 mb-4">
-              Track Your Orders
-            </h2>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              Stay updated on your order status in real-time
-            </p>
-          </div>
-          
-          <div className="max-w-2xl mx-auto">
-            <OrderStatus order={mockOrders[0]} />
           </div>
         </div>
       </section>

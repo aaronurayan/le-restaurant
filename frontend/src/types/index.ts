@@ -8,16 +8,23 @@ export * from './order';
 export * from './session';
 
 export interface MenuItem {
-  id: string;
-  categoryId: string;
+  id: string | number; // Backend uses number, mock data or UI might use string
   name: string;
-  description: string;
+  description?: string;
   price: number;
-  image: string;
-  isAvailable: boolean;
-  dietaryTags: string[];
-  preparationTime: number;
+  category?: string;
+  categoryId?: string;
+  imageUrl?: string | null;
+
+  // Availability fields (support both backend and frontend naming)
+  available?: boolean;
+  isAvailable?: boolean;
+
+  // Optional additional fields (used by mock data)
+  ingredients?: string[];
   allergens?: string[];
+  preparationTime?: number;
+  calories?: number;
 }
 
 export interface MenuCategory {

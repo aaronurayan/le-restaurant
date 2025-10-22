@@ -1,10 +1,26 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CartItem, MenuItem } from '../types';
 
-// this is a comment
+  // Load cart items from localStorage
+const getStoredCart = (): CartItem[] => {
+  if (typeof window === 'undefined') return [];
+  
+  const storedCart = localStorage.getItem('cart');
+  
+  if (!storedCart) return [];
+  
+  try {
+    return JSON.parse(storedCart);
+  } catch (error) {
+    console.error('Failed to parse cart from localStorage:', error);
+    localStorage.removeItem('cart'); // Remove invalid cart data
+    return [];
+  }
+};// this is a comment
 export const useCart = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(getStoredCart());
 
+  // This is a comment on the order management branch
   const addToCart = useCallback((menuItem: MenuItem, quantity: number = 1, specialInstructions?: string) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.menuItem.id === menuItem.id);
@@ -59,10 +75,20 @@ export const useCart = () => {
 
   const clearCart = useCallback(() => {
     setCartItems([]);
+    localStorage.removeItem('cart'); // Explicitly remove from localStorage
   }, []);
 
   const cartTotal = cartItems.reduce((total, item) => total + item.subtotal, 0);
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    } else {
+      localStorage.removeItem('cart');
+    }
+  }, [cartItems]);
 
   return {
     cartItems,

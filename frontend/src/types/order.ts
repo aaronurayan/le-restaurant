@@ -1,6 +1,9 @@
 /**
  * Order Types (F105)
  * Data models for order management operations
+ * 
+ * ⚠️ IMPORTANT: OrderStatus values MUST match backend enum exactly
+ * Backend: PENDING, CONFIRMED, PREPARING, READY, COMPLETED, CANCELLED
  */
 
 export type OrderType = 'DINE_IN' | 'TAKEOUT' | 'DELIVERY';
