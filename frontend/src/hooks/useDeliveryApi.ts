@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  DeliveryPerson, 
-  DeliveryAssignment, 
-  DeliveryProgress, 
+import {
+  DeliveryPerson,
+  DeliveryAssignment,
+  DeliveryProgress,
   DeliveryRoute,
   DeliveryNotification,
   DeliveryMetrics,
@@ -35,7 +35,7 @@ const mockDeliveryPersons: DeliveryPerson[] = [
     name: 'Sarah Johnson',
     email: 'sarah@example.com',
     phone: '+1-555-0124',
-    status: 'busy',
+    status: 'available',
     currentLocation: { latitude: 37.7849, longitude: -122.4094 },
     vehicleType: 'motorcycle',
     maxCapacity: 8,
@@ -50,14 +50,45 @@ const mockDeliveryPersons: DeliveryPerson[] = [
     name: 'Mike Wilson',
     email: 'mike@example.com',
     phone: '+1-555-0125',
-    status: 'offline',
+    status: 'available',
+    currentLocation: { latitude: 37.7649, longitude: -122.4294 },
     vehicleType: 'car',
     maxCapacity: 15,
     rating: 4.7,
     totalDeliveries: 89,
-    isActive: false,
+    isActive: true,
     createdAt: '2024-01-20T10:00:00Z',
     updatedAt: '2024-01-20T10:00:00Z'
+  },
+  {
+    id: '4',
+    name: 'Emily Chen',
+    email: 'emily@example.com',
+    phone: '+1-555-0126',
+    status: 'available',
+    currentLocation: { latitude: 37.7949, longitude: -122.3994 },
+    vehicleType: 'motorcycle',
+    maxCapacity: 8,
+    rating: 4.95,
+    totalDeliveries: 312,
+    isActive: true,
+    createdAt: '2024-01-05T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z'
+  },
+  {
+    id: '5',
+    name: 'David Martinez',
+    email: 'david@example.com',
+    phone: '+1-555-0127',
+    status: 'busy',
+    currentLocation: { latitude: 37.7549, longitude: -122.4394 },
+    vehicleType: 'car',
+    maxCapacity: 12,
+    rating: 4.6,
+    totalDeliveries: 178,
+    isActive: true,
+    createdAt: '2024-01-12T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z'
   }
 ];
 
@@ -153,10 +184,16 @@ export const useDeliveryApi = () => {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const response = await fetch('/api/health');
+        // Try to fetch from the actual backend port
+        const response = await fetch('http://localhost:8080/api/deliveries', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
         setIsBackendConnected(response.ok);
-      } catch {
+        console.log('Backend connection status:', response.ok ? '✅ Connected' : '❌ Not connected');
+      } catch (error) {
         setIsBackendConnected(false);
+        console.log('Backend connection status: ❌ Not connected (Error:', error instanceof Error ? error.message : 'Unknown error', ')');
       }
     };
     checkConnection();
@@ -166,7 +203,7 @@ export const useDeliveryApi = () => {
   const getDeliveryPersons = useCallback(async (): Promise<DeliveryPerson[]> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch('/api/delivery/persons');
@@ -190,12 +227,12 @@ export const useDeliveryApi = () => {
   }, [getDeliveryPersons]);
 
   const updateDeliveryPersonStatus = useCallback(async (
-    personId: string, 
+    personId: string,
     status: 'available' | 'busy' | 'offline'
   ): Promise<DeliveryPerson> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch(`/api/delivery/persons/${personId}/status`, {
@@ -225,7 +262,7 @@ export const useDeliveryApi = () => {
   const getDeliveries = useCallback(async (filter?: DeliveryFilter): Promise<DeliveryAssignment[]> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const params = new URLSearchParams();
@@ -233,7 +270,7 @@ export const useDeliveryApi = () => {
         if (filter?.deliveryPersonId) params.append('deliveryPersonId', filter.deliveryPersonId);
         if (filter?.priority) params.append('priority', filter.priority.join(','));
         if (filter?.search) params.append('search', filter.search);
-        
+
         const response = await fetch(`/api/delivery/assignments?${params}`);
         if (!response.ok) throw new Error('Failed to fetch deliveries');
         return await response.json();
@@ -264,30 +301,50 @@ export const useDeliveryApi = () => {
   ): Promise<DeliveryAssignment> => {
     setLoading(true);
     setError(null);
-    
+
+    console.log('🔵 Creating delivery assignment...', {
+      isBackendConnected,
+      request
+    });
+
     try {
       if (isBackendConnected) {
-        const response = await fetch('/api/delivery/assignments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(request)
-        });
-        if (!response.ok) throw new Error('Failed to create delivery assignment');
-        return await response.json();
-      } else {
-        // Mock creation
-        const newAssignment: DeliveryAssignment = {
-          id: `delivery-${Date.now()}`,
-          ...request,
-          assignedAt: new Date().toISOString(),
-          status: 'assigned'
-        };
-        mockDeliveries.push(newAssignment);
-        return newAssignment;
+        console.log('🔵 Attempting to create via backend API...');
+        try {
+          const response = await fetch('/api/delivery/assignments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request)
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Failed to create delivery assignment' }));
+            throw new Error(errorData.error || 'Failed to create delivery assignment');
+          }
+          return await response.json();
+        } catch (fetchErr) {
+          // If backend call fails, fall back to mock mode
+          console.warn('⚠️ Backend call failed, falling back to mock mode:', fetchErr);
+          setIsBackendConnected(false);
+          // Fall through to mock mode below
+        }
       }
+
+      // Mock creation - simulating successful creation
+      console.log('🔵 Creating via mock data (backend not connected)...');
+      const newAssignment: DeliveryAssignment = {
+        id: `delivery-${Date.now()}`,
+        ...request,
+        assignedAt: new Date().toISOString(),
+        status: 'assigned'
+      };
+      mockDeliveries.push(newAssignment);
+      console.log('✅ Successfully created delivery assignment (Mock Mode):', newAssignment);
+      return newAssignment;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create delivery assignment');
-      throw err;
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create delivery assignment';
+      setError(errorMessage);
+      console.error('❌ Error creating delivery assignment:', errorMessage, err);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -299,7 +356,7 @@ export const useDeliveryApi = () => {
   ): Promise<DeliveryAssignment> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch(`/api/delivery/assignments/${deliveryId}/status`, {
@@ -333,7 +390,7 @@ export const useDeliveryApi = () => {
   ): Promise<DeliveryAssignment> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch(`/api/delivery/assignments/${request.deliveryId}/assign`, {
@@ -370,7 +427,7 @@ export const useDeliveryApi = () => {
   const getDeliveryProgress = useCallback(async (deliveryId: string): Promise<DeliveryProgress[]> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch(`/api/delivery/assignments/${deliveryId}/progress`);
@@ -392,7 +449,7 @@ export const useDeliveryApi = () => {
   const getDeliveryMetrics = useCallback(async (): Promise<DeliveryMetrics> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch('/api/delivery/metrics');
@@ -413,7 +470,7 @@ export const useDeliveryApi = () => {
   const getDeliveryNotifications = useCallback(async (): Promise<DeliveryNotification[]> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (isBackendConnected) {
         const response = await fetch('/api/delivery/notifications');
@@ -436,27 +493,27 @@ export const useDeliveryApi = () => {
     isBackendConnected,
     loading,
     error,
-    
+
     // Delivery Persons
     getDeliveryPersons,
     getAvailableDeliveryPersons,
     updateDeliveryPersonStatus,
-    
+
     // Deliveries
     getDeliveries,
     createDeliveryAssignment,
     updateDeliveryStatus,
     assignDeliveryPerson,
-    
+
     // Progress & Tracking
     getDeliveryProgress,
-    
+
     // Metrics & Analytics
     getDeliveryMetrics,
-    
+
     // Notifications
     getDeliveryNotifications,
-    
+
     // Constants
     deliveryStatuses: DELIVERY_STATUSES
   };

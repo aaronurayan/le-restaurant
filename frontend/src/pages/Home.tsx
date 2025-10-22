@@ -13,14 +13,15 @@ interface HomeProps {
   onFavorite: (item: MenuItem) => void;
 }
 
+// Test
 export const Home: React.FC<HomeProps> = ({
   onAddToCart,
   favoritedItems,
   onFavorite,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  // API
+  
+  // API 훅 사용
   const {
     menuItems,
     categories,
@@ -28,17 +29,18 @@ export const Home: React.FC<HomeProps> = ({
     error,
     isBackendConnected,
     loadMenuItemsByCategory,
-    searchMenuItems,
+    searchMenuItems
   } = useMenuApi();
 
   const filteredItems = useMemo(() => {
+    if (!menuItems) return [];
     if (!selectedCategory) return menuItems;
     return menuItems.filter(item => item.categoryId === selectedCategory);
   }, [selectedCategory, menuItems]);
 
   const handleCategorySelect = async (categoryId: string | null) => {
     setSelectedCategory(categoryId);
-
+    
     if (categoryId) {
       await loadMenuItemsByCategory(categoryId);
     }
@@ -52,7 +54,7 @@ export const Home: React.FC<HomeProps> = ({
     <div>
       {/* Hero Section */}
       <Hero onOrderNow={handleOrderNow} />
-
+      
       {/* Menu Section */}
       <section id="menu" className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,38 +63,30 @@ export const Home: React.FC<HomeProps> = ({
               Our Delicious Menu
             </h2>
             <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              Discover our carefully crafted dishes made with the finest ingredients and authentic
-              recipes
+              Discover our carefully crafted dishes made with the finest ingredients and authentic recipes
             </p>
           </div>
-
+          
           {/* Category Filter */}
           <CategoryFilter
-            categories={categories.map(cat => ({
-              id: cat,
-              name: cat,
-              description: '',
-              displayOrder: 1,
-              isActive: true,
-              itemCount: 0,
-            }))}
+            categories={(categories || []).map(cat => ({ id: cat, name: cat, description: '', displayOrder: 1, isActive: true, itemCount: 0 }))}
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategorySelect}
           />
-
+          
           {/* Backend Connection Status */}
           {isBackendConnected && (
             <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-center">
               🟢 Connected to Backend API
             </div>
           )}
-
+          
           {error && (
             <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg text-center">
               ⚠️ Using Mock Data: {error}
             </div>
           )}
-
+          
           {/* Menu Grid */}
           <div className="mt-8">
             <MenuGrid
@@ -105,7 +99,7 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </div>
       </section>
-
+      
       {/* Sample Order Status */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -117,7 +111,7 @@ export const Home: React.FC<HomeProps> = ({
               Stay updated on your order status in real-time
             </p>
           </div>
-
+          
           <div className="max-w-2xl mx-auto">
             <OrderStatus order={mockOrders[0]} />
           </div>

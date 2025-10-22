@@ -219,7 +219,7 @@ export const useApiHealth = () => {
   // 컴포넌트 마운트 시 상태 확인
   useEffect(() => {
     checkBackendStatus();
-  }, [checkBackendStatus]);
+  }, []); // Remove checkBackendStatus from dependencies to prevent infinite loop
 
   return {
     isBackendHealthy,
@@ -227,4 +227,35 @@ export const useApiHealth = () => {
     checkBackendStatus,
     baseUrl: apiHealth.getBaseUrl(),
   };
+};
+
+export const useApi = () => {
+  const get = async (url: string) => {
+    const response = await fetch(url);
+    return response.json();
+  };
+
+  const post = async (url: string, body: any) => {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return response.json();
+  };
+
+  const put = async (url: string, body: any) => {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return response.json();
+  };
+
+  const del = async (url: string) => {
+    await fetch(url, { method: 'DELETE' });
+  };
+
+  return { get, post, put, del };
 };

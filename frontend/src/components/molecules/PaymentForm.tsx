@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { 
-  CreditCard, 
-  Lock, 
-  Eye, 
+import {
+  CreditCard,
+  Lock,
+  Eye,
   EyeOff,
   AlertCircle,
   CheckCircle,
@@ -65,6 +65,13 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const [errors, setErrors] = useState<Partial<PaymentFormData>>({});
   const [showCardDetails, setShowCardDetails] = useState(false);
 
+  // Add state to track delivery details
+  const [deliveryDetails, setDeliveryDetails] = useState({
+    name: '',
+    phone: '',
+    address: '',
+  });
+
   const validateForm = (): boolean => {
     const newErrors: Partial<PaymentFormData> = {};
 
@@ -104,6 +111,22 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       newErrors.billingAddress = { ...newErrors.billingAddress, zipCode: 'ZIP code is required' };
     }
 
+    if (method === 'DELIVERY') {
+      if (!deliveryDetails.name.trim()) {
+        newErrors.name = 'Customer name is required';
+      }
+
+      if (!deliveryDetails.phone.trim()) {
+        newErrors.phone = 'Phone number is required';
+      } else if (!/^\d{3}[-]?\d{3}[-]?\d{4}$/.test(deliveryDetails.phone)) {
+        newErrors.phone = 'Please enter a valid phone number';
+      }
+
+      if (!deliveryDetails.address.trim()) {
+        newErrors.address = 'Delivery address is required';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -135,6 +158,10 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         billingAddress: { ...prev.billingAddress, [field]: undefined }
       }));
     }
+  };
+
+  const handleDeliveryChange = (field: keyof typeof deliveryDetails, value: string) => {
+    setDeliveryDetails((prev) => ({ ...prev, [field]: value }));
   };
 
   const formatCardNumber = (value: string) => {
@@ -202,16 +229,73 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className={`space-y-6 ${className}`}>
+      {/* Delivery Option */}
+      <div className="space-y-4">
+        <h4 className="font-semibold text-neutral-900">Order Type</h4>
+        <div className="flex items-center gap-4">
+          <label>
+            <input
+              type="radio"
+              name="orderType"
+              value="DINE_IN"
+              checked={method === 'DINE_IN'}
+              onChange={() => handleInputChange('method', 'DINE_IN')}
+            />
+            Dine-in
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="orderType"
+              value="DELIVERY"
+              checked={method === 'DELIVERY'}
+              onChange={() => handleInputChange('method', 'DELIVERY')}
+            />
+            Delivery
+          </label>
+        </div>
+      </div>
+
+      {/* Delivery Details */}
+      {method === 'DELIVERY' && (
+        <div className="space-y-4">
+          <Input
+            type="text"
+            label="Customer Name"
+            placeholder="John Doe"
+            value={deliveryDetails.name}
+            onChange={(value) => handleDeliveryChange('name', value)}
+            required
+          />
+          <Input
+            type="text"
+            label="Phone Number"
+            placeholder="123-456-7890"
+            value={deliveryDetails.phone}
+            onChange={(value) => handleDeliveryChange('phone', value)}
+            required
+          />
+          <Input
+            type="text"
+            label="Delivery Address"
+            placeholder="123 Main Street, City, State, ZIP"
+            value={deliveryDetails.address}
+            onChange={(value) => handleDeliveryChange('address', value)}
+            required
+          />
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center">
         <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <MethodIcon className="w-8 h-8 text-primary-600" />
         </div>
         <h3 className="text-xl font-semibold text-neutral-900 mb-2">
-          {method === 'CREDIT_CARD' ? 'Credit Card' : 
-           method === 'DEBIT_CARD' ? 'Debit Card' : 
-           method === 'DIGITAL_WALLET' ? 'Digital Wallet' : 
-           method === 'BANK_TRANSFER' ? 'Bank Transfer' : 'Payment'}
+          {method === 'CREDIT_CARD' ? 'Credit Card' :
+            method === 'DEBIT_CARD' ? 'Debit Card' :
+              method === 'DIGITAL_WALLET' ? 'Digital Wallet' :
+                method === 'BANK_TRANSFER' ? 'Bank Transfer' : 'Payment'}
         </h3>
         <p className="text-neutral-600">
           Amount: <span className="font-semibold text-primary-600">${amount.toFixed(2)}</span>
@@ -296,7 +380,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       {/* Billing Address */}
       <div className="space-y-4">
         <h4 className="font-semibold text-neutral-900">Billing Address</h4>
-        
+
         <Input
           type="text"
           label="Street Address"
