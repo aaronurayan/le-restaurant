@@ -1,0 +1,94 @@
+# Azure DevOps Pipeline for Delivery Management Feature
+
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  # Node.js version for frontend
+  nodeVersion: '20.x'
+  # Java version for backend
+  javaVersion: '17'
+
+stages:
+# =============================================================================
+# CONTINUOUS INTEGRATION STAGE
+# =============================================================================
+- stage: CI
+  displayName: 'Continuous Integration for Delivery Management'
+  jobs:
+
+  # Build Backend Delivery Management Feature
+  - job: BuildBackendDeliveryManagement
+    displayName: 'Build Backend Delivery Management Feature'
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    # Setup JDK
+    - task: JavaToolInstaller@1
+      displayName: 'Set up JDK $(javaVersion)'
+      inputs:
+        version: '$(javaVersion)'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+
+    # Cache Gradle Dependencies
+    - task: Cache@2
+      displayName: 'Cache Gradle Dependencies'
+      inputs:
+        key: 'gradle | "$(Agent.OS)" | backend/gradle/wrapper/gradle-wrapper.properties'
+        restoreKeys: |
+          gradle | "$(Agent.OS)"
+          gradle
+        path: '~/.gradle'
+
+    # Build Backend
+    - script: |
+        cd backend
+        chmod +x gradlew # Ensure gradlew is executable
+        ./gradlew build --stacktrace --info
+      displayName: 'Build Backend Delivery Management Feature'
+
+    # Publish Backend Build Artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Backend Build Artifacts'
+      inputs:
+        pathToPublish: 'backend/build/libs'
+        artifactName: 'le-restaurant-backend'
+        publishLocation: 'Container'
+
+  # Build Frontend Delivery Management Feature
+  - job: BuildFrontendDeliveryManagement
+    displayName: 'Build Frontend Delivery Management Feature'
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    # Setup Node.js Environment
+    - task: NodeTool@0
+      displayName: 'Setup Node.js $(nodeVersion)'
+      inputs:
+        versionSpec: '$(nodeVersion)'
+
+    # Clean and Install Dependencies
+    - script: |
+        cd frontend
+        rm -rf node_modules package-lock.json
+        npm install
+      displayName: 'Clean and Install Frontend Dependencies'
+
+    # Build Frontend
+    - script: |
+        cd frontend
+        npm run build
+      displayName: 'Build Frontend Delivery Management Feature'
+
+    # Publish Frontend Build Artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Frontend Build Artifacts'
+      inputs:
+        pathToPublish: 'frontend/dist'
+        artifactName: 'le-restaurant-frontend'
+        publishLocation: 'Container'
