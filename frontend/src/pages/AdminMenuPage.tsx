@@ -69,6 +69,8 @@ const AdminMenuPage = () => {
         }
     };
 
+    console.log('AdminMenuPage rendered');
+
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
