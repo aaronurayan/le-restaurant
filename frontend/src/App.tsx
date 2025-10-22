@@ -9,6 +9,8 @@ import DeliveryDashboard from './pages/DeliveryDashboard';
 import AdminDashboard from './components/organisms/AdminDashboard';
 import CustomerDashboard from './components/organisms/CustomerDashboard';
 import CustomerReservationsPage from './pages/CustomerReservationsPage';
+import CustomerOrdersPage from './pages/CustomerOrdersPage';
+import CustomerOrderDetailPage from './pages/CustomerOrderDetailPage';
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import { UserRole } from './types/user';
@@ -115,6 +117,26 @@ function App() {
                 element={
                   <ProtectedRoute roles={[UserRole.CUSTOMER]}>
                     <CustomerReservationsPage />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Customer Orders (F105) */}
+              <Route
+                path="/customer/orders"
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <CustomerOrdersPage />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Customer Order Details (F105) */}
+              <Route
+                path="/customer/orders/:orderId"
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <CustomerOrderDetailPage />
                   </ProtectedRoute>
                 }
               />
