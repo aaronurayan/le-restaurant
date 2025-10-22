@@ -1,6 +1,7 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 
 public class MenuItemDto {
     
@@ -11,6 +12,8 @@ public class MenuItemDto {
     private String category;
     private String imageUrl;
     private boolean available;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
     
     // Constructors
     public MenuItemDto() {}
@@ -80,5 +83,21 @@ public class MenuItemDto {
     
     public void setAvailable(boolean available) {
         this.available = available;
+    }
+    
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

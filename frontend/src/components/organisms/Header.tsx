@@ -264,6 +264,15 @@ export const Header: React.FC<HeaderProps> = ({
                           <LayoutDashboard className="w-4 h-4 text-primary-orange group-hover:text-primary-orange-dark" />
                           <span className="font-medium">Admin Dashboard</span>
                         </Link>
+                        
+                        <Link
+                          to="/admin/menu"
+                          onClick={closeDropdown}
+                          className="w-full text-left px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-3 group"
+                        >
+                          <ClipboardList className="w-4 h-4 text-neutral-500 group-hover:text-neutral-700" />
+                          <span>Menu Management</span>
+                        </Link>
                       </div>
 
                       <div className="border-t border-neutral-100 my-1"></div>

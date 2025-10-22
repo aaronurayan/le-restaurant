@@ -151,6 +151,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="font-semibold text-neutral-gray-800">Orders</div>
             <div className="text-sm text-neutral-gray-600">View menu and orders</div>
           </Link>
+
+          <Link
+            to="/admin/menu"
+            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"
+          >
+            <Package className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
+            <div className="font-semibold text-neutral-gray-800">Menu Management</div>
+            <div className="text-sm text-neutral-gray-600">Manage menu items</div>
+          </Link>
           
           <button
             onClick={() => setShowUsers(true)}
