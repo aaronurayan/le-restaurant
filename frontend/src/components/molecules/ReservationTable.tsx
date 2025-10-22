@@ -78,7 +78,7 @@ const ReservationTable: React.FC<ReservationTableProps> = ({
             ) : (
               reservations.map((reservation) => {
                 const isPending = reservation.status === ReservationStatus.PENDING;
-                
+
                 return (
                   <tr key={reservation.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -112,7 +112,7 @@ const ReservationTable: React.FC<ReservationTableProps> = ({
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      
+
                       {isPending && (
                         <>
                           <button
@@ -131,7 +131,7 @@ const ReservationTable: React.FC<ReservationTableProps> = ({
                           </button>
                         </>
                       )}
-                      
+
                       {onDelete && (
                         <button
                           onClick={() => onDelete(reservation)}

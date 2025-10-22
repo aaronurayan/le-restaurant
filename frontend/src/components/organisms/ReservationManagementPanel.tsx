@@ -187,98 +187,102 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
   return (
     <>
       {/* Modal Overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose}></div>
-
-      {/* Modal Panel */}
-      <div className="fixed inset-y-0 right-0 max-w-7xl w-full bg-white shadow-xl z-50 overflow-y-auto">
-        {/* Close Button */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Reservation Management</h1>
-            <p className="text-gray-600 mt-1">View, approve, and manage customer reservations</p>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
+        {/* Modal Panel - Click inside won't close */}
+        <div
+          className="bg-white rounded-xl shadow-2xl w-full max-w-7xl mx-4 max-h-[90vh] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-neutral-200">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Reservation Management</h1>
+              <p className="text-gray-600 mt-1">View, approve, and manage customer reservations</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Close panel"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Close panel"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
 
-        <div className="p-6">
-          {/* Filters Component */}
-          <ReservationFiltersComponent
-            statusFilter={statusFilter}
-            startDateFilter={startDateFilter}
-            endDateFilter={endDateFilter}
-            searchQuery={searchQuery}
-            onStatusChange={setStatusFilter}
-            onStartDateChange={setStartDateFilter}
-            onEndDateChange={setEndDateFilter}
-            onSearchChange={setSearchQuery}
-            onApplyFilters={handleFilterChange}
-            onClearFilters={handleClearFilters}
-            onShowPending={handleShowPending}
-            loading={loading}
-          />
-
-          {/* Error Display */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-              {error}
-            </div>
-          )}
-
-          {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          )}
-
-          {/* Reservations Table Component */}
-          {!loading && (
-            <ReservationTable
-              reservations={reservations}
-              onViewDetails={handleDetailsClick}
-              onApprove={handleApproveClick}
-              onDeny={handleDenyClick}
-              onDelete={handleDeleteClick}
+          {/* Content Area with Scroll */}
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+            {/* Filters Component */}
+            <ReservationFiltersComponent
+              statusFilter={statusFilter}
+              startDateFilter={startDateFilter}
+              endDateFilter={endDateFilter}
+              searchQuery={searchQuery}
+              onStatusChange={setStatusFilter}
+              onStartDateChange={setStartDateFilter}
+              onEndDateChange={setEndDateFilter}
+              onSearchChange={setSearchQuery}
+              onApplyFilters={handleFilterChange}
+              onClearFilters={handleClearFilters}
+              onShowPending={handleShowPending}
+              loading={loading}
             />
-          )}
+
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
+                {error}
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loading && (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            )}
+
+            {/* Reservations Table Component */}
+            {!loading && (
+              <ReservationTable
+                reservations={reservations}
+                onViewDetails={handleDetailsClick}
+                onApprove={handleApproveClick}
+                onDeny={handleDenyClick}
+                onDelete={handleDeleteClick}
+              />
+            )}
+          </div>
         </div>
-
-        {/* Approval Modal */}
-        {showApprovalModal && selectedReservation && (
-          <ReservationApprovalModal
-            reservation={selectedReservation}
-            onApprove={handleApprovalSubmit}
-            onCancel={handleCloseApprovalModal}
-            loading={loading}
-          />
-        )}
-
-        {/* Denial Modal */}
-        {showDenialModal && selectedReservation && (
-          <ReservationDenialModal
-            reservation={selectedReservation}
-            onDeny={handleDenialSubmit}
-            onCancel={handleCloseDenialModal}
-            loading={loading}
-          />
-        )}
-
-        {/* Details Modal */}
-        {showDetailsModal && selectedReservation && (
-          <ReservationDetailsModal
-            reservation={selectedReservation}
-            onClose={handleCloseDetailsModal}
-          />
-        )}
       </div>
+
+      {/* Approval Modal */}
+      {showApprovalModal && selectedReservation && (
+        <ReservationApprovalModal
+          reservation={selectedReservation}
+          onApprove={handleApprovalSubmit}
+          onCancel={handleCloseApprovalModal}
+          loading={loading}
+        />
+      )}
+
+      {/* Denial Modal */}
+      {showDenialModal && selectedReservation && (
+        <ReservationDenialModal
+          reservation={selectedReservation}
+          onDeny={handleDenialSubmit}
+          onCancel={handleCloseDenialModal}
+          loading={loading}
+        />
+      )}
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedReservation && (
+        <ReservationDetailsModal
+          reservation={selectedReservation}
+          onClose={handleCloseDetailsModal}
+        />
+      )}
     </>
   );
 };

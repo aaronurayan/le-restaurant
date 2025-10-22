@@ -33,6 +33,8 @@ export interface Reservation {
   reservationTime: string;
   partySize: number;
   tableId?: number;
+  tableNumber?: string;
+  tableLocation?: string;
   status: ReservationStatus;
   specialRequests?: string;
   createdAt: string;
@@ -40,7 +42,56 @@ export interface Reservation {
   confirmedByUserId?: number;
   checkedInAt?: string;
   adminNotes?: string;
+  rejectionReason?: string;
 }
+
+// Backend DTO interface (what API actually returns)
+interface ReservationBackendDto {
+  id: number;
+  customerId: number;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  reservationDateTime: string;
+  numberOfGuests: number;
+  tableId?: number;
+  tableNumber?: string;
+  tableLocation?: string;
+  status: string;
+  specialRequests?: string;
+  createdAt: string;
+  updatedAt?: string;
+  rejectionReason?: string;
+  approvedBy?: number;
+}
+
+/**
+ * Transform backend DTO to frontend Reservation interface
+ */
+const transformReservation = (dto: ReservationBackendDto): Reservation => {
+  const dateTime = new Date(dto.reservationDateTime);
+  const reservationDate = dateTime.toISOString().split('T')[0]; // YYYY-MM-DD
+  const reservationTime = dateTime.toTimeString().substring(0, 5); // HH:MM
+
+  return {
+    id: dto.id,
+    customerId: dto.customerId,
+    customerName: dto.customerName,
+    customerEmail: dto.customerEmail,
+    customerPhone: dto.customerPhone,
+    reservationDate,
+    reservationTime,
+    partySize: dto.numberOfGuests,
+    tableId: dto.tableId,
+    tableNumber: dto.tableNumber,
+    tableLocation: dto.tableLocation,
+    status: dto.status as ReservationStatus,
+    specialRequests: dto.specialRequests,
+    createdAt: dto.createdAt,
+    rejectionReason: dto.rejectionReason,
+    confirmedByUserId: dto.approvedBy,
+  };
+};
 
 export interface ApprovalRequest {
   tableId?: number;
@@ -84,15 +135,16 @@ export const useReservationManagementApi = () => {
       const queryString = params.toString();
       const url = `${API_BASE_URL}/api/reservations${queryString ? `?${queryString}` : ''}`;
 
-      const response = await axios.get<Reservation[]>(url, {
+      const response = await axios.get<ReservationBackendDto[]>(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
-      setReservations(response.data);
-      return response.data;
+      const transformedReservations = response.data.map(transformReservation);
+      setReservations(transformedReservations);
+      return transformedReservations;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch reservations';
       setError(errorMessage);
@@ -112,7 +164,7 @@ export const useReservationManagementApi = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get<Reservation[]>(
+      const response = await axios.get<ReservationBackendDto[]>(
         `${API_BASE_URL}/api/reservations/status/PENDING`,
         {
           headers: {
@@ -122,8 +174,9 @@ export const useReservationManagementApi = () => {
         }
       );
 
-      setReservations(response.data);
-      return response.data;
+      const transformedReservations = response.data.map(transformReservation);
+      setReservations(transformedReservations);
+      return transformedReservations;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch pending reservations';
       setError(errorMessage);
@@ -143,7 +196,7 @@ export const useReservationManagementApi = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get<Reservation>(
+      const response = await axios.get<ReservationBackendDto>(
         `${API_BASE_URL}/api/reservations/${id}`,
         {
           headers: {
@@ -153,7 +206,7 @@ export const useReservationManagementApi = () => {
         }
       );
 
-      return response.data;
+      return transformReservation(response.data);
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch reservation';
       setError(errorMessage);
@@ -173,7 +226,7 @@ export const useReservationManagementApi = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.post<Reservation>(
+      const response = await axios.post<ReservationBackendDto>(
         `${API_BASE_URL}/api/reservations/${id}/approve/${approvalData.confirmedByUserId}`,
         {
           tableId: approvalData.tableId,
@@ -187,12 +240,14 @@ export const useReservationManagementApi = () => {
         }
       );
 
+      const transformedReservation = transformReservation(response.data);
+      
       // Update local state
       setReservations(prev =>
-        prev.map(res => res.id === id ? response.data : res)
+        prev.map(res => res.id === id ? transformedReservation : res)
       );
 
-      return response.data;
+      return transformedReservation;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to approve reservation';
       setError(errorMessage);
@@ -212,7 +267,7 @@ export const useReservationManagementApi = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.post<Reservation>(
+      const response = await axios.post<ReservationBackendDto>(
         `${API_BASE_URL}/api/reservations/${id}/reject`,
         {
           rejectionReason: denialData.denialReason,
@@ -226,12 +281,14 @@ export const useReservationManagementApi = () => {
         }
       );
 
+      const transformedReservation = transformReservation(response.data);
+
       // Update local state
       setReservations(prev =>
-        prev.map(res => res.id === id ? response.data : res)
+        prev.map(res => res.id === id ? transformedReservation : res)
       );
 
-      return response.data;
+      return transformedReservation;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to deny reservation';
       setError(errorMessage);
