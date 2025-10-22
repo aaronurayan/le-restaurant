@@ -25,6 +25,16 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequestDto request) {
+        if (request.getEmail() == null || request.getEmail().isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Email must not be null or empty");
+            return ResponseEntity.badRequest().body(error);
+        }
+        if (request.getPassword() == null || request.getPassword().isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Password must not be null or empty");
+            return ResponseEntity.badRequest().body(error);
+        }
         try {
             UserDto user = userService.authenticateUser(request.getEmail(), request.getPassword());
             Map<String, Object> response = new HashMap<>();
@@ -36,9 +46,7 @@ public class AuthController {
             String msg = e.getMessage();
             Map<String, String> error = new HashMap<>();
             error.put("error", msg);
-            if (msg != null && msg.toLowerCase().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-            }
+            // Always return 401 for any login failure, including user not found
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
     }
