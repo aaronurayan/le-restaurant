@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Users, 
   Plus, 
@@ -22,7 +22,6 @@ interface UserManagementPanelProps {
 }
 
 const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClose }) => {
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all');
@@ -49,11 +48,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
     }
   }, [isOpen, loadUsers]);
 
-  useEffect(() => {
-    filterUsers();
-  }, [users, searchTerm, roleFilter, statusFilter]);
-
-  const filterUsers = () => {
+  // Use useMemo to prevent infinite loop
+  const filteredUsers = useMemo(() => {
     let filtered = users;
 
     // Search filter
@@ -75,8 +71,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
       filtered = filtered.filter(user => user.status === statusFilter);
     }
 
-    setFilteredUsers(filtered);
-  };
+    return filtered;
+  }, [users, searchTerm, roleFilter, statusFilter]);
 
   const handleCreateUser = async (userData: CreateUserRequest | UpdateUserRequest) => {
     try {
@@ -85,7 +81,16 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
         throw new Error('Password is required for creating a new user');
       }
       
-      const createData = userData as CreateUserRequest;
+      // Convert to service CreateUserRequest type
+      const createData = {
+        email: userData.email,
+        password: userData.password,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        phoneNumber: userData.phoneNumber,
+        role: userData.role || 'customer' as UserRole
+      };
+      
       await createUser(createData);
       setShowCreateModal(false);
     } catch (error) {
@@ -190,6 +195,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value as UserRole | 'all')}
                 className="form-input"
+                aria-label="Filter by user role"
+                title="Filter by user role"
               >
                 <option value="all">All Roles</option>
                 <option value={UserRole.ADMIN}>Admin</option>
@@ -201,6 +208,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as UserStatus | 'all')}
                 className="form-input"
+                aria-label="Filter by user status"
+                title="Filter by user status"
               >
                 <option value="all">All Status</option>
                 <option value={UserStatus.ACTIVE}>Active</option>
@@ -322,12 +331,16 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
                             setShowEditModal(true);
                           }}
                           className="text-primary-600 hover:text-primary-900 p-1"
+                          title="Edit user"
+                          aria-label="Edit user"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user.id)}
                           className="text-red-600 hover:text-red-900 p-1"
+                          title="Delete user"
+                          aria-label="Delete user"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
