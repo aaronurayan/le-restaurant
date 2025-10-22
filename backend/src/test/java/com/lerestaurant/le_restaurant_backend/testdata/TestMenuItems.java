@@ -13,6 +13,7 @@ public class TestMenuItems {
         "Classic Neapolitan pizza with tomato sauce, mozzarella, and basil",
         new BigDecimal("12.99"),
         "PIZZA",
+        "/images/pizza-margherita.jpg",
         true
     );
 
@@ -22,6 +23,7 @@ public class TestMenuItems {
         "Fettuccine pasta with creamy alfredo sauce and grilled chicken",
         new BigDecimal("15.99"),
         "PASTA",
+        "/images/chicken-alfredo.jpg",
         true
     );
 
