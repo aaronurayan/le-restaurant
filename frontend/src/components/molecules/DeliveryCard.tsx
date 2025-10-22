@@ -1,11 +1,11 @@
 import React from 'react';
-import { 
-  Package, 
-  User, 
-  Clock, 
-  MapPin, 
-  Phone, 
-  Mail, 
+import {
+  Package,
+  User,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
   AlertCircle,
   CheckCircle,
   Truck,
@@ -22,8 +22,6 @@ interface DeliveryCardProps {
   deliveryPerson?: DeliveryPerson;
   onStatusUpdate?: (deliveryId: string, status: string) => void;
   onAssignPerson?: (deliveryId: string) => void;
-  onViewDetails?: (deliveryId: string) => void;
-  onTrackLocation?: (deliveryId: string) => void;
   className?: string;
 }
 
@@ -49,8 +47,6 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
   deliveryPerson,
   onStatusUpdate,
   onAssignPerson,
-  onViewDetails,
-  onTrackLocation,
   className = ''
 }) => {
   const StatusIcon = statusIcons[delivery.status as keyof typeof statusIcons] || Package;
@@ -100,7 +96,7 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <StatusBadge status={delivery.status} size="sm" />
             {isOverdue() && (
@@ -151,21 +147,21 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
             <Clock className="w-4 h-4 text-neutral-400" />
             <div>
               <p className="text-neutral-500">Estimated Delivery</p>
-              <TimeDisplay 
-                time={delivery.estimatedDeliveryTime} 
+              <TimeDisplay
+                time={delivery.estimatedDeliveryTime}
                 type="datetime"
                 variant="compact"
               />
             </div>
           </div>
-          
+
           {delivery.actualDeliveryTime && (
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-green-500" />
               <div>
                 <p className="text-neutral-500">Actual Delivery</p>
-                <TimeDisplay 
-                  time={delivery.actualDeliveryTime} 
+                <TimeDisplay
+                  time={delivery.actualDeliveryTime}
                   type="datetime"
                   variant="compact"
                 />
@@ -220,7 +216,7 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
               Update Status
             </Button>
           )}
-          
+
           {canAssignPerson() && onAssignPerson && (
             <Button
               variant="outline"
@@ -228,26 +224,6 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
               onClick={() => onAssignPerson(delivery.id)}
             >
               Assign Person
-            </Button>
-          )}
-          
-          {onTrackLocation && deliveryPerson?.currentLocation && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onTrackLocation(delivery.id)}
-            >
-              Track Location
-            </Button>
-          )}
-          
-          {onViewDetails && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewDetails(delivery.id)}
-            >
-              View Details
             </Button>
           )}
         </div>

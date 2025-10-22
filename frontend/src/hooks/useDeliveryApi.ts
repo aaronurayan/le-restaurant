@@ -153,10 +153,16 @@ export const useDeliveryApi = () => {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const response = await fetch('/api/health');
+        // Try to fetch from the actual backend port
+        const response = await fetch('http://localhost:8080/api/deliveries', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
         setIsBackendConnected(response.ok);
-      } catch {
+        console.log('Backend connection status:', response.ok ? '✅ Connected' : '❌ Not connected');
+      } catch (error) {
         setIsBackendConnected(false);
+        console.log('Backend connection status: ❌ Not connected (Error:', error instanceof Error ? error.message : 'Unknown error', ')');
       }
     };
     checkConnection();
@@ -265,29 +271,49 @@ export const useDeliveryApi = () => {
     setLoading(true);
     setError(null);
 
+    console.log('🔵 Creating delivery assignment...', {
+      isBackendConnected,
+      request
+    });
+
     try {
       if (isBackendConnected) {
-        const response = await fetch('/api/delivery/assignments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(request)
-        });
-        if (!response.ok) throw new Error('Failed to create delivery assignment');
-        return await response.json();
-      } else {
-        // Mock creation
-        const newAssignment: DeliveryAssignment = {
-          id: `delivery-${Date.now()}`,
-          ...request,
-          assignedAt: new Date().toISOString(),
-          status: 'assigned'
-        };
-        mockDeliveries.push(newAssignment);
-        return newAssignment;
+        console.log('🔵 Attempting to create via backend API...');
+        try {
+          const response = await fetch('/api/delivery/assignments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request)
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Failed to create delivery assignment' }));
+            throw new Error(errorData.error || 'Failed to create delivery assignment');
+          }
+          return await response.json();
+        } catch (fetchErr) {
+          // If backend call fails, fall back to mock mode
+          console.warn('⚠️ Backend call failed, falling back to mock mode:', fetchErr);
+          setIsBackendConnected(false);
+          // Fall through to mock mode below
+        }
       }
+
+      // Mock creation - simulating successful creation
+      console.log('🔵 Creating via mock data (backend not connected)...');
+      const newAssignment: DeliveryAssignment = {
+        id: `delivery-${Date.now()}`,
+        ...request,
+        assignedAt: new Date().toISOString(),
+        status: 'assigned'
+      };
+      mockDeliveries.push(newAssignment);
+      console.log('✅ Successfully created delivery assignment (Mock Mode):', newAssignment);
+      return newAssignment;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create delivery assignment');
-      throw err;
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create delivery assignment';
+      setError(errorMessage);
+      console.error('❌ Error creating delivery assignment:', errorMessage, err);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }

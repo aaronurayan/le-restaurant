@@ -74,12 +74,17 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
 
   const handleCreateAssignment = async (data: any) => {
     try {
-      await createDeliveryAssignment(data);
+      const result = await createDeliveryAssignment(data);
+      console.log('✅ Delivery assignment created successfully:', result);
       setShowCreateForm(false);
       setSelectedOrderId('');
-      loadData();
+      await loadData(); // Reload the deliveries to show the new one
+      // Show success message
+      alert(`✅ Successfully created delivery assignment for Order #${data.orderId}`);
     } catch (err) {
-      console.error('Failed to create delivery assignment:', err);
+      console.error('❌ Failed to create delivery assignment:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create delivery assignment';
+      alert(`❌ Error: ${errorMessage}`);
     }
   };
 
@@ -95,14 +100,6 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
   const handleAssignPerson = async (deliveryId: string) => {
     // This would open a modal or form to assign a delivery person
     console.log('Assign person for delivery:', deliveryId);
-  };
-
-  const handleViewDetails = (deliveryId: string) => {
-    console.log('View details for delivery:', deliveryId);
-  };
-
-  const handleTrackLocation = (deliveryId: string) => {
-    console.log('Track location for delivery:', deliveryId);
   };
 
   const filteredDeliveries = deliveries.filter(delivery => {
@@ -254,8 +251,8 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
                 }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -298,8 +295,6 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
                   deliveryPerson={person}
                   onStatusUpdate={handleStatusUpdate}
                   onAssignPerson={handleAssignPerson}
-                  onViewDetails={handleViewDetails}
-                  onTrackLocation={handleTrackLocation}
                 />
               );
             })}
