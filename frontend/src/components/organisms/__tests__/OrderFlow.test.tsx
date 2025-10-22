@@ -301,4 +301,201 @@ describe('Order Flow Integration Tests (F105)', () => {
       expect(screen.getByText(/failed to fetch orders/i)).toBeInTheDocument();
     });
   });
+
+  // ============================================================
+  // ✅ Test 4: Test order type selection in checkout
+  // ============================================================
+  it('should allow selection of different order types', async () => {
+    const user = userEvent.setup();
+    
+    render(<Checkout />, { wrapper: TestWrapper });
+    
+    // Check default selection (DINE_IN)
+    const dineInButton = screen.getByText('Dine-In');
+    expect(dineInButton.closest('button')).toHaveClass('border-primary-500');
+    
+    // Click on Takeout
+    const takeoutButton = screen.getByText('Takeout');
+    await user.click(takeoutButton.closest('button')!);
+    
+    // After click, Takeout should be selected and Dine-In deselected
+    expect(takeoutButton.closest('button')).toHaveClass('border-primary-500');
+    expect(dineInButton.closest('button')).not.toHaveClass('border-primary-500');
+    
+    // Click on Delivery
+    const deliveryButton = screen.getByText('Delivery');
+    await user.click(deliveryButton.closest('button')!);
+    
+    // After click, Delivery should be selected and Takeout deselected
+    expect(deliveryButton.closest('button')).toHaveClass('border-primary-500');
+    expect(takeoutButton.closest('button')).not.toHaveClass('border-primary-500');
+  });
+
+  // ============================================================
+  // ✅ Test 5: Test validation error for empty cart
+  // ============================================================
+  it('should show validation error when cart is empty', async () => {
+    const user = userEvent.setup();
+    
+    // Mock empty cart
+    mockUseCart.mockReturnValue({
+      cartItems: [],
+      cartTotal: 0,
+      cartItemCount: 0,
+      addToCart: vi.fn(),
+      removeFromCart: vi.fn(),
+      updateQuantity: vi.fn(),
+      clearCart: mockClearCart,
+      isCartEmpty: true
+    });
+    
+    render(<Checkout />, { wrapper: TestWrapper });
+    
+    // Find empty cart message - disabled button means validation error happened
+    expect(screen.getByText('Your cart is empty')).toBeInTheDocument();
+    const placeOrderButton = screen.getByRole('button', { name: /place order/i });
+    expect(placeOrderButton).toBeDisabled();
+  });
+
+  // ============================================================
+  // ✅ Test 6: Test tip input in checkout form
+  // ============================================================
+  it('should allow tip input in checkout form', async () => {
+    const user = userEvent.setup();
+    
+    // Return cart with items to enable button
+    mockUseCart.mockReturnValue({
+      cartItems: mockCartItems,
+      cartTotal: 25.98,
+      cartItemCount: 2,
+      addToCart: vi.fn(),
+      removeFromCart: vi.fn(),
+      updateQuantity: vi.fn(),
+      clearCart: mockClearCart,
+      isCartEmpty: false
+    });
+    
+    render(<Checkout />, { wrapper: TestWrapper });
+    
+    // Enter tip amount
+    const tipInput = screen.getByPlaceholderText(/0.00/i);
+    await user.clear(tipInput);
+    await user.type(tipInput, '5');
+    
+    // Check the tip amount is displayed
+    expect(tipInput).toHaveValue(5);
+  });
+
+  // ============================================================
+  // ✅ Test 7: Test special instructions field
+  // ============================================================
+  it('should allow entering special instructions', async () => {
+    const user = userEvent.setup();
+    
+    // Return cart with items
+    mockUseCart.mockReturnValue({
+      cartItems: mockCartItems,
+      cartTotal: 25.98,
+      cartItemCount: 2,
+      addToCart: vi.fn(),
+      removeFromCart: vi.fn(),
+      updateQuantity: vi.fn(),
+      clearCart: mockClearCart,
+      isCartEmpty: false
+    });
+    
+    render(<Checkout />, { wrapper: TestWrapper });
+    
+    // Enter special instructions
+    const instructionsTextarea = screen.getByPlaceholderText(/any special requests/i);
+    const specialInstructionsText = 'Please make it extra spicy';
+    await user.type(instructionsTextarea, specialInstructionsText);
+    
+    // Check that the text was entered
+    expect(instructionsTextarea).toHaveValue(specialInstructionsText);
+    
+    // Verify character count is displayed
+    const characterCount = screen.getByText(`${specialInstructionsText.length}/500 characters`);
+    expect(characterCount).toBeInTheDocument();
+  });
+
+  // ============================================================
+  // ✅ Test 8: Test order creation flow with combined form fields
+  // ============================================================
+  it('should correctly render a form with all input fields for order creation', () => {
+    // Setup mocks for successful order creation
+    mockApi.createOrder = vi.fn().mockResolvedValue(mockOrder);
+    
+    // Return cart with items
+    mockUseCart.mockReturnValue({
+      cartItems: mockCartItems,
+      cartTotal: 25.98,
+      cartItemCount: 2,
+      addToCart: vi.fn(),
+      removeFromCart: vi.fn(),
+      updateQuantity: vi.fn(),
+      clearCart: mockClearCart,
+      isCartEmpty: false
+    });
+    
+    render(<Checkout />, { wrapper: TestWrapper });
+    
+    // Check that order type buttons exist
+    expect(screen.getByText('Dine-In')).toBeInTheDocument();
+    expect(screen.getByText('Takeout')).toBeInTheDocument();
+    expect(screen.getByText('Delivery')).toBeInTheDocument();
+    
+    // Check that tip input exists
+    expect(screen.getByPlaceholderText(/0.00/i)).toBeInTheDocument();
+    
+    // Check that special instructions field exists
+    expect(screen.getByPlaceholderText(/any special requests/i)).toBeInTheDocument();
+    
+    // Check order summary displays
+    expect(screen.getByText('Subtotal')).toBeInTheDocument();
+    expect(screen.getByText('Tax (10%)')).toBeInTheDocument();
+    expect(screen.getByText('Total')).toBeInTheDocument();
+    
+    // Check that place order button exists and is enabled with items in cart
+    const placeOrderButton = screen.getByRole('button', { name: /place order/i });
+    expect(placeOrderButton).toBeEnabled();
+  });
+
+  // ============================================================
+  // ✅ Test 9: Test order details display and collapse
+  // ============================================================
+  it('should display order details when clicking on an order', async () => {
+    const user = userEvent.setup();
+    
+    // Ensure multiple orders exist for testing
+    const secondOrder = {
+      ...mockOrder,
+      id: 2,
+      status: 'COMPLETED' as OrderStatus
+    };
+    
+    updateMockApi([mockOrder, secondOrder]);
+    
+    render(<Orders />, { wrapper: TestWrapper });
+    
+    // Initial state - should show both order cards but no details
+    expect(screen.getAllByText(/Order #/i).length).toBe(2);
+    expect(screen.queryByText(/Close Details/i)).not.toBeInTheDocument();
+    
+    // Click on first order
+    await user.click(screen.getByText('Order #1'));
+    
+    // Check that order details are shown
+    await waitFor(() => {
+      expect(screen.getByText(/Close Details/i)).toBeInTheDocument();
+    });
+    
+    // Click on close details button
+    await user.click(screen.getByText(/Close Details/i));
+    
+    // Verify details are hidden
+    await waitFor(() => {
+      expect(screen.queryByText(/Close Details/i)).not.toBeInTheDocument();
+    });
+  });
 });
