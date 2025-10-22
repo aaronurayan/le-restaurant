@@ -32,16 +32,16 @@ import java.util.Map;
 @RequestMapping("/api/reservations")
 @CrossOrigin(origins = "http://localhost:5173")
 public class ReservationController {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(ReservationController.class);
-    
+
     private final ReservationService reservationService;
-    
+
     @Autowired
     public ReservationController(ReservationService reservationService) {
         this.reservationService = reservationService;
     }
-    
+
     /**
      * Create new reservation (F108)
      * POST /api/reservations
@@ -62,7 +62,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
+
     /**
      * Get reservation by ID
      * GET /api/reservations/{id}
@@ -83,7 +83,7 @@ public class ReservationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         }
     }
-    
+
     /**
      * Get all reservations
      * GET /api/reservations
@@ -103,7 +103,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
+
     /**
      * Get reservations by customer (F108)
      * GET /api/reservations/customer/{customerId}
@@ -124,7 +124,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
+
     /**
      * Get reservations by status
      * GET /api/reservations/status/{status}
@@ -136,7 +136,8 @@ public class ReservationController {
     public ResponseEntity<?> getReservationsByStatus(@PathVariable String status) {
         try {
             logger.info("Fetching reservations with status: {}", status);
-            Reservation.ReservationStatus reservationStatus = Reservation.ReservationStatus.valueOf(status.toUpperCase());
+            Reservation.ReservationStatus reservationStatus = Reservation.ReservationStatus
+                    .valueOf(status.toUpperCase());
             List<ReservationDto> reservations = reservationService.getReservationsByStatus(reservationStatus);
             return ResponseEntity.ok(reservations);
         } catch (IllegalArgumentException e) {
@@ -151,12 +152,12 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
+
     /**
      * Approve reservation (F109)
      * POST /api/reservations/{id}/approve
      * 
-     * @param id Reservation ID
+     * @param id         Reservation ID
      * @param approverId Manager ID
      * @return Approved reservation
      */
@@ -173,25 +174,24 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
+
     /**
      * Reject/Cancel reservation (F109)
      * POST /api/reservations/{id}/reject
      * 
-     * @param id Reservation ID
+     * @param id         Reservation ID
      * @param requestDto Rejection request with reason
      * @return Rejected reservation
      */
     @PostMapping("/{id}/reject")
-    public ResponseEntity<?> rejectReservation(@PathVariable Long id, 
-                                              @RequestBody ReservationApprovalRequestDto requestDto) {
+    public ResponseEntity<?> rejectReservation(@PathVariable Long id,
+            @RequestBody ReservationApprovalRequestDto requestDto) {
         try {
             logger.info("Rejecting reservation {}", id);
             ReservationDto reservationDto = reservationService.rejectReservation(
-                id,
-                requestDto.getRejectionReason(),
-                requestDto.getApproverId()
-            );
+                    id,
+                    requestDto.getRejectionReason(),
+                    requestDto.getApproverId());
             return ResponseEntity.ok(reservationDto);
         } catch (RuntimeException e) {
             logger.error("Error rejecting reservation: {}", e.getMessage());
@@ -200,7 +200,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
+
     /**
      * Cancel reservation (Customer cancellation)
      * PUT /api/reservations/{id}/cancel
@@ -221,7 +221,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
+
     /**
      * Complete reservation
      * PUT /api/reservations/{id}/complete
@@ -242,7 +242,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
+
     /**
      * Delete reservation
      * DELETE /api/reservations/{id}
@@ -264,5 +264,92 @@ public class ReservationController {
             error.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
+    }
+
+    /**
+     * Get reservations by date (F108)
+     * GET /api/reservations/date/{date}
+     * 
+     * @param date Reservation date (yyyy-MM-dd format)
+     * @return List of reservations for the date
+     */
+    @GetMapping("/date/{date}")
+    public ResponseEntity<?> getReservationsByDate(@PathVariable String date) {
+        try {
+            logger.info("Fetching reservations for date: {}", date);
+            List<ReservationDto> reservations = reservationService.getReservationsByDate(date);
+            return ResponseEntity.ok(reservations);
+        } catch (RuntimeException e) {
+            logger.error("Error fetching reservations by date: {}", e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    /**
+     * Get available time slots for a date and party size (F108)
+     * GET /api/reservations/timeslots?date={date}&partySize={partySize}
+     * 
+     * @param date      Reservation date (yyyy-MM-dd format)
+     * @param partySize Number of guests
+     * @return List of available time slots
+     */
+    @GetMapping("/timeslots")
+    public ResponseEntity<?> getTimeSlots(
+            @RequestParam String date,
+            @RequestParam Integer partySize) {
+        try {
+            logger.info("Fetching time slots for date: {} and party size: {}", date, partySize);
+            List<?> timeSlots = reservationService.getAvailableTimeSlots(date, partySize);
+            return ResponseEntity.ok(timeSlots);
+        } catch (RuntimeException e) {
+            logger.error("Error fetching time slots: {}", e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    /**
+     * Get available tables for a date, time, and party size (F108)
+     * GET
+     * /api/reservations/availability?date={date}&time={time}&partySize={partySize}
+     * 
+     * @param date      Reservation date (yyyy-MM-dd format)
+     * @param time      Reservation time (HH:mm format)
+     * @param partySize Number of guests
+     * @return List of available tables
+     */
+    @GetMapping("/availability")
+    public ResponseEntity<?> getAvailableTables(
+            @RequestParam String date,
+            @RequestParam String time,
+            @RequestParam Integer partySize) {
+        try {
+            logger.info("Fetching available tables for date: {}, time: {}, party size: {}",
+                    date, time, partySize);
+            List<?> tables = reservationService.getAvailableTables(date, time, partySize);
+            return ResponseEntity.ok(tables);
+        } catch (RuntimeException e) {
+            logger.error("Error fetching available tables: {}", e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    /**
+     * Health check endpoint for frontend connection test
+     * GET /api/reservations/test
+     * 
+     * @return Success message
+     */
+    @GetMapping("/test")
+    public ResponseEntity<?> healthCheck() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "OK");
+        response.put("message", "Reservation API is running");
+        return ResponseEntity.ok(response);
     }
 }
