@@ -32,7 +32,7 @@ class Scenario9_HighVolumeConcurrentOrdersTest extends BaseE2ETest {
         specialDish.setPrice(BigDecimal.valueOf(30.00));
         specialDish.setCategory("SPECIAL");
         specialDish.setAvailable(true);
-        specialDish.setStock(1); // Only 1 available
+        // Note: MenuItem does not have a stock field; availability is managed via 'available' flag
         MenuItem savedSpecialDish = menuItemRepository.save(specialDish);
         Long dishId = savedSpecialDish.getId();
 
@@ -45,21 +45,19 @@ class Scenario9_HighVolumeConcurrentOrdersTest extends BaseE2ETest {
         OrderDto order1 = createTestOrder(customer1.getId(), dishId, 1, BigDecimal.valueOf(30.00));
         assertNotNull(order1);
 
-        // Update stock to 0 (simulating concurrent order)
+        // Update availability to false (simulating item no longer available)
         MenuItem updatedDish = menuItemRepository.findById(dishId).orElseThrow();
-        updatedDish.setStock(0);
         updatedDish.setAvailable(false);
         menuItemRepository.save(updatedDish);
 
-        // Customer 2 tries to order - should fail due to stock
+        // Customer 2 tries to order unavailable item - should fail
         Exception exception = assertThrows(Exception.class, () -> {
             createTestOrder(customer2.getId(), dishId, 1, BigDecimal.valueOf(30.00));
         });
         assertNotNull(exception);
 
-        // Verify stock is 0
-        MenuItem finalDish = menuItemRepository.findById(dishId).orElseThrow();
-        assertEquals(0, finalDish.getStock());
-        assertFalse(finalDish.isAvailable());
+        // Verify item is unavailable
+        MenuItem confirmedUnavailable = menuItemRepository.findById(dishId).orElseThrow();
+        assertFalse(confirmedUnavailable.isAvailable());
     }
 }

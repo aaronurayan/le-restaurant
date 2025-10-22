@@ -44,7 +44,7 @@ class Scenario7_UnauthorizedAccessAttemptTest extends BaseE2ETest {
         
         // Manually set manager role (in real app, this would be done during registration)
         User managerEntity = userRepository.findById(manager.getId()).orElseThrow();
-        managerEntity.setRole("MANAGER");
+        managerEntity.setRole(User.UserRole.MANAGER);
         userRepository.save(managerEntity);
 
         // Verify manager role is set

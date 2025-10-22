@@ -1,751 +1,169 @@
-# 07 Overall End-to-End Test Case
+# 07: Overall End-to-End Backend Test Scenarios
 
-**Document Purpose**: Comprehensive end-to-end test scenario for implemented features in `main` branch for AI analysis and test automation.
+**Document Purpose**: To define comprehensive end-to-end (E2E) test scenarios for the Le Restaurant backend, ensuring all features (F100-F109) are fully integrated and function correctly. This document focuses on API interactions and database state changes.
 
-**Last Updated**: 2025-10-21  
-**Status**: Updated for Current Implementation  
-**Branch**: main  
-**Excluded Features**: F103, F104 (Menu features - in development by Mikhail Zhelnin)
-
----
-
-## 🎯 Feature Map (Testing Scope)
-
-| Feature | Name | Description | Owner | Type | Status |
-|---------|------|-------------|-------|------|--------|
-| F100 | User Registration | Customers create new account with email/password | Junayeed Halim | Customer | ✅ Implemented |
-| F101 | User Authentication | Registered customers log in to their account | Junayeed Halim | Customer | ✅ Implemented |
-| F102 | User Management (Manager) | Managers view, edit, delete customer accounts | Jungwook Van | Manager | ✅ Implemented |
-| F103 | Menu Display | View food items by category, search, filter | Mikhail Zhelnin | Customer | 🚧 **EXCLUDED - In Development** |
-| F104 | Menu Management (Manager) | Create, update, delete menu items & prices | Mikhail Zhelnin | Manager | 🚧 **EXCLUDED - In Development** |
-| F105 | Order Management | Create, submit orders with payment system | Damaq Zain | Customer | ✅ Implemented |
-| F106 | Payment Management | Handle customer payments, transaction processing | Jungwook Van | Manager | ✅ Implemented |
-| F107 | Delivery Management | Manage deliveries, assign personnel, track status | Aaron Urayan | Manager | ✅ Implemented |
-| F108 | Table Reservation | Book tables for specific date, time, guests | Damaq Zain | Customer | ✅ Implemented |
-| F109 | Reservation Management (Manager) | View, approve, deny, manage reservations | Aaron Urayan | Manager | ✅ Implemented |
-
-**Test Coverage**: 8/10 features (80%) - Menu features excluded until branch merge
+**Last Updated**: 2025-10-23
+**Status**: Aligned with complete feature set
+**Branch**: main
+**Test Focus**: Backend API and Database Integrity
 
 ---
 
-## 📋 Test Scenario Breakdown
+## 🎯 Feature Map (F100-F109)
 
-### **Actor Profiles**
-
-**Customer**: Alice (New User)
-- Initial Status: Not registered
-- Goal: Sign up, place order (with hardcoded menu items), make payment, track delivery, book table
-- **Note**: Menu browsing functionality excluded until F103/F104 merge
-
-**Manager 1**: Jungwook (User & Payment Manager)
-- Initial Status: Logged in
-- Responsibility: Verify users, monitor payments, manage user accounts
-
-**Manager 2**: Aaron (Delivery & Reservation Manager)
-- Initial Status: Logged in
-- Responsibility: Approve reservations, assign deliveries, update status
-
-**Test Data Prerequisites**:
-- Hardcoded menu items available for order testing (bypassing F103/F104)
-- Pre-configured delivery addresses
-- Available table inventory for reservation testing
+| Feature | Name | Owner | API Endpoints |
+|---|---|---|---|
+| F100 | User Registration | Junayeed Halim | `POST /api/users/register` |
+| F101 | User Authentication | Junayeed Halim | `POST /api/auth/login` |
+| F102 | User Management | Jungwook Van | `GET, PUT, DELETE /api/users/{id}` |
+| F103 | Menu Display | Mikhail Zhelnin | `GET /api/menu-items` |
+| F104 | Menu Management | Mikhail Zhelnin | `POST, PUT, DELETE /api/menu-items` |
+| F105 | Order Management | Damaq Zain | `POST, GET /api/orders` |
+| F106 | Payment Management | Jungwook Van | `POST /api/payments`, `GET /api/payments/{id}` |
+| F107 | Delivery Management | Aaron Urayan | `PUT /api/deliveries/{id}/status` |
+| F108 | Table Reservation | Damaq Zain | `POST /api/reservations` |
+| F109 | Reservation Management | Aaron Urayan | `PUT /api/reservations/{id}/status` |
 
 ---
 
-## 🔄 Complete Test Flow (Revised for Current Implementation)
+## 🧪 10 Comprehensive Backend Test Scenarios
 
-### **PHASE 1: Database Seeding & Test Data Preparation**
+Here are 10 end-to-end stories designed to test the integration and business logic of the backend services.
 
-#### Step 1.1 - Test Data Seeding (Backend Setup)
-```
-Actor: System/Test Suite
-Precondition: Backend running, H2 database initialized
+### **Scenario 1: New Customer Full Journey (Happy Path)**
+*Story: A new customer signs up, orders food, pays, gets it delivered, and books a table for a future visit.*
 
-Actions:
-  1.1.1 | Seed hardcoded menu items (bypassing F103/F104)
-         SQL/Data:
-           INSERT INTO menu_items VALUES 
-             (1, 'Grilled Chicken', 24.99, 'MAIN', true, 'chicken.jpg'),
-             (2, 'Caesar Salad', 12.99, 'STARTER', true, 'salad.jpg'),
-             (3, 'Chocolate Cake', 8.99, 'DESSERT', true, 'cake.jpg'),
-             (4, 'Coca Cola', 3.50, 'BEVERAGE', true, 'coke.jpg');
-         Expected: 4 menu items available for order testing
-  
-  1.1.2 | Seed manager accounts
-         Data:
-           - Email: jungwook@lerestaurant.com, Role: MANAGER (User & Payment Mgmt)
-           - Email: aaron@lerestaurant.com, Role: MANAGER (Delivery & Reservation Mgmt)
-         Expected: 2 manager accounts ready for authentication
-  
-  1.1.3 | Seed available tables for reservation
-         Data:
-           - Table IDs: T1, T2, T3, T4
-           - Capacity: 2, 4, 6, 8 guests
-           - Availability: ALL AVAILABLE
-         Expected: Table inventory ready for F108 reservation testing
-  
-  1.1.4 | Verify backend health
-         Request: GET http://localhost:8080/actuator/health
-         Expected: HTTP 200, status: "UP"
-```
+1.  **Registration (F100)**: Alice registers via `POST /api/users/register`.
+    - **DB Check**: `users` table has a new entry for Alice with `role: 'CUSTOMER'`.
+2.  **Login (F101)**: Alice logs in via `POST /api/auth/login`.
+    - **API Check**: Receives a valid JWT token.
+3.  **Create Order (F105)**: Alice creates an order with 2 menu items via `POST /api/orders`.
+    - **DB Check**: `orders` table has a new order with `status: 'PENDING_PAYMENT'`. `order_items` table has 2 corresponding entries.
+4.  **Process Payment (F106)**: Alice pays for the order via `POST /api/payments`.
+    - **DB Check**: `payments` table has a new entry with `status: 'COMPLETED'`. The `orders` table entry for her order is updated to `status: 'PREPARING'`.
+5.  **Manage Delivery (F107)**: A manager updates the delivery status to `OUT_FOR_DELIVERY` and then `DELIVERED` via `PUT /api/deliveries/{id}/status`.
+    - **DB Check**: `deliveries` table entry status is updated accordingly.
+6.  **Make Reservation (F108)**: Alice books a table via `POST /api/reservations`.
+    - **DB Check**: `reservations` table has a new entry with `status: 'PENDING_APPROVAL'`.
+7.  **Approve Reservation (F109)**: A manager approves the reservation via `PUT /api/reservations/{id}/status`.
+    - **DB Check**: The reservation status is updated to `status: 'CONFIRMED'`.
 
-**Feature Coverage**: Database setup (no feature-specific logic)
-**Note**: Menu items are hardcoded for testing until F103/F104 integration
+### **Scenario 2: Manager Manages a User Account**
+*Story: A manager views, modifies, and ultimately deletes a problematic user account.*
 
----
+1.  **User Creation (F100)**: A user "Bob" registers.
+2.  **View User (F102)**: A manager (Jungwook) fetches Bob's details via `GET /api/users/{bob_id}`.
+    - **API Check**: Receives Bob's user data.
+3.  **Update User (F102)**: The manager deactivates Bob's account via `PUT /api/users/{bob_id}` with `status: 'INACTIVE'`.
+    - **DB Check**: Bob's entry in the `users` table has `status: 'INACTIVE'`.
+4.  **Login Failure (F101)**: Bob attempts to log in.
+    - **API Check**: `POST /api/auth/login` returns `401 Unauthorized`.
+5.  **Delete User (F102)**: The manager deletes Bob's account via `DELETE /api/users/{bob_id}`.
+    - **DB Check**: Bob's entry is removed from the `users` table.
 
-### **PHASE 2: Customer Onboarding & Journey**
+### **Scenario 3: Menu Lifecycle and its Impact on Orders**
+*Story: A manager adds a new dish, a customer orders it, the manager updates its price, and finally removes it from the menu.*
 
-#### Step 2.1 - User Registration (F100)
-```
-Actor: Alice (New Customer)
-Precondition: Not registered in system
+1.  **Create Menu Item (F104)**: A manager (Mikhail) adds "Truffle Pasta" for $25 via `POST /api/menu-items`.
+    - **DB Check**: `menu_items` table has a new entry for "Truffle Pasta".
+2.  **Customer Orders Item (F103, F105)**: A customer views the menu and orders "Truffle Pasta".
+    - **DB Check**: A new order is created with an `order_items` entry for "Truffle Pasta" at $25.
+3.  **Update Price (F104)**: The manager updates the price to $28 via `PUT /api/menu-items/{id}`.
+    - **DB Check**: The price in `menu_items` is now $28.
+4.  **New Order with New Price (F105)**: Another customer orders "Truffle Pasta".
+    - **DB Check**: The new order's `order_items` entry reflects the $28 price. The original order is unaffected.
+5.  **Delete Menu Item (F104)**: The manager deletes "Truffle Pasta".
+    - **DB Check**: The item is marked as inactive or removed.
+6.  **Order Failure (F105)**: A customer attempts to order the deleted item.
+    - **API Check**: `POST /api/orders` returns a `400 Bad Request` or similar error.
 
-Actions:
-  2.1.1 | Alice visits website homepage
-         Expected: Registration link visible, website loads
-  
-  2.1.2 | Click "Sign Up" button
-         Expected: Registration form displayed with fields:
-           - Email
-           - Password
-           - Confirm Password
-  
-  2.1.3 | Fill registration form
-         Input:
-           - Email: alice@example.com
-           - Password: SecurePass123!
-           - Confirm: SecurePass123!
-         Expected: Form validation passes
-  
-  2.1.4 | Click "Create Account" button
-         Expected: 
-           - Account created (HTTP 201)
-           - Alice's record inserted into 'users' table
-           - Status: ACTIVE
-           - Role: CUSTOMER
-           - Email verified or pending
-```
+### **Scenario 4: Payment Failure and Retry**
+*Story: A customer's payment fails, they try again, and the order is processed.*
 
-**Feature Coverage**: F100 (user registration)
+1.  **Create Order (F105)**: A customer creates an order.
+    - **DB Check**: `orders` table shows `status: 'PENDING_PAYMENT'`.
+2.  **Payment Fails (F106)**: The customer attempts payment with invalid card details via `POST /api/payments`.
+    - **API Check**: Returns a `400 Bad Request`.
+    - **DB Check**: `payments` table may log a `FAILED` transaction. The order status remains `PENDING_PAYMENT`.
+3.  **Payment Succeeds (F106)**: The customer retries with valid details.
+    - **API Check**: Returns `201 Created`.
+    - **DB Check**: `payments` table logs a `COMPLETED` transaction. `orders` status updates to `PREPARING`.
 
----
+### **Scenario 5: Reservation Conflict and Rejection**
+*Story: Two customers try to book the last table for the same time slot; one succeeds, the other is rejected.*
 
-#### Step 2.2 - User Authentication & Login (F101)
-```
-Actor: Alice
-Precondition: Account created in Step 2.1
+1.  **Customer A Reserves (F108)**: Customer A books the last table for 4 at 7 PM via `POST /api/reservations`.
+    - **DB Check**: A new reservation is created with `status: 'PENDING_APPROVAL'`.
+2.  **Customer B Reserves (F108)**: Before approval, Customer B tries to book the same table slot.
+    - **API Check**: The system should either create another `PENDING_APPROVAL` reservation or immediately return a `409 Conflict` if logic prevents overbooking pending requests.
+3.  **Manager Approves A (F109)**: A manager (Aaron) approves Customer A's reservation.
+    - **DB Check**: Customer A's reservation status becomes `CONFIRMED`.
+4.  **Manager Rejects B (F109)**: The manager sees the conflict and rejects Customer B's reservation.
+    - **DB Check**: Customer B's reservation status becomes `REJECTED`.
 
-Actions:
-  2.2.1 | Alice on login page
-         Expected: Login form visible (Email, Password fields)
-  
-  2.2.2 | Enter credentials
-         Input:
-           - Email: alice@example.com
-           - Password: SecurePass123!
-  
-  2.2.3 | Click "Log In"
-         Expected:
-           - Session created
-           - JWT token generated (if applicable)
-           - Redirected to dashboard
-           - Navigation bar shows "Hello, Alice"
-```
+### **Scenario 6: Order Cancellation by Manager**
+*Story: A customer places an order, but a manager has to cancel it before it's delivered.*
 
-**Feature Coverage**: F101 (authentication)
+1.  **Order and Pay (F105, F106)**: A customer successfully places and pays for an order.
+    - **DB Check**: Order status is `PREPARING`.
+2.  **Manager Cancels (F105/F106)**: A manager cancels the order via a dedicated API endpoint (e.g., `PUT /api/orders/{id}/cancel`).
+    - **DB Check**: Order status changes to `CANCELLED`.
+    - **Business Logic**: A refund process should be triggered. A `refund` entry might be created in the `payments` table.
 
----
+### **Scenario 7: Unauthorized Access Attempt**
+*Story: A regular customer attempts to access manager-only functionality.*
 
-#### Step 2.6 - Reservation Booking (F108)
-```
-Actor: Alice
-Precondition: Authenticated, order placed and paid
+1.  **Customer Login (F101)**: A customer logs in, obtaining a `CUSTOMER` role JWT.
+2.  **Access User Management (F102)**: The customer attempts to call `GET /api/users`.
+    - **API Check**: Returns `403 Forbidden`.
+3.  **Access Menu Management (F104)**: The customer attempts to call `POST /api/menu-items`.
+    - **API Check**: Returns `403 Forbidden`.
+4.  **Access Reservation Management (F109)**: The customer attempts to call `PUT /api/reservations/{id}/status`.
+    - **API Check**: Returns `403 Forbidden`.
 
-Actions:
-  2.6.1 | Create reservation via CustomerReservationList
-         Input (ReservationCreateRequestDto):
-           - userId: Alice's user ID
-           - partySize: 4
-           - reservationDate: "2025-11-01"
-           - reservationTime: "19:00:00"
-           - specialRequests: "Window seat preferred, celebrating birthday"
-         Expected: 
-           - API POST /api/reservations returns HTTP 201
-           - Reservation created with PENDING_APPROVAL status
-  
-  2.6.2 | Verify reservation created
-         Request: GET /api/reservations/{reservationId}
-         Expected:
-           - Reservation ID: RES-123001
-           - Status: PENDING_APPROVAL
-           - Party size: 4 guests
-           - Date: 2025-11-01
-           - Time: 19:00
-           - Special requests recorded
-           - Customer: Alice (alice.johnson@gmail.com)
-  
-  2.6.3 | Verify reservation in customer list
-         Request: GET /api/reservations/user/{userId}
-         Expected:
-           - Reservation RES-123001 visible in list
-           - Status indicator: "Pending Approval"
-           - Date/time displayed correctly
-           - Edit/Cancel buttons available (for pending reservations)
-```
+### **Scenario 8: Delivery Driver Workflow**
+*Story: A manager assigns a delivery, and the driver updates the status through the journey.*
 
-**Feature Coverage**: F108 (reservation booking)
-**Components Tested**: 
-- Backend: ReservationController, ReservationService
-- Frontend: CustomerReservationList, ReservationForm
-- Business Logic: Reservation validation, status management
+1.  **Order Confirmed (F105, F106)**: An order is paid for.
+    - **DB Check**: A `deliveries` entry is created with `status: 'PENDING_ASSIGNMENT'`.
+2.  **Manager Assigns Driver (F107)**: A manager assigns a driver via `PUT /api/deliveries/{id}/assign`.
+    - **DB Check**: `deliveries` entry is updated with `driver_id` and `status: 'ASSIGNED'`.
+3.  **Driver Updates Status (F107)**: The driver (or system) updates status to `OUT_FOR_DELIVERY` and then `DELIVERED`.
+    - **DB Check**: The `status` field in the `deliveries` table is updated at each step.
+
+### **Scenario 9: High-Volume Concurrent Orders**
+*Story: Multiple customers place orders for the same limited-stock menu item simultaneously.*
+
+1.  **Setup**: A menu item "Special Dish" has a stock of 1.
+2.  **Concurrent Requests (F105)**: Two customers (C1, C2) simultaneously submit `POST /api/orders` for "Special Dish".
+3.  **Pessimistic/Optimistic Locking**: The `OrderService` must handle this.
+    - **Expected Outcome**: One order (e.g., C1's) is accepted. The other (C2's) fails.
+    - **API Check**: C1 gets `201 Created`. C2 gets `409 Conflict` or `400 Bad Request` with an "Item out of stock" message.
+    - **DB Check**: Only one order for "Special Dish" is created. The item's stock in `menu_items` is 0.
+
+### **Scenario 10: Full Refund Process**
+*Story: A customer's order is delivered incorrectly, and a manager issues a full refund.*
+
+1.  **Order Delivered (F107)**: An order is marked as `DELIVERED`.
+2.  **Customer Complaint**: The customer reports an issue.
+3.  **Manager Issues Refund (F106)**: A manager (Jungwook) triggers a refund via a dedicated API (e.g., `POST /api/payments/{payment_id}/refund`).
+    - **API Check**: Returns `200 OK` with refund details.
+    - **DB Check**: The original `payments` entry is updated, or a new `refund` transaction is created linked to the original payment. The order status might be updated to `REFUNDED`.
 
 ---
 
-#### Step 2.4 - Order Creation & Management (F105) **[MODIFIED - No Menu UI]**
-```
-Actor: Alice (Logged in)
-Precondition: Seeded menu items available (ID: 1-Chicken, 2-Salad, 3-Cake, 4-Coke)
-Test Approach: Direct API call OR order form with hardcoded item selection
+## ✅ Test Assertion Summary
 
-Actions:
-  2.4.1 | Create order via Order Management Panel
-         Input (OrderCreateRequestDto):
-           - customerId: Alice's user ID
-           - items: [
-               { menuItemId: 1, quantity: 1, price: 24.99 },  // Grilled Chicken
-               { menuItemId: 4, quantity: 2, price: 3.50 }    // Coca Cola x2
-             ]
-           - orderType: "DELIVERY"
-           - totalAmount: 31.99 (24.99 + 3.50×2)
-         Expected: API POST /api/orders returns HTTP 201
-  
-  2.4.2 | Verify order created
-         Request: GET /api/orders/{orderId}
-         Expected:
-           - Order status: PENDING
-           - Order ID: ORD-789456
-           - Customer ID matches Alice
-           - Items count: 2 distinct items, 3 total quantity
-           - Total amount: $31.99
-  
-  2.4.3 | Add delivery address
-         Input (DeliveryAddressCreateRequestDto):
-           - orderId: ORD-789456
-           - street: "123 Main St"
-           - city: "Sydney"
-           - state: "NSW"
-           - zipCode: "2000"
-           - phone: "+61-455-123-456"
-           - specialInstructions: "Leave at front door"
-         Expected: 
-           - API POST /api/delivery-addresses returns HTTP 201
-           - Address linked to order
-  
-  2.4.4 | Proceed to payment
-         Expected:
-           - Order status remains PENDING
-           - Payment amount: $31.99
-           - Payment page loads with order summary
-```
+### Database State Assertions
+- **User Creation**: `users` table contains the new user with correct role and status.
+- **Order Lifecycle**: `orders.status` correctly transitions from `PENDING_PAYMENT` -> `PREPARING` -> `OUT_FOR_DELIVERY` -> `DELIVERED` or `CANCELLED`.
+- **Payment Integrity**: `payments` table correctly logs `COMPLETED`, `FAILED`, and `REFUNDED` transactions.
+- **Foreign Keys**: `order_items` links to `orders` and `menu_items`. `payments` links to `orders`. `deliveries` links to `orders`.
+- **Reservation State**: `reservations.status` transitions from `PENDING_APPROVAL` -> `CONFIRMED` or `REJECTED`.
 
-**Feature Coverage**: F105 (order management)
-**Testing Method**: Backend API testing + Frontend OrderManagementPanel component
-**Note**: Bypasses menu browsing UI (F103/F104) - uses hardcoded menu item IDs
-
----
-
-#### Step 2.5 - Payment Processing (F106)
-```
-Actor: Alice
-Precondition: Order created (ORD-789456), total = $31.99
-
-Actions:
-  2.5.1 | Create payment via PaymentManagementPanel
-         Input (PaymentCreateRequestDto):
-           - orderId: "ORD-789456"
-           - amount: 31.99
-           - paymentMethod: "CREDIT_CARD"
-           - cardDetails: {
-               cardholderName: "Alice Johnson",
-               cardNumber: "4532111122223333",
-               expiryDate: "12/25",
-               cvv: "123"
-             }
-         Expected: 
-           - API POST /api/payments returns HTTP 201
-           - Payment processing initiated
-  
-  2.5.2 | Verify payment success
-         Request: GET /api/payments/{paymentId}
-         Expected:
-           - Payment status: COMPLETED
-           - Transaction ID: TXN-555888
-           - Amount: $31.99
-           - Timestamp recorded
-           - Payment method: CREDIT_CARD
-  
-  2.5.3 | Verify order status updated
-         Request: GET /api/orders/ORD-789456
-         Expected:
-           - Order status changed: PENDING → CONFIRMED
-           - Payment ID linked to order
-           - Confirmation timestamp recorded
-  
-  2.5.4 | Payment confirmation displayed
-         Expected (Frontend):
-           - Success message: "Payment successful!"
-           - Order ID: ORD-789456
-           - Transaction ID: TXN-555888
-           - Estimated delivery: "30-45 minutes"
-           - Track order button visible
-```
-
-**Feature Coverage**: F106 (payment management)
-**Components Tested**: 
-- Backend: PaymentController, PaymentService
-- Frontend: PaymentManagementPanel, PaymentVerification
-- Integration: Order status update after payment
-
----
-
-### **PHASE 3: Manager Operations & Order Processing**
-
-#### Step 3.1 - User Management Verification (F102)
-```
-Actor: Jungwook (User & Payment Manager)
-Precondition: Alice registered and logged in
-
-Actions:
-  3.1.1 | Manager logs in
-         Expected: Manager dashboard loaded
-  
-  3.1.2 | Navigate to "User Management"
-         Expected: User list displays all customers
-  
-  3.1.3 | Search for "alice@example.com"
-         Expected:
-           - Alice's record found in list
-           - User details visible:
-             * Name: Alice
-             * Email: alice@example.com
-             * Status: ACTIVE
-             * Role: CUSTOMER
-             * Registration Date: 2025-10-20
-  
-  3.1.4 | Click on Alice's record to view details
-         Expected:
-           - Profile page shows:
-             * Account info
-             * Order history (1 order: ORD-789456)
-             * Registration date
-             * Last login
-  
-  3.1.5 | Verify no edit/delete actions needed
-         Expected: Confirm Alice's account is valid
-```
-
-**Feature Coverage**: F102 (user management)
-
----
-
-#### Step 3.2 - Payment Verification (F106)
-```
-Actor: Jungwook (User & Payment Manager)
-Precondition: Alice's payment completed (TXN-555888), order ORD-789456 confirmed
-
-Actions:
-  3.2.1 | Access payment records via API
-         Request: GET /api/payments
-         Expected: 
-           - HTTP 200 with list of all payments
-           - Transaction TXN-555888 visible in list
-  
-  3.2.2 | Retrieve specific payment details
-         Request: GET /api/payments/{paymentId}
-         Expected:
-           - Payment ID: PAY-555888
-           - Order ID: ORD-789456
-           - Customer: Alice Johnson (USR-123456)
-           - Amount: $31.99
-           - Status: COMPLETED
-           - Payment Method: CREDIT_CARD
-           - Card Last 4 Digits: 3333
-           - Transaction Date: 2025-10-20T14:45:00Z
-           - Gateway Response: "SUCCESS"
-  
-  3.2.3 | Filter payments by order
-         Request: GET /api/payments?orderId=ORD-789456
-         Expected:
-           - Only payment TXN-555888 returned
-           - Matches order total ($31.99)
-  
-  3.2.4 | Verify payment-order linkage
-         Request: GET /api/orders/ORD-789456
-         Expected:
-           - Order status: CONFIRMED
-           - Payment ID: PAY-555888 linked
-           - No payment discrepancies detected
-```
-
-**Feature Coverage**: F106 (payment management, monitoring)
-**Components Tested**: 
-- Backend: PaymentController, PaymentService
-- Frontend: PaymentManagementPanel, PaymentVerification
-- Data Integrity: Payment-Order relationship validation
-
----
-
-#### Step 3.3 - Reservation Approval (F109)
-```
-Actor: Aaron (Delivery & Reservation Manager)
-Precondition: Alice's reservation created (RES-123001, Status: PENDING_APPROVAL)
-
-Actions:
-  3.3.1 | Access pending reservations
-         Request: GET /api/reservations?status=PENDING_APPROVAL
-         Expected:
-           - HTTP 200 with list of pending reservations
-           - Reservation RES-123001 visible
-  
-  3.3.2 | Retrieve reservation details
-         Request: GET /api/reservations/RES-123001
-         Expected:
-           - Reservation ID: RES-123001
-           - Customer: Alice Johnson (USR-123456)
-           - Party Size: 4 guests
-           - Date: 2025-11-01
-           - Time: 19:00
-           - Special Requests: "Window seat preferred, celebrating birthday"
-           - Status: PENDING_APPROVAL
-           - Created At: 2025-10-20T15:00:00Z
-  
-  3.3.3 | Check table availability
-         Action: Verify sufficient capacity
-         Expected:
-           - Available tables: T3 (capacity 6) or T4 (capacity 8)
-           - Time slot 19:00 not double-booked
-  
-  3.3.4 | Approve reservation
-         Request: PUT /api/reservations/RES-123001/approve
-         Input (ReservationApprovalDto):
-           - status: "CONFIRMED"
-           - assignedTableId: "T3"
-           - managerNotes: "Window seat assigned, birthday setup arranged"
-         Expected:
-           - HTTP 200: Reservation approved
-           - Status: PENDING_APPROVAL → CONFIRMED
-           - Table T3 assigned
-           - Notification sent to Alice (future enhancement)
-  
-  3.3.5 | Verify approval persisted
-         Request: GET /api/reservations/RES-123001
-         Expected:
-           - Status: CONFIRMED
-           - Assigned Table: T3
-           - Manager Notes recorded
-           - Approval Timestamp: 2025-10-20T15:10:00Z
-```
-
-**Feature Coverage**: F109 (reservation management, approval/rejection)
-**Components Tested**: 
-- Backend: ReservationController, ReservationService
-- Frontend: ReservationApprovalPanel, ReservationDetails
-- Business Logic: Table availability check, status transitions
-
----
-
-#### Step 3.4 - Delivery Assignment & Status Updates (F107)
-```
-Actor: Aaron (Delivery & Reservation Manager)
-Precondition: Order confirmed (ORD-789456), Payment completed (PAY-555888)
-
-Actions:
-  3.4.1 | Access active deliveries
-         Request: GET /api/deliveries?status=PENDING
-         Expected:
-           - HTTP 200 with list of orders awaiting delivery assignment
-           - Order ORD-789456 visible
-  
-  3.4.2 | Retrieve delivery details
-         Request: GET /api/deliveries/order/ORD-789456
-         Expected:
-           - Order ID: ORD-789456
-           - Customer: Alice Johnson (USR-123456)
-           - Items: Grilled Chicken (1), Coca Cola (2)
-           - Total: $31.99
-           - Delivery Address:
-             * Street: 123 Main St
-             * City: Sydney
-             * State: NSW
-             * Zip: 2000
-             * Phone: +61-455-123-456
-             * Special Instructions: "Leave at front door"
-           - Status: PENDING
-           - Order Created: 2025-10-20T14:45:00Z
-  
-  3.4.3 | Assign delivery driver
-         Request: PUT /api/deliveries/{deliveryId}/assign
-         Input (DeliveryAssignmentDto):
-           - driverId: "DRV-001"
-           - driverName: "John Smith"
-           - estimatedDeliveryTime: "2025-10-20T15:30:00Z"
-         Expected:
-           - HTTP 200: Driver assigned
-           - Delivery status: PENDING → ASSIGNED
-           - Driver assignment timestamp recorded
-  
-  3.4.4 | Update status to PREPARING
-         Request: PUT /api/deliveries/{deliveryId}/status
-         Input: status: "PREPARING"
-         Expected:
-           - HTTP 200: Status updated
-           - Delivery status: ASSIGNED → PREPARING
-           - Order status: CONFIRMED → PREPARING
-           - Timestamp: 2025-10-20T14:50:00Z
-  
-  3.4.5 | Update status to OUT_FOR_DELIVERY
-         Request: PUT /api/deliveries/{deliveryId}/status
-         Input: status: "OUT_FOR_DELIVERY"
-         Expected:
-           - HTTP 200: Status updated
-           - Delivery status: PREPARING → OUT_FOR_DELIVERY
-           - Order status: PREPARING → OUT_FOR_DELIVERY
-           - Timestamp: 2025-10-20T15:00:00Z
-           - Estimated arrival: 15:30:00
-  
-  3.4.6 | Update status to DELIVERED
-         Request: PUT /api/deliveries/{deliveryId}/status
-         Input: 
-           - status: "DELIVERED"
-           - deliveredAt: "2025-10-20T15:25:00Z"
-           - deliveryNotes: "Delivered successfully, left at front door as requested"
-         Expected:
-           - HTTP 200: Status updated
-           - Delivery status: OUT_FOR_DELIVERY → DELIVERED
-           - Order status: OUT_FOR_DELIVERY → DELIVERED
-           - Actual delivery time: 15:25:00 (5 min early)
-           - Delivery marked complete
-  
-  3.4.7 | Verify final delivery state
-         Request: GET /api/deliveries/{deliveryId}
-         Expected:
-           - Status: DELIVERED
-           - Driver: John Smith (DRV-001)
-           - Delivered At: 2025-10-20T15:25:00Z
-           - All timestamps recorded
-           - Delivery notes saved
-```
-
-**Feature Coverage**: F107 (delivery management, status tracking)
-**Components Tested**: 
-- Backend: DeliveryController, DeliveryService, DeliveryRepository
-- Frontend: DeliveryManagementPanel, DeliveryStatusTracker
-- Status Workflow: PENDING → ASSIGNED → PREPARING → OUT_FOR_DELIVERY → DELIVERED
-
----
-
-## ✅ Test Assertion Checklist
-
-### **Database Assertions**
-
-```sql
--- Verify Seeded Menu Items Exist
-SELECT * FROM menu_items WHERE id IN (1, 2, 3, 4);
--- Expected: 4 rows (Chicken $24.99, Salad $12.99, Cake $8.99, Coke $3.50)
-
--- Verify User Created
-SELECT * FROM users WHERE email = 'alice.johnson@gmail.com';
--- Expected: 1 row, status = 'ACTIVE', role = 'CUSTOMER', first_name = 'Alice', last_name = 'Johnson'
-
--- Verify Order Created
-SELECT * FROM orders WHERE id = 'ORD-789456';
--- Expected: 1 row, status = 'DELIVERED', customer_id = USR-123456, total_amount = 31.99
-
--- Verify Payment Created
-SELECT * FROM payments WHERE transaction_id = 'TXN-555888';
--- Expected: 1 row, status = 'COMPLETED', amount = 31.99, payment_method = 'CREDIT_CARD'
-
--- Verify Order Items
-SELECT oi.*, mi.name, mi.price 
-FROM order_items oi 
-JOIN menu_items mi ON oi.menu_item_id = mi.id 
-WHERE oi.order_id = 'ORD-789456';
--- Expected: 2 rows
---   Row 1: menu_item_id = 1 (Grilled Chicken), quantity = 1, price = 24.99
---   Row 2: menu_item_id = 4 (Coca Cola), quantity = 2, price = 3.50
-
--- Verify Delivery Created and Completed
-SELECT * FROM deliveries WHERE order_id = 'ORD-789456';
--- Expected: 1 row, status = 'DELIVERED', driver_id = 'DRV-001', driver_name = 'John Smith'
-
--- Verify Reservation Created and Approved
-SELECT * FROM reservations WHERE id = 'RES-123001';
--- Expected: 1 row, status = 'CONFIRMED', party_size = 4, date = '2025-11-01', time = '19:00', assigned_table = 'T3'
-
--- Verify User Management Actions
-SELECT * FROM users WHERE status = 'ACTIVE';
--- Expected: At least 3 rows (Alice + 2 managers: Jungwook, Aaron)
-```
-
-### **API Response Assertions**
-
-```
-POST /api/users
-Response: HTTP 201
-Body: {
-  "id": "USR-123456",
-  "email": "alice.johnson@gmail.com",
-  "firstName": "Alice",
-  "lastName": "Johnson",
-  "role": "CUSTOMER",
-  "status": "ACTIVE",
-  "createdAt": "2025-10-20T14:30:00Z"
-}
-
-POST /api/auth/login
-Response: HTTP 200
-Body: {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "USR-123456",
-    "email": "alice.johnson@gmail.com",
-    "role": "CUSTOMER"
-  }
-}
-
-POST /api/orders
-Response: HTTP 201
-Body: {
-  "orderId": "ORD-789456",
-  "customerId": "USR-123456",
-  "status": "PENDING",
-  "totalAmount": 31.99,
-  "items": [
-    { "menuItemId": 1, "quantity": 1, "price": 24.99 },
-    { "menuItemId": 4, "quantity": 2, "price": 3.50 }
-  ],
-  "createdAt": "2025-10-20T14:45:00Z"
-}
-
-POST /api/payments
-Response: HTTP 201
-Body: {
-  "paymentId": "PAY-555888",
-  "orderId": "ORD-789456",
-  "transactionId": "TXN-555888",
-  "amount": 31.99,
-  "status": "COMPLETED",
-  "paymentMethod": "CREDIT_CARD",
-  "createdAt": "2025-10-20T14:50:00Z"
-}
-
-PUT /api/reservations/RES-123001/approve
-Response: HTTP 200
-Body: {
-  "reservationId": "RES-123001",
-  "status": "CONFIRMED",
-  "assignedTable": "T3",
-  "approvedBy": "aaron@lerestaurant.com",
-  "approvedAt": "2025-10-20T15:10:00Z"
-}
-
-PUT /api/deliveries/{deliveryId}/status
-Response: HTTP 200
-Body: {
-  "deliveryId": "DEL-789456",
-  "orderId": "ORD-789456",
-  "status": "DELIVERED",
-  "driverId": "DRV-001",
-  "driverName": "John Smith",
-  "deliveredAt": "2025-10-20T15:25:00Z"
-}
-
-GET /api/users/{userId}
-Response: HTTP 200
-Body: {
-  "id": "USR-123456",
-  "email": "alice.johnson@gmail.com",
-  "firstName": "Alice",
-  "lastName": "Johnson",
-  "role": "CUSTOMER",
-  "status": "ACTIVE"
-}
-
-Note: Menu endpoints (GET /api/menu/*) are NOT tested in this flow as F103/F104 are excluded.
-Menu item data is seeded directly in the database for testing Order functionality.
-```
-
----
-
-## 🐛 Key Edge Cases & Error Scenarios
-
-| Scenario | Feature | Expected Behavior |
-|----------|---------|-------------------|
-| Invalid email format during registration | F100 | Validation error, form resubmit, "@Email" annotation validates |
-| Password too weak | F100 | Validation error, strength indicator, min 8 chars required |
-| Email already exists | F100 | HTTP 409 Conflict, "Email already registered" message |
-| Wrong password on login | F101 | HTTP 401 Unauthorized, "Invalid credentials" error |
-| ~~Out-of-stock menu item~~ | ~~F103/F105~~ | **EXCLUDED - Menu features not tested** |
-| Invalid menu item ID in order | F105 | HTTP 400 Bad Request, "Menu item not found" error |
-| Order with zero quantity | F105 | Validation error, "Quantity must be >= 1" |
-| Invalid card number | F106 | Payment gateway rejection, error message displayed |
-| Payment amount mismatch | F106 | HTTP 400 Bad Request, "Amount does not match order total" |
-| Reservation date in past | F108 | Validation error, calendar disables past dates |
-| Reservation time slot conflict | F108 | HTTP 409 Conflict, "Table not available at selected time" |
-| Duplicate order within seconds | F105 | Idempotency check, prevent double submission |
-| Payment timeout | F106 | Retry mechanism, graceful error handling, rollback transaction |
-| Delivery status not updated | F107 | Manager able to manually update status via API PUT |
-| Suspended user login attempt | F102 | HTTP 403 Forbidden, "User account is suspended" |
-| Manager tries to delete active order | F105 | HTTP 403 Forbidden, "Cannot delete confirmed orders" |
-
-**Note**: Edge cases related to Menu features (F103/F104) are excluded from this test plan.
-
----
-
-## 📊 Test Coverage Summary
-
-| Feature | Test Steps | Status |
-|---------|-----------|--------|
-| F100 - User Registration | 4 | ✅ Covered |
-| F101 - User Authentication | 2 | ✅ Covered |
-| F102 - User Management | 6 | ✅ Covered |
-| F103 - Menu Display | N/A | 🚧 **EXCLUDED - In Development** |
-| F104 - Menu Management | N/A | 🚧 **EXCLUDED - In Development** |
-| F105 - Order Management | 4 | ✅ Covered (with hardcoded menu items) |
-| F106 - Payment Management | 4 + 4 | ✅ Covered |
-| F107 - Delivery Management | 7 | ✅ Covered |
-| F108 - Table Reservation | 3 | ✅ Covered |
-| F109 - Reservation Management | 5 | ✅ Covered |
-
-**Total Test Steps**: 35+ (excluding edge cases)  
-**Estimated Duration**: 30-45 minutes (manual), 5-10 minutes (automated)  
-**Coverage**: 80% (8 out of 10 features F100-F109)
-**Excluded Features**: F103 (Menu Display), F104 (Menu Management) - being developed in separate branches
-
-### Feature Status Breakdown:
-- ✅ **Fully Tested** (8 features): F100, F101, F102, F105, F106, F107, F108, F109
-- 🚧 **Excluded from Current Testing** (2 features): F103, F104
-- **Testing Workaround**: Order Management (F105) tested using hardcoded menu item IDs seeded in database
-- **Future Integration**: When F103/F104 merge, add menu browsing/management test steps and update coverage to 100%
-
----
-
-## 🔗 Related Documents
-
-- [01-project-overview.md](./01-project-overview.md) - Project context
-- [02-system-architecture.md](./02-system-architecture.md) - System design
-- [04-api-specification.md](./04-api-specification.md) - API endpoints
-- [Actual-design-plan/use-cases/](../Actual-design-plan/use-cases/) - Detailed use cases per feature
-
----
-
-## 📝 Notes for AI/Automation
-
-- **Step Naming Convention**: `[Phase].[Section].[Step]` (e.g., 2.6.3)
-- **Clear Inputs/Outputs**: Each action has explicit inputs and expected outputs for easy assertion
-- **Database-Level Verification**: SQL assertions provided for data integrity checks
-- **Modular Structure**: Each feature section can be tested independently or sequentially
-- **Status Tracking**: Order/reservation/delivery statuses follow finite state machines (see state transitions above)
-- **Idempotency**: Payment and order creation include duplicate prevention mechanisms
+### API Response Assertions
+- **Success Codes**: `200 OK`, `201 Created`, `204 No Content` for successful operations.
+- **Error Codes**: `400 Bad Request` for validation errors, `401 Unauthorized` for login failures, `403 Forbidden` for role-based access violations, `404 Not Found` for invalid IDs, and `409 Conflict` for resource conflicts.
+- **Data Consistency**: API response bodies (DTOs) accurately reflect the state of the database after an operation.
+- **Security**: Endpoints that require authentication return `401` if no token is provided. Manager-only endpoints return `403` for customer roles.
 

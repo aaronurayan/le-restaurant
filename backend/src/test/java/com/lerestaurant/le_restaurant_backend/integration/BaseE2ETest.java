@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +70,6 @@ public abstract class BaseE2ETest {
         menuItem.setPrice(price);
         menuItem.setCategory(category);
         menuItem.setAvailable(true);
-        menuItem.setStock(100);
         return menuItemRepository.save(menuItem);
     }
 
@@ -76,9 +77,9 @@ public abstract class BaseE2ETest {
      * Helper: Create a test order
      */
     protected OrderDto createTestOrder(Long customerId, Long menuItemId, int quantity, BigDecimal price) {
-        OrderRequestDto orderDto = new OrderRequestDto();
+        OrderCreateRequestDto orderDto = new OrderCreateRequestDto();
         orderDto.setCustomerId(customerId);
-        orderDto.setOrderType("DELIVERY");
+        orderDto.setOrderType(Order.OrderType.DELIVERY);
 
         OrderItemRequestDto orderItem = new OrderItemRequestDto();
         orderItem.setMenuItemId(menuItemId);
@@ -98,7 +99,7 @@ public abstract class BaseE2ETest {
         PaymentRequestDto paymentDto = new PaymentRequestDto();
         paymentDto.setOrderId(orderId);
         paymentDto.setAmount(amount);
-        paymentDto.setPaymentMethod("CREDIT_CARD");
+        paymentDto.setPaymentMethod(Payment.PaymentMethod.CREDIT_CARD);
         return paymentService.createPayment(paymentDto);
     }
 
@@ -118,8 +119,14 @@ public abstract class BaseE2ETest {
         ReservationCreateRequestDto reservationDto = new ReservationCreateRequestDto();
         reservationDto.setCustomerId(customerId);
         reservationDto.setNumberOfGuests(guests);
-        reservationDto.setReservationDate(date);
-        reservationDto.setReservationTime(time);
+        
+        // Combine date and time into OffsetDateTime using system default timezone
+        OffsetDateTime reservationDateTime = OffsetDateTime.of(
+            date, 
+            time, 
+            ZoneOffset.UTC
+        );
+        reservationDto.setReservationDateTime(reservationDateTime);
         reservationDto.setSpecialRequests("Test reservation");
         return reservationService.createReservation(reservationDto);
     }

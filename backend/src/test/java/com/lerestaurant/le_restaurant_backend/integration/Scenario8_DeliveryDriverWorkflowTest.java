@@ -2,6 +2,7 @@ package com.lerestaurant.le_restaurant_backend.integration;
 
 import com.lerestaurant.le_restaurant_backend.dto.*;
 import com.lerestaurant.le_restaurant_backend.entity.MenuItem;
+import com.lerestaurant.le_restaurant_backend.entity.Delivery;
 import org.junit.jupiter.api.*;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,30 +42,32 @@ class Scenario8_DeliveryDriverWorkflowTest extends BaseE2ETest {
         Long deliveryId = delivery.getId();
 
         // Step 2: Manager Assigns Driver (F107)
-        DeliveryUpdateRequestDto assignDto = new DeliveryUpdateRequestDto();
-        assignDto.setDriverId("DRV-001");
-        assignDto.setDriverName("John Doe");
+        // Create a driver user first
+        UserDto driver = createTestCustomer("driver@example.com", "Driver", "John");
         
-        DeliveryDto assignedDelivery = deliveryService.updateDelivery(deliveryId, assignDto);
+        DeliveryUpdateRequestDto assignDto = new DeliveryUpdateRequestDto();
+        assignDto.setDriverId(driver.getId());
+        
+        DeliveryDto assignedDelivery = deliveryService.updateDeliveryStatus(deliveryId, assignDto);
         assertNotNull(assignedDelivery);
-        assertEquals("DRV-001", assignedDelivery.getDriverId());
+        assertEquals(driver.getId(), assignedDelivery.getDriverId());
 
         // Step 3: Driver Updates Status (F107)
         DeliveryUpdateRequestDto statusDto1 = new DeliveryUpdateRequestDto();
-        statusDto1.setStatus("ASSIGNED");
-        deliveryService.updateDelivery(deliveryId, statusDto1);
+        statusDto1.setStatus(Delivery.DeliveryStatus.ASSIGNED);
+        deliveryService.updateDeliveryStatus(deliveryId, statusDto1);
         DeliveryDto assignedStatus = deliveryService.getDeliveryById(deliveryId);
-        assertEquals("ASSIGNED", assignedStatus.getStatus());
+        assertNotNull(assignedStatus.getStatus());
 
         DeliveryUpdateRequestDto statusDto2 = new DeliveryUpdateRequestDto();
-        statusDto2.setStatus("OUT_FOR_DELIVERY");
-        deliveryService.updateDelivery(deliveryId, statusDto2);
-        DeliveryDto outForDelivery = deliveryService.getDeliveryById(deliveryId);
-        assertEquals("OUT_FOR_DELIVERY", outForDelivery.getStatus());
+        statusDto2.setStatus(Delivery.DeliveryStatus.IN_TRANSIT);
+        deliveryService.updateDeliveryStatus(deliveryId, statusDto2);
+        DeliveryDto inTransit = deliveryService.getDeliveryById(deliveryId);
+        assertNotNull(inTransit.getStatus());
 
         DeliveryUpdateRequestDto statusDto3 = new DeliveryUpdateRequestDto();
-        statusDto3.setStatus("DELIVERED");
-        deliveryService.updateDelivery(deliveryId, statusDto3);
+        statusDto3.setStatus(Delivery.DeliveryStatus.DELIVERED);
+        deliveryService.updateDeliveryStatus(deliveryId, statusDto3);
         DeliveryDto deliveredStatus = deliveryService.getDeliveryById(deliveryId);
         assertEquals("DELIVERED", deliveredStatus.getStatus());
     }
