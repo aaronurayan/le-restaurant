@@ -43,10 +43,6 @@ pr:
 pool:
   vmImage: 'ubuntu-latest'
 
-# Concurrency Control
-options:
-  - skipScheduleQueueingPolicy
-
 # ==============================================================================
 # GLOBAL VARIABLES
 # ==============================================================================
