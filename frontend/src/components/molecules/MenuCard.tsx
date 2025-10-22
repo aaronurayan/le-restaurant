@@ -94,10 +94,12 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         )}
         
         {/* Preparation Time */}
-        <div className="flex items-center text-neutral-500 text-sm mb-4">
-          <Clock className="w-4 h-4 mr-1" />
-          {item.preparationTime} min
-        </div>
+        {item.preparationTime && (
+          <div className="flex items-center text-neutral-500 text-sm mb-4">
+            <Clock className="w-4 h-4 mr-1" />
+            {item.preparationTime} min
+          </div>
+        )}
         
         {/* Actions */}
         <div className="flex items-center gap-3">
