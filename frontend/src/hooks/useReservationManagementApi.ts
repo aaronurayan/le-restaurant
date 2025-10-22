@@ -82,7 +82,7 @@ export const useReservationManagementApi = () => {
       if (filters?.customerName) params.append('customerName', filters.customerName);
 
       const queryString = params.toString();
-      const url = `${API_BASE_URL}/api/admin/reservations${queryString ? `?${queryString}` : ''}`;
+      const url = `${API_BASE_URL}/api/reservations${queryString ? `?${queryString}` : ''}`;
 
       const response = await axios.get<Reservation[]>(url, {
         headers: {
@@ -113,7 +113,7 @@ export const useReservationManagementApi = () => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.get<Reservation[]>(
-        `${API_BASE_URL}/api/admin/reservations/pending`,
+        `${API_BASE_URL}/api/reservations/status/PENDING`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -144,7 +144,7 @@ export const useReservationManagementApi = () => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.get<Reservation>(
-        `${API_BASE_URL}/api/admin/reservations/${id}`,
+        `${API_BASE_URL}/api/reservations/${id}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -173,9 +173,12 @@ export const useReservationManagementApi = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.put<Reservation>(
-        `${API_BASE_URL}/api/admin/reservations/${id}/approve`,
-        approvalData,
+      const response = await axios.post<Reservation>(
+        `${API_BASE_URL}/api/reservations/${id}/approve/${approvalData.confirmedByUserId}`,
+        {
+          tableId: approvalData.tableId,
+          adminNotes: approvalData.adminNotes
+        },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -209,9 +212,12 @@ export const useReservationManagementApi = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.put<Reservation>(
-        `${API_BASE_URL}/api/admin/reservations/${id}/deny`,
-        denialData,
+      const response = await axios.post<Reservation>(
+        `${API_BASE_URL}/api/reservations/${id}/reject`,
+        {
+          rejectionReason: denialData.denialReason,
+          approverId: denialData.deniedByUserId
+        },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -250,6 +256,73 @@ export const useReservationManagementApi = () => {
     return fetchReservations({ status });
   }, [fetchReservations]);
 
+  /**
+   * Delete a reservation (Admin only)
+   */
+  const deleteReservation = useCallback(async (id: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.delete(
+        `${API_BASE_URL}/api/reservations/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      // Remove from local state
+      setReservations(prev => prev.filter(res => res.id !== id));
+
+      return true;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete reservation';
+      setError(errorMessage);
+      console.error('Error deleting reservation:', err);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Create a new reservation (Admin can create for any customer)
+   */
+  const createReservation = useCallback(async (reservationData: any) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.post<Reservation>(
+        `${API_BASE_URL}/api/reservations`,
+        reservationData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      // Add to local state
+      setReservations(prev => [...prev, response.data]);
+
+      return response.data;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to create reservation';
+      setError(errorMessage);
+      console.error('Error creating reservation:', err);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     reservations,
     loading,
@@ -261,5 +334,7 @@ export const useReservationManagementApi = () => {
     denyReservation,
     searchByCustomerName,
     getReservationsByStatus,
+    deleteReservation,
+    createReservation,
   };
 };

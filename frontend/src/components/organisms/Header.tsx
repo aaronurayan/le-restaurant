@@ -19,6 +19,7 @@ import ApiStatusIndicator from '../atoms/ApiStatusIndicator';
 import AuthModal from './AuthModal';
 import UserManagementPanel from './UserManagementPanel';
 import ReservationModal from './ReservationModal';
+import ReservationManagementPanel from './ReservationManagementPanel';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showReservationModal, setShowReservationModal] = useState(false);
+  const [showReservationManagement, setShowReservationManagement] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
 
@@ -292,6 +294,17 @@ export const Header: React.FC<HeaderProps> = ({
                           <span>User Management</span>
                         </button>
 
+                        <button
+                          onClick={() => {
+                            setShowReservationManagement(true);
+                            closeDropdown();
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-3 group"
+                        >
+                          <Calendar className="w-4 h-4 text-neutral-500 group-hover:text-neutral-700" />
+                          <span>Reservation Management</span>
+                        </button>
+
                         <Link
                           to="/delivery"
                           onClick={closeDropdown}
@@ -360,6 +373,13 @@ export const Header: React.FC<HeaderProps> = ({
         isOpen={showUserManagement}
         onClose={() => setShowUserManagement(false)}
       />
+
+      {/* Reservation Management Panel */}
+      <ReservationManagementPanel
+        isOpen={showReservationManagement}
+        onClose={() => setShowReservationManagement(false)}
+      />
+
       {/* Reservation Modal */}
       <ReservationModal
         isOpen={showReservationModal}
