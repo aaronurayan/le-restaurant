@@ -57,9 +57,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
 
   const loadTimeSlots = async () => {
     try {
-      console.log('Loading time slots for date:', formData.date, 'partySize:', formData.partySize);
       const slots = await getTimeSlots(formData.date, formData.partySize);
-      console.log('Received time slots:', slots);
       setTimeSlots(slots);
     } catch (error) {
       console.error('Failed to load time slots:', error);

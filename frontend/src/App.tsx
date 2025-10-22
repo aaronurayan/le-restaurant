@@ -8,6 +8,7 @@ import DeliveryTracking from './pages/DeliveryTracking';
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import AdminDashboard from './components/organisms/AdminDashboard';
 import CustomerDashboard from './components/organisms/CustomerDashboard';
+import CustomerReservationsPage from './pages/CustomerReservationsPage';
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import { UserRole } from './types/user';
@@ -65,76 +66,86 @@ function App() {
           >
             {redirectToPayments && <Navigate to="/payments" replace />}
             <Routes>
-              <Route 
-                path="/" 
+              <Route
+                path="/"
                 element={
                   <Home
                     onAddToCart={handleAddToCart}
                     favoritedItems={favoritedItems}
                     onFavorite={handleFavorite}
                   />
-                } 
+                }
               />
-              
+
               {/* Admin Dashboard */}
-              <Route 
-                path="/admin/dashboard" 
+              <Route
+                path="/admin/dashboard"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <AdminDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
+
               {/* Customer Dashboard */}
-              <Route 
-                path="/customer/dashboard" 
+              <Route
+                path="/customer/dashboard"
                 element={
                   <ProtectedRoute roles={[UserRole.CUSTOMER]}>
                     <CustomerDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/admin/menu" 
+
+              {/* Customer Reservations (F108) */}
+              <Route
+                path="/customer/reservations"
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <CustomerReservationsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/menu"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <MenuManagementPanel />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/payments" 
+              <Route
+                path="/payments"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <PaymentManagementPanel isOpen={true} onClose={() => window.history.back()} />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/delivery" 
+              <Route
+                path="/delivery"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <DeliveryManagement />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/delivery/dashboard" 
+              <Route
+                path="/delivery/dashboard"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <DeliveryDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/delivery/tracking/:deliveryId" 
+              <Route
+                path="/delivery/tracking/:deliveryId"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
                     <DeliveryTracking />
                   </ProtectedRoute>
-                } 
+                }
               />
             </Routes>
           </MainLayout>

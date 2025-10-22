@@ -43,15 +43,9 @@ const reservationApi = {
   },
 
   getTimeSlots: async (date: string, partySize: number): Promise<TimeSlot[]> => {
-    console.log('API call: getTimeSlots', { date, partySize });
-    const url = `http://localhost:8080/api/reservations/timeslots?date=${date}&partySize=${partySize}`;
-    console.log('Fetching from:', url);
-    const response = await fetch(url);
-    console.log('Response status:', response.status, response.ok);
+    const response = await fetch(`http://localhost:8080/api/reservations/timeslots?date=${date}&partySize=${partySize}`);
     if (!response.ok) throw new Error('Failed to fetch time slots');
-    const data = await response.json();
-    console.log('Time slots data:', data);
-    return data;
+    return response.json();
   },
 
   createReservation: async (reservation: CreateReservationRequest): Promise<Reservation> => {
@@ -96,6 +90,44 @@ const reservationApi = {
     });
     if (!response.ok) throw new Error('Failed to delete reservation');
   },
+};
+
+// Transform backend DTO to frontend Reservation type
+const transformReservationDto = (dto: any): Reservation => {
+  console.log('Transforming DTO:', dto);
+
+  const dateTime = new Date(dto.reservationDateTime);
+  const date = dateTime.toISOString().split('T')[0];
+  const time = dateTime.toTimeString().slice(0, 5); // HH:mm format
+
+  const transformed = {
+    id: dto.id,
+    customerId: dto.customerId,
+    tableId: dto.tableId,
+    reservationDate: date,
+    reservationTime: time,
+    partySize: dto.numberOfGuests,
+    specialRequests: dto.specialRequests,
+    status: dto.status as ReservationStatus,
+    createdAt: dto.createdAt,
+    updatedAt: dto.updatedAt,
+    confirmedAt: dto.confirmedAt,
+    checkedInAt: dto.checkedInAt,
+    customerInfo: {
+      name: dto.customerName,
+      email: dto.customerEmail,
+      phone: dto.customerPhone,
+    },
+    tableInfo: dto.tableId ? {
+      id: dto.tableId,
+      number: dto.tableNumber || '',
+      capacity: dto.tableCapacity || 0,
+      location: dto.tableLocation || '',
+    } : undefined,
+  };
+
+  console.log('Transformed reservation:', transformed);
+  return transformed;
 };
 
 export const useReservationApi = () => {
@@ -165,7 +197,8 @@ export const useReservationApi = () => {
 
       if (isConnected) {
         const data = await reservationApi.getAllReservations();
-        setReservations(data);
+        const transformed = data.map(transformReservationDto);
+        setReservations(transformed);
       } else {
         setReservations(mockReservations);
       }
@@ -180,23 +213,26 @@ export const useReservationApi = () => {
 
   // 고객별 예약 조회
   const loadReservationsByCustomer = async (customerId: number) => {
+    console.log('Loading reservations for customer:', customerId);
     setLoading(true);
     setError(null);
 
     try {
-      const isConnected = await checkBackendConnection();
-
-      if (isConnected) {
-        const data = await reservationApi.getReservationsByCustomer(customerId.toString());
-        setReservations(data);
-      } else {
-        const filteredReservations = mockReservations.filter(r => r.customerId === customerId);
-        setReservations(filteredReservations);
-      }
+      // Try to call the API directly - don't rely solely on test endpoint
+      const data = await reservationApi.getReservationsByCustomer(customerId.toString());
+      console.log('Raw API response:', data);
+      const transformed = data.map(transformReservationDto);
+      console.log('Setting reservations:', transformed);
+      setReservations(transformed);
+      setIsBackendConnected(true);
     } catch (err) {
-      setError('Failed to load customer reservations');
       console.error('Error loading customer reservations:', err);
+      setError('Failed to load customer reservations');
+      setIsBackendConnected(false);
+
+      // Fallback to mock data
       const filteredReservations = mockReservations.filter(r => r.customerId === customerId);
+      console.log('Using mock reservations:', filteredReservations);
       setReservations(filteredReservations);
     } finally {
       setLoading(false);
@@ -213,7 +249,8 @@ export const useReservationApi = () => {
 
       if (isConnected) {
         const data = await reservationApi.getReservationsByDate(date);
-        setReservations(data);
+        const transformed = data.map(transformReservationDto);
+        setReservations(transformed);
       } else {
         const filteredReservations = mockReservations.filter(r => r.reservationDate === date);
         setReservations(filteredReservations);
@@ -257,17 +294,11 @@ export const useReservationApi = () => {
   // 시간대 조회
   const getTimeSlots = async (date: string, partySize: number): Promise<TimeSlot[]> => {
     try {
-      console.log('getTimeSlots called with:', { date, partySize });
       const isConnected = await checkBackendConnection();
-      console.log('Backend connected:', isConnected);
 
       if (isConnected) {
-        console.log('Calling backend API for time slots...');
-        const result = await reservationApi.getTimeSlots(date, partySize);
-        console.log('Backend returned time slots:', result);
-        return result;
+        return await reservationApi.getTimeSlots(date, partySize);
       } else {
-        console.log('Using mock time slots...');
         // Mock time slots - generate without calling getAvailableTables to avoid circular calls
         const timeSlots: TimeSlot[] = [];
         for (let hour = 17; hour <= 21; hour++) {
@@ -293,7 +324,6 @@ export const useReservationApi = () => {
             });
           }
         }
-        console.log('Generated mock time slots:', timeSlots);
         return timeSlots;
       }
     } catch (err) {
@@ -308,15 +338,21 @@ export const useReservationApi = () => {
       const isConnected = await checkBackendConnection();
 
       if (isConnected) {
-        const newReservation = await reservationApi.createReservation(reservation);
-        setReservations(prev => [...prev, newReservation]);
-        return newReservation;
+        const dto = await reservationApi.createReservation(reservation);
+        const transformed = transformReservationDto(dto);
+        setReservations(prev => [...prev, transformed]);
+        return transformed;
       } else {
         // Mock data에 추가
         const newReservation: Reservation = {
           id: Date.now(),
           customerId: reservation.customerId || 1, // Mock customer ID
-          ...reservation,
+          tableId: reservation.tableId,
+          reservationDate: reservation.reservationDate,
+          reservationTime: reservation.reservationTime,
+          partySize: reservation.partySize,
+          specialRequests: reservation.specialRequests,
+          customerInfo: reservation.customerInfo,
           status: ReservationStatus.PENDING,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -337,17 +373,19 @@ export const useReservationApi = () => {
       const isConnected = await checkBackendConnection();
 
       if (isConnected) {
-        const updatedReservation = await reservationApi.updateReservation(id.toString(), reservation);
-        setReservations(prev => prev.map(r => r.id === id ? updatedReservation : r));
-        return updatedReservation;
+        const dto = await reservationApi.updateReservation(id.toString(), reservation);
+        const transformed = transformReservationDto(dto);
+        setReservations(prev => prev.map(r => r.id === id ? transformed : r));
+        return transformed;
       } else {
         // Mock data 업데이트
+        const updated = mockReservations.find(r => r.id === id);
+        if (!updated) throw new Error('Reservation not found');
+        const updatedReservation = { ...updated, ...reservation, updatedAt: new Date().toISOString() };
         setReservations(prev => prev.map(r =>
-          r.id === id
-            ? { ...r, ...reservation, updatedAt: new Date().toISOString() }
-            : r
+          r.id === id ? updatedReservation : r
         ));
-        return { ...mockReservations.find(r => r.id === id)!, ...reservation };
+        return updatedReservation;
       }
     } catch (err) {
       setError('Failed to update reservation');
