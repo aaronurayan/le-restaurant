@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Hero } from '../components/organisms/Hero';
 import { CategoryFilter } from '../components/organisms/CategoryFilter';
-import { MenuGrid } from '../components/organisms/MenuGrid';
+import { MenuGrid } from '../components/molecules/MenuGrid';
+import { OrderStatus } from '../components/organisms/OrderStatus';
+import { mockOrders } from '../data/mockData';
 import { MenuItem } from '../types';
 import { useMenuApi } from '../hooks/useMenuApi';
 

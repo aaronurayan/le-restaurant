@@ -14,7 +14,7 @@ import CustomerOrderDetailPage from './pages/CustomerOrderDetailPage';
 import { Checkout } from './pages/Checkout';
 import Payment from './pages/Payment';
 import { MainLayout } from './components/templates/MainLayout';
-import ProtectedRoute from './components/routes/ProtectedRoute';
+import ProtectedRoute from './components/organisms/ProtectedRoute';
 import { UserRole } from './types/user';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useOrderApi } from '../hooks/useOrderApi';
 import { OrderDto } from '../types/order';
 import { LoadingSpinner } from '../components/atoms/LoadingSpinner';
-import { ErrorMessage } from '../components/atoms/ErrorMessage';
+import { ErrorMessage } from '../components/molecules/ErrorMessage';
 import { Badge } from '../components/atoms/Badge';
 import { ArrowLeft, Calendar, Clock, MapPin, FileText, CreditCard } from 'lucide-react';
 

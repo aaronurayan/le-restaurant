@@ -3,10 +3,11 @@ import { ShoppingBag, Calendar, Star, Award, Utensils, User } from 'lucide-react
 import { Link } from 'react-router-dom';
 import { StatCard } from '../molecules/StatCard';
 import { LoadingSpinner } from '../atoms/LoadingSpinner';
-import { ErrorMessage } from '../atoms/ErrorMessage';
-import { EmptyState } from '../atoms/EmptyState';
+import { ErrorMessage } from '../molecules/ErrorMessage';
+import { EmptyState } from '../molecules/EmptyState';
 import { Badge } from '../atoms/Badge';
 import { OrderDto } from '../../types/order';
+import ReservationModal from './ReservationModal';
 
 export interface CustomerDashboardProps {
   /** Loading state */
@@ -28,25 +29,10 @@ export interface CustomerDashboardProps {
 
 /**
  * CustomerDashboard Organism
- * 
- * Customer dashboard combining:
- * - StatCard molecules for personal metrics
- * - LoadingSpinner/ErrorMessage/EmptyState atoms for states
- * - Recent orders summary
- * 
- * Role-based: CUSTOMER only
+ *
+ * Combines stats, recent orders, and quick actions
+ * Role: CUSTOMER
  * Route: /customer/dashboard
- * 
- * @example
- * <CustomerDashboard
- *   stats={{
- *     totalOrders: 24,
- *     activeReservations: 1,
- *     loyaltyPoints: 450,
- *     rewardsTier: 'Gold'
- *   }}
- *   recentOrders={[...]}
- * />
  */
 const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   loading = false,
@@ -80,17 +66,16 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Dashboard Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-gray-800 mb-2">
-          My Dashboard
-        </h1>
-        <p className="text-neutral-gray-600">
-          Welcome back! Here's your account overview
-        </p>
+        <h1 className="text-3xl font-bold text-neutral-gray-800 mb-2">My Dashboard</h1>
+        <p className="text-neutral-gray-600">Welcome back! Here's your account overview</p>
       </div>
 
       {/* Statistics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Link to="/customer/orders" className="transform transition-transform hover:scale-105 hover:shadow-lg block">
+        <Link
+          to="/customer/orders"
+          className="transform transition-transform hover:scale-105 hover:shadow-lg block"
+        >
           <StatCard
             title="Total Orders"
             value={stats.totalOrders}
@@ -99,7 +84,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             change="View History"
           />
         </Link>
-        
+
         <StatCard
           title="Active Reservations"
           value={stats.activeReservations}
@@ -108,7 +93,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           change={stats.activeReservations > 0 ? 'Upcoming' : 'None'}
           description="View details"
         />
-        
+
         <StatCard
           title="Loyalty Points"
           value={stats.loyaltyPoints}
@@ -117,7 +102,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           change="+50 pts"
           description="This month"
         />
-        
+
         <StatCard
           title="Rewards Tier"
           value={stats.rewardsTier}
@@ -131,11 +116,14 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
       <div className="bg-white rounded-lg border-2 border-neutral-gray-200 p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-neutral-gray-800">Recent Orders</h2>
-          <Link to="/customer/orders" className="text-primary-600 hover:text-primary-700 font-medium">
+          <Link
+            to="/customer/orders"
+            className="text-primary-600 hover:text-primary-700 font-medium"
+          >
             View all orders →
           </Link>
         </div>
-        
+
         {recentOrders && recentOrders.length > 0 ? (
           <div className="space-y-4">
             {recentOrders.slice(0, 3).map((order) => (
@@ -149,11 +137,11 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                     <div className="font-medium text-neutral-gray-900">Order #{order.id}</div>
                     <div className="text-sm text-neutral-gray-600">
                       {new Date(order.createdAt).toLocaleDateString()} •{' '}
-                      {order.items.length} {order.items.length === 1 ? 'item' : 'items'} •{' '}
-                      ${order.totalAmount.toFixed(2)}
+                      {order.items.length} {order.items.length === 1 ? 'item' : 'items'} • $
+                      {order.totalAmount.toFixed(2)}
                     </div>
                   </div>
-                  <Badge 
+                  <Badge
                     variant={order.status === 'COMPLETED' ? 'success' : 'primary'}
                     size="sm"
                   >
@@ -164,10 +152,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             ))}
           </div>
         ) : (
-          <EmptyState
-            message="You haven't placed any orders yet"
-            actionText="View menu"
-          />
+          <EmptyState message="You haven't placed any orders yet" actionText="View menu" />
         )}
       </div>
 

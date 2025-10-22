@@ -8,7 +8,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import ReservationFiltersComponent from '../molecules/ReservationFilters';
-import ReservationTable from '../molecules/ReservationTable';
+import ReservationTable from '../organisms/ReservationTable';
 import ReservationApprovalModal from '../molecules/ReservationApprovalModal';
 import ReservationDenialModal from '../molecules/ReservationDenialModal';
 import ReservationDetailsModal from '../molecules/ReservationDetailsModal';

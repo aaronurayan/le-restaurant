@@ -51,9 +51,9 @@ export const StatCard: React.FC<StatCardProps> = ({
   onClick,
 }) => {
   const variantClasses = {
-    default: 'bg-white border-neutral-gray-200',
-    primary: 'bg-primary-orange-light border-primary-orange',
-    secondary: 'bg-secondary-green-light border-secondary-green',
+    default: 'bg-white border-neutral-200',
+    primary: 'bg-primary-100 border-primary-600',
+    secondary: 'bg-secondary-100 border-secondary-600',
   };
 
   const trendIcon = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→';
@@ -81,7 +81,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       {/* Header: Icon + Trend Badge */}
       <div className="flex items-start justify-between mb-2">
         {icon && (
-          <div className="text-primary-orange text-2xl" aria-hidden="true">
+          <div className="text-primary-600 text-2xl" aria-hidden="true">
             {icon}
           </div>
         )}
@@ -89,18 +89,18 @@ export const StatCard: React.FC<StatCardProps> = ({
       </div>
 
       {/* Main Value */}
-      <div className="text-3xl font-bold text-neutral-gray-800 mb-1">
+      <div className="text-3xl font-bold text-neutral-900 mb-1">
         {value}
       </div>
 
       {/* Title */}
-      <div className="text-sm font-medium text-neutral-gray-600 mb-1">
+      <div className="text-sm font-medium text-neutral-600 mb-1">
         {title}
       </div>
 
       {/* Description */}
       {description && (
-        <div className="text-xs text-neutral-gray-400 mt-2">
+        <div className="text-xs text-neutral-500 mt-2">
           {description}
         </div>
       )}
