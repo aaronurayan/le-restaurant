@@ -8,9 +8,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  RefreshCw, 
+import {
+  Calendar,
+  RefreshCw,
   Plus,
   Filter,
   AlertTriangle,
@@ -53,9 +53,10 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
   // Load customer's reservations on mount and when customerId changes
   useEffect(() => {
     if (customerId) {
-      loadReservationsByCustomer(customerId);
+      loadReservationsByCustomer(Number(customerId));
     }
-  }, [customerId, loadReservationsByCustomer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerId]); // Only depend on customerId, not the function
 
   // Filter reservations when data or filter type changes
   useEffect(() => {
@@ -77,7 +78,7 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
       filtered = filtered.filter((r: Reservation) => {
         const reservationDate = new Date(r.reservationDate);
         reservationDate.setHours(0, 0, 0, 0);
-        
+
         return (
           (r.status === ReservationStatus.PENDING || r.status === ReservationStatus.CONFIRMED) &&
           reservationDate >= today
@@ -88,7 +89,7 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
       filtered = filtered.filter((r: Reservation) => {
         const reservationDate = new Date(r.reservationDate);
         reservationDate.setHours(0, 0, 0, 0);
-        
+
         return (
           r.status === ReservationStatus.COMPLETED ||
           r.status === ReservationStatus.CANCELLED ||
@@ -124,12 +125,12 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
     if (!selectedReservationId) return;
 
     try {
-      await cancelReservation(selectedReservationId);
+      await cancelReservation(Number(selectedReservationId));
       setShowCancelModal(false);
       setSelectedReservationId(null);
       // Reload customer's reservations
       if (customerId) {
-        await loadReservationsByCustomer(customerId);
+        await loadReservationsByCustomer(Number(customerId));
       }
     } catch (err) {
       console.error('Error cancelling reservation:', err);
@@ -149,7 +150,7 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
     reservationDate.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     return (
       (r.status === ReservationStatus.PENDING || r.status === ReservationStatus.CONFIRMED) &&
       reservationDate >= today
@@ -166,7 +167,7 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
             View and manage your restaurant reservations
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           {isBackendConnected && (
             <div className="flex items-center text-secondary-700 text-sm">
@@ -174,7 +175,7 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
               <span>Backend Connected</span>
             </div>
           )}
-          
+
           {onNewReservation && (
             <button
               onClick={onNewReservation}
@@ -185,9 +186,9 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
               <span className="text-sm font-medium">New Reservation</span>
             </button>
           )}
-          
+
           <button
-            onClick={() => customerId && loadReservationsByCustomer(customerId)}
+            onClick={() => customerId && loadReservationsByCustomer(Number(customerId))}
             disabled={apiLoading}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50"
             aria-label="Refresh reservations list"
@@ -213,14 +214,14 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
 
       {/* Error Display */}
       {apiError && (
-        <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg p-4 flex items-start gap-3">
+        <div className="flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-accent-red flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="font-medium text-accent-red">Error</p>
             <p className="text-sm text-neutral-700 mt-1">{apiError}</p>
           </div>
           <button
-            onClick={() => customerId && loadReservationsByCustomer(customerId)}
+            onClick={() => customerId && loadReservationsByCustomer(Number(customerId))}
             className="text-neutral-400 hover:text-neutral-600"
             aria-label="Dismiss error and retry"
           >
@@ -236,21 +237,19 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
           <div className="flex gap-2">
             <button
               onClick={() => setFilterType('upcoming')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filterType === 'upcoming'
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterType === 'upcoming'
                   ? 'bg-primary-500 text-white'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-              }`}
+                }`}
             >
               Upcoming ({upcomingCount})
             </button>
             <button
               onClick={() => setFilterType('past')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                filterType === 'past'
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterType === 'past'
                   ? 'bg-primary-500 text-white'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-              }`}
+                }`}
             >
               Past ({apiReservations.length - upcomingCount})
             </button>
@@ -274,8 +273,8 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
             {filterType === 'upcoming' ? 'No Upcoming Reservations' : 'No Past Reservations'}
           </p>
           <p className="text-neutral-600 mt-1">
-            {filterType === 'upcoming' 
-              ? 'You have no upcoming reservations at this time' 
+            {filterType === 'upcoming'
+              ? 'You have no upcoming reservations at this time'
               : 'You have no past reservations'}
           </p>
           {filterType === 'upcoming' && onNewReservation && (
