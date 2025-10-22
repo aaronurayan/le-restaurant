@@ -1,0 +1,107 @@
+# IDE and Editor
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+build/
+dist/
+target/
+*.jar
+*.war
+*.class
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Maven
+!.mvn/wrapper/maven-wrapper.jar
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Spring Boot
+HELP.md
+.springBeans
+spring-boot-starter-parent/
+
+# React/Vite
+.vite/
+*.local
+
+# Test results
+test-results/
+junit/
+
+.fake
+
+# Build and Package artifacts
+node_modules/
+backend/build/
+backend/out/
+frontend/dist/
+frontend/build/
+*.class
+*.jar
+
+# Test coverage and reports (generated files, not tracked)
+frontend/coverage/
+frontend/test-results/
+backend/build/reports/
+*.xml
+!.github/
+
+# Temporary documentation (merge reviews, status reports)
+*_MERGE_REVIEW*.md
+*_TEST_QUICK_START.md
+*_TEST_SUITE_SUMMARY.md
+*_IMPLEMENTATION_COMPLETE.md
+*_INTEGRATION_TEST_STATUS.md
+*STRATEGY*.md
+*_COMPLETE.md
+
+# IDE workspace and local configs (should not be committed)
+.idea/workspace.xml
+.idea/inspectionProfiles/
+.vscode/settings.json
+*.userprefs

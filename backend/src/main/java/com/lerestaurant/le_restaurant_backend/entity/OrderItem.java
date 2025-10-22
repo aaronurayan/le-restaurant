@@ -46,6 +46,15 @@ public class OrderItem {
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public BigDecimal getUnitPrice() { return unitPrice; }
     public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+    
+    // Calculate subtotal (unitPrice * quantity)
+    public BigDecimal getSubtotal() {
+        if (unitPrice == null || quantity == null) {
+            return BigDecimal.ZERO;
+        }
+        return unitPrice.multiply(new BigDecimal(quantity));
+    }
+    
     public String getCustomizations() { return customizations; }
     public void setCustomizations(String customizations) { this.customizations = customizations; }
     public String getSpecialRequests() { return specialRequests; }

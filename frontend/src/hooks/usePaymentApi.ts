@@ -1,314 +1,416 @@
-import { useState } from 'react';
+/**
+ * Payment Management API Hook (F106)
+ * 
+ * This hook provides comprehensive payment management functionality for F106 Payment Management.
+ * It uses the centralized PaymentApiService and provides a clean interface for React components.
+ * 
+ * Features:
+ * - Payment CRUD operations
+ * - Payment processing and status management
+ * - Payment search and filtering
+ * - Statistics and reporting
+ * - Error handling and loading states
+ * - Mock data fallback
+ * 
+ * @author Le Restaurant Development Team
+ * @version 1.0.0
+ * @since 2024-01-15
+ * @module F106-PaymentManagement
+ */
+
+import { useState, useCallback } from 'react';
 import { Payment, PaymentMethod, PaymentStatus } from '../types/payment';
+import { useApiList, useApiItem } from './useApiBase';
+import { 
+  paymentApiService, 
+  CreatePaymentRequest, 
+  UpdatePaymentRequest, 
+  PaymentSearchFilters,
+  PaymentListResponse,
+  PaymentProcessingResult
+} from '../services/paymentApiService';
 
-// Payment API 함수들 (백엔드 API 연동)
-const paymentApi = {
-  getAllPayments: async (): Promise<Payment[]> => {
-    const response = await fetch('http://localhost:8080/api/payments');
-    if (!response.ok) throw new Error('Failed to fetch payments');
-    return response.json();
-  },
-  
-  getPaymentById: async (id: number): Promise<Payment> => {
-    const response = await fetch(`http://localhost:8080/api/payments/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch payment');
-    return response.json();
-  },
-  
-  getPaymentsByOrderId: async (orderId: number): Promise<Payment[]> => {
-    const response = await fetch(`http://localhost:8080/api/payments/order/${orderId}`);
-    if (!response.ok) throw new Error('Failed to fetch payments by order');
-    return response.json();
-  },
-  
-  getPaymentsByStatus: async (status: PaymentStatus): Promise<Payment[]> => {
-    const response = await fetch(`http://localhost:8080/api/payments/status/${status}`);
-    if (!response.ok) throw new Error('Failed to fetch payments by status');
-    return response.json();
-  },
-  
-  updatePaymentStatus: async (id: number, status: PaymentStatus): Promise<Payment> => {
-    const response = await fetch(`http://localhost:8080/api/payments/${id}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (!response.ok) throw new Error('Failed to update payment status');
-    return response.json();
-  },
-  
-  processPayment: async (id: number): Promise<Payment> => {
-    const response = await fetch(`http://localhost:8080/api/payments/${id}/process`, {
-      method: 'POST',
-    });
-    if (!response.ok) throw new Error('Failed to process payment');
-    return response.json();
-  },
-  
-  deletePayment: async (id: number): Promise<void> => {
-    const response = await fetch(`http://localhost:8080/api/payments/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete payment');
-  },
-};
+// =============================================================================
+// Payment List Management Hook
+// =============================================================================
 
-export const usePaymentApi = () => {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isBackendConnected, setIsBackendConnected] = useState(false);
+/**
+ * Hook for managing payment lists with search, filtering, and pagination
+ * 
+ * @returns Payment list management functions and state
+ */
+export const usePaymentList = () => {
+  const apiHook = useApiList<Payment>();
+  const [filters, setFilters] = useState<PaymentSearchFilters>({});
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+    totalCount: 0,
+    totalAmount: 0,
+  });
+  const [summary, setSummary] = useState({
+    completed: 0,
+    pending: 0,
+    failed: 0,
+    refunded: 0,
+  });
 
-  // 백엔드 연결 상태 확인
-  const checkBackendConnection = async () => {
-    try {
-      const response = await fetch('http://localhost:8080/api/payments/test');
-      if (response.ok) {
-        setIsBackendConnected(true);
-        return true;
+  /**
+   * Load payments with current filters and pagination
+   */
+  const loadPayments = useCallback(async (customFilters?: PaymentSearchFilters) => {
+    const currentFilters = { ...filters, ...customFilters };
+    setFilters(currentFilters);
+
+    await apiHook.executeOperation(
+      async () => {
+        const response = await paymentApiService.getAllPayments(currentFilters);
+        return response.payments; // Extract payments array from response
+      },
+      true, // Use mock data on failure
+      async () => {
+        // Mock data fallback
+        const mockResponse = paymentApiService['getMockPaymentList'](currentFilters);
+        return mockResponse.payments; // Extract payments array from response
       }
-    } catch (error) {
-      console.warn('Backend not connected, using mock data');
-    }
-    setIsBackendConnected(false);
-    return false;
-  };
+    );
 
-  // Mock payments data (백엔드 연결 실패 시 사용)
-  const mockPayments: Payment[] = [
-    {
-      id: 1,
-      orderId: 1001,
-      amount: 45.99,
-      currency: 'USD',
-      method: PaymentMethod.CREDIT_CARD,
-      status: PaymentStatus.COMPLETED,
-      transactionId: 'txn_123456789',
-      processedAt: '2024-01-15T10:30:00Z',
-      createdAt: '2024-01-15T10:25:00Z',
-      updatedAt: '2024-01-15T10:30:00Z',
-      customerEmail: 'customer@example.com',
-      customerName: 'John Doe'
-    },
-    {
-      id: 2,
-      orderId: 1002,
-      amount: 32.50,
-      currency: 'USD',
-      method: PaymentMethod.DEBIT_CARD,
-      status: PaymentStatus.PROCESSING,
-      transactionId: 'txn_987654321',
-      processedAt: undefined,
-      createdAt: '2024-01-15T11:15:00Z',
-      updatedAt: '2024-01-15T11:15:00Z',
-      customerEmail: 'jane@example.com',
-      customerName: 'Jane Smith'
-    },
-    {
-      id: 3,
-      orderId: 1003,
-      amount: 28.75,
-      currency: 'USD',
-      method: PaymentMethod.CASH,
-      status: PaymentStatus.PENDING,
-      transactionId: undefined,
-      processedAt: undefined,
-      createdAt: '2024-01-15T12:00:00Z',
-      updatedAt: '2024-01-15T12:00:00Z',
-      customerEmail: 'bob@example.com',
-      customerName: 'Bob Johnson'
-    },
-    {
-      id: 4,
-      orderId: 1004,
-      amount: 67.25,
-      currency: 'USD',
-      method: PaymentMethod.DIGITAL_WALLET,
-      status: PaymentStatus.FAILED,
-      transactionId: 'txn_failed_123',
-      processedAt: undefined,
-      createdAt: '2024-01-15T13:30:00Z',
-      updatedAt: '2024-01-15T13:35:00Z',
-      customerEmail: 'alice@example.com',
-      customerName: 'Alice Brown'
-    },
-    {
-      id: 5,
-      orderId: 1005,
-      amount: 89.99,
-      currency: 'USD',
-      method: PaymentMethod.BANK_TRANSFER,
-      status: PaymentStatus.REFUNDED,
-      transactionId: 'txn_refund_456',
-      processedAt: '2024-01-15T14:00:00Z',
-      createdAt: '2024-01-15T09:00:00Z',
-      updatedAt: '2024-01-15T14:00:00Z',
-      customerEmail: 'charlie@example.com',
-      customerName: 'Charlie Wilson'
+    // Update pagination and summary state
+    if (apiHook.data) {
+      const response = apiHook.data as unknown as PaymentListResponse;
+      setPagination({
+        page: response.page,
+        limit: response.limit,
+        totalPages: response.totalPages,
+        totalCount: response.totalCount,
+        totalAmount: response.totalAmount,
+      });
+      setSummary(response.summary);
     }
-  ];
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 모든 결제 조회
-  const loadPayments = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const data = await paymentApi.getAllPayments();
-        setPayments(data);
-      } else {
-        setPayments(mockPayments);
-      }
-    } catch (err) {
-      setError('Failed to load payments');
-      console.error('Error loading payments:', err);
-      setPayments(mockPayments);
-    } finally {
-      setLoading(false);
-    }
-  };
+  /**
+   * Search payments by customer email
+   */
+  const searchPayments = useCallback((customerEmail: string) => {
+    loadPayments({ customerEmail });
+  }, [loadPayments]);
 
-  // 주문별 결제 조회
-  const loadPaymentsByOrderId = async (orderId: number) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const data = await paymentApi.getPaymentsByOrderId(orderId);
-        setPayments(data);
-      } else {
-        const filteredPayments = mockPayments.filter(p => p.orderId === orderId);
-        setPayments(filteredPayments);
-      }
-    } catch (err) {
-      setError('Failed to load payments by order');
-      console.error('Error loading payments by order:', err);
-      const filteredPayments = mockPayments.filter(p => p.orderId === orderId);
-      setPayments(filteredPayments);
-    } finally {
-      setLoading(false);
-    }
-  };
+  /**
+   * Filter payments by status
+   */
+  const filterByStatus = useCallback((status: PaymentStatus) => {
+    loadPayments({ status });
+  }, [loadPayments]);
 
-  // 상태별 결제 조회
-  const loadPaymentsByStatus = async (status: PaymentStatus) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const data = await paymentApi.getPaymentsByStatus(status);
-        setPayments(data);
-      } else {
-        const filteredPayments = mockPayments.filter(p => p.status === status);
-        setPayments(filteredPayments);
-      }
-    } catch (err) {
-      setError('Failed to load payments by status');
-      console.error('Error loading payments by status:', err);
-      const filteredPayments = mockPayments.filter(p => p.status === status);
-      setPayments(filteredPayments);
-    } finally {
-      setLoading(false);
-    }
-  };
+  /**
+   * Filter payments by method
+   */
+  const filterByMethod = useCallback((method: PaymentMethod) => {
+    loadPayments({ method });
+  }, [loadPayments]);
 
-  // 결제 상태 업데이트
-  const updatePaymentStatus = async (id: number, status: PaymentStatus) => {
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const updatedPayment = await paymentApi.updatePaymentStatus(id, status);
-        setPayments(prev => prev.map(p => p.id === id ? updatedPayment : p));
-        return updatedPayment;
-      } else {
-        // Mock data 업데이트
-        setPayments(prev => prev.map(p => 
-          p.id === id 
-            ? { ...p, status, updatedAt: new Date().toISOString() }
-            : p
-        ));
-        return { ...mockPayments.find(p => p.id === id)!, status };
-      }
-    } catch (err) {
-      setError('Failed to update payment status');
-      console.error('Error updating payment status:', err);
-      throw err;
-    }
-  };
+  /**
+   * Filter payments by order ID
+   */
+  const filterByOrderId = useCallback((orderId: number) => {
+    loadPayments({ orderId });
+  }, [loadPayments]);
 
-  // 결제 처리
-  const processPayment = async (id: number) => {
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        const processedPayment = await paymentApi.processPayment(id);
-        setPayments(prev => prev.map(p => p.id === id ? processedPayment : p));
-        return processedPayment;
-      } else {
-        // Mock data 업데이트
-        setPayments(prev => prev.map(p => 
-          p.id === id 
-            ? { 
-                ...p, 
-                status: PaymentStatus.COMPLETED, 
-                processedAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              }
-            : p
-        ));
-        return { 
-          ...mockPayments.find(p => p.id === id)!, 
-          status: PaymentStatus.COMPLETED,
-          processedAt: new Date().toISOString()
-        };
-      }
-    } catch (err) {
-      setError('Failed to process payment');
-      console.error('Error processing payment:', err);
-      throw err;
-    }
-  };
+  /**
+   * Filter payments by date range
+   */
+  const filterByDateRange = useCallback((dateFrom: string, dateTo: string) => {
+    loadPayments({ dateFrom, dateTo });
+  }, [loadPayments]);
 
-  // 결제 삭제
-  const deletePayment = async (id: number) => {
-    try {
-      const isConnected = await checkBackendConnection();
-      
-      if (isConnected) {
-        await paymentApi.deletePayment(id);
-        setPayments(prev => prev.filter(p => p.id !== id));
-      } else {
-        // Mock data에서 삭제
-        setPayments(prev => prev.filter(p => p.id !== id));
-      }
-    } catch (err) {
-      setError('Failed to delete payment');
-      console.error('Error deleting payment:', err);
-      throw err;
-    }
-  };
+  /**
+   * Clear all filters
+   */
+  const clearFilters = useCallback(() => {
+    setFilters({});
+    loadPayments({});
+  }, [loadPayments]);
+
+  /**
+   * Go to specific page
+   */
+  const goToPage = useCallback((page: number) => {
+    loadPayments({ page });
+  }, [loadPayments]);
+
+  /**
+   * Change page size
+   */
+  const changePageSize = useCallback((limit: number) => {
+    loadPayments({ limit, page: 1 });
+  }, [loadPayments]);
 
   return {
-    payments,
-    loading,
-    error,
-    isBackendConnected,
+    // State
+    payments: apiHook.items,
+    loading: apiHook.loading,
+    error: apiHook.error,
+    isBackendConnected: apiHook.isBackendConnected,
+    filters,
+    pagination,
+    summary,
+    
+    // Actions
     loadPayments,
-    loadPaymentsByOrderId,
-    loadPaymentsByStatus,
+    searchPayments,
+    filterByStatus,
+    filterByMethod,
+    filterByOrderId,
+    filterByDateRange,
+    clearFilters,
+    goToPage,
+    changePageSize,
+    refresh: loadPayments,
+  };
+};
+
+// =============================================================================
+// Single Payment Management Hook
+// =============================================================================
+
+/**
+ * Hook for managing individual payment operations
+ * 
+ * @returns Single payment management functions and state
+ */
+export const usePayment = () => {
+  const apiHook = useApiItem<Payment>();
+
+  /**
+   * Load payment by ID
+   */
+  const loadPaymentById = useCallback(async (id: number) => {
+    await apiHook.executeOperation(
+      () => paymentApiService.getPaymentById(id),
+      true, // Use mock data on failure
+      () => paymentApiService.getPaymentById(id) // This will use mock data
+    );
+  }, [apiHook]);
+
+  /**
+   * Create new payment
+   */
+  const createPayment = useCallback(async (paymentData: CreatePaymentRequest) => {
+    const result = await apiHook.executeOperationWithoutData(
+      async () => {
+        const newPayment = await paymentApiService.createPayment(paymentData);
+        apiHook.setData(newPayment);
+      }
+    );
+    return result;
+  }, [apiHook]);
+
+  /**
+   * Update payment
+   */
+  const updatePayment = useCallback(async (id: number, paymentData: UpdatePaymentRequest) => {
+    const result = await apiHook.executeOperationWithoutData(
+      async () => {
+        const updatedPayment = await paymentApiService.updatePayment(id, paymentData);
+        apiHook.setData(updatedPayment);
+      }
+    );
+    return result;
+  }, [apiHook]);
+
+  /**
+   * Update payment status
+   */
+  const updatePaymentStatus = useCallback(async (id: number, status: PaymentStatus) => {
+    return updatePayment(id, { status });
+  }, [updatePayment]);
+
+  /**
+   * Process payment
+   */
+  const processPayment = useCallback(async (id: number): Promise<PaymentProcessingResult | null> => {
+    try {
+      const result = await paymentApiService.processPayment(id);
+      // Reload payment data after processing
+      await loadPaymentById(id);
+      return result;
+    } catch (error) {
+      console.error('Payment processing failed:', error);
+      return null;
+    }
+  }, [loadPaymentById]);
+
+  /**
+   * Refund payment
+   */
+  const refundPayment = useCallback(async (id: number, amount?: number) => {
+    const result = await apiHook.executeOperationWithoutData(
+      async () => {
+        const refundedPayment = await paymentApiService.refundPayment(id, amount);
+        apiHook.setData(refundedPayment);
+      }
+    );
+    return result;
+  }, [apiHook]);
+
+  /**
+   * Delete payment
+   */
+  const deletePayment = useCallback(async (id: number) => {
+    const result = await apiHook.executeOperationWithoutData(
+      () => paymentApiService.deletePayment(id)
+    );
+    return result;
+  }, [apiHook]);
+
+  return {
+    // State
+    payment: apiHook.item,
+    loading: apiHook.loading,
+    error: apiHook.error,
+    isBackendConnected: apiHook.isBackendConnected,
+    hasPayment: apiHook.hasItem,
+    
+    // Actions
+    loadPaymentById,
+    createPayment,
+    updatePayment,
     updatePaymentStatus,
     processPayment,
+    refundPayment,
     deletePayment,
+    clearError: apiHook.clearError,
+    reset: apiHook.reset,
+  };
+};
+
+// =============================================================================
+// Payment Status Management Hook
+// =============================================================================
+
+/**
+ * Hook for managing payments by status
+ * 
+ * @returns Status-specific payment management functions and state
+ */
+export const usePaymentsByStatus = () => {
+  const apiHook = useApiList<Payment>();
+  const [currentStatus, setCurrentStatus] = useState<PaymentStatus | null>(null);
+
+  /**
+   * Load payments by status
+   */
+  const loadPaymentsByStatus = useCallback(async (status: PaymentStatus) => {
+    setCurrentStatus(status);
+    await apiHook.executeOperation(
+      () => paymentApiService.getPaymentsByStatus(status),
+      true, // Use mock data on failure
+      () => paymentApiService.getPaymentsByStatus(status) // This will use mock data
+    );
+  }, [apiHook]);
+
+  return {
+    // State
+    payments: apiHook.items,
+    loading: apiHook.loading,
+    error: apiHook.error,
+    isBackendConnected: apiHook.isBackendConnected,
+    currentStatus,
+    
+    // Actions
+    loadPaymentsByStatus,
+    refresh: () => currentStatus && loadPaymentsByStatus(currentStatus),
+  };
+};
+
+// =============================================================================
+// Payment Statistics Hook
+// =============================================================================
+
+/**
+ * Hook for payment statistics and reporting
+ * 
+ * @returns Payment statistics functions and state
+ */
+export const usePaymentStatistics = () => {
+  const apiHook = useApiItem<PaymentListResponse>();
+  const [filters, setFilters] = useState<PaymentSearchFilters>({});
+
+  /**
+   * Load payment statistics
+   */
+  const loadStatistics = useCallback(async (customFilters?: PaymentSearchFilters) => {
+    const currentFilters = { ...filters, ...customFilters };
+    setFilters(currentFilters);
+
+    await apiHook.executeOperation(
+      () => paymentApiService.getPaymentStatistics(currentFilters),
+      true, // Use mock data on failure
+      () => {
+        // Mock data fallback
+        const mockResponse = paymentApiService['getMockPaymentList'](currentFilters);
+        return Promise.resolve(mockResponse);
+      }
+    );
+  }, [filters, apiHook]);
+
+  /**
+   * Load statistics for date range
+   */
+  const loadStatisticsByDateRange = useCallback((dateFrom: string, dateTo: string) => {
+    loadStatistics({ dateFrom, dateTo });
+  }, [loadStatistics]);
+
+  /**
+   * Load statistics by payment method
+   */
+  const loadStatisticsByMethod = useCallback((method: PaymentMethod) => {
+    loadStatistics({ method });
+  }, [loadStatistics]);
+
+  return { 
+    // State
+    statistics: apiHook.item,
+    loading: apiHook.loading,
+    error: apiHook.error,
+    isBackendConnected: apiHook.isBackendConnected,
+    filters,
+    
+    // Actions
+    loadStatistics,
+    loadStatisticsByDateRange,
+    loadStatisticsByMethod,
+    refresh: loadStatistics,
+  };
+};
+
+// =============================================================================
+// Legacy Hook (for backward compatibility)
+// =============================================================================
+
+/**
+ * Legacy payment API hook for backward compatibility
+ * @deprecated Use usePaymentList, usePayment, usePaymentsByStatus, or usePaymentStatistics instead
+ */
+export const usePaymentApi = () => {
+  const paymentListHook = usePaymentList();
+  const paymentHook = usePayment();
+
+  return {
+    // Legacy state
+    payments: paymentListHook.payments,
+    loading: paymentListHook.loading || paymentHook.loading,
+    error: paymentListHook.error || paymentHook.error,
+    isBackendConnected: paymentListHook.isBackendConnected,
+    
+    // Legacy functions
+    loadPayments: paymentListHook.loadPayments,
+    loadPaymentsByOrderId: (orderId: number) => paymentListHook.filterByOrderId(orderId),
+    loadPaymentsByStatus: paymentListHook.filterByStatus,
+    updatePaymentStatus: paymentHook.updatePaymentStatus,
+    processPayment: paymentHook.processPayment,
+    deletePayment: paymentHook.deletePayment,
   };
 };

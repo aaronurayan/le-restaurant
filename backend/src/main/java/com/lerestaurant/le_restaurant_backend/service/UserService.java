@@ -9,16 +9,38 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.lerestaurant.le_restaurant_backend.util.PasswordValidator;
 
+/**
+ * User Management Service (F102)
+ * 
+ * This service handles all user-related business logic for F102 User Management.
+ * It provides comprehensive user CRUD operations, role management, and status control.
+ * 
+ * Features:
+ * - User CRUD operations
+ * - User role and status management
+ * - Email validation and uniqueness checking
+ * - Password encryption and security
+ * - Transaction management
+ * - Comprehensive logging
+ * 
+ * @author Le Restaurant Development Team
+ * @version 1.0.0
+ * @since 2024-01-15
+ * @module F102-UserManagement
+ */
 @Service
 @Transactional
 public class UserService {
-
+    
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -27,27 +49,41 @@ public class UserService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
-
+    
+    /**
+     * Create a new user
+     * 
+     * This method creates a new user with the provided information.
+     * It validates input, checks password strength, enforces email uniqueness,
+     * encrypts the password, and sets default values.
+     * 
+     * @param requestDto User creation request data
+     * @return UserDto Created user data
+     * @throws RuntimeException if email already exists
+     */
     public UserDto createUser(UserCreateRequestDto requestDto) {
-        // 기본 입력 검증
-        if (requestDto.getEmail() == null) {
-            throw new IllegalArgumentException("Email must not be null");
+        logger.info("Creating new user with email: {}", requestDto.getEmail());
+
+        // Basic input validation
+        if (requestDto.getEmail() == null || requestDto.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email must not be null or empty");
         }
         if (requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) {
             throw new IllegalArgumentException("Password must not be null or empty");
         }
 
-        // Validate password strength (must meet minimum complexity requirements)
+        // Validate password strength
         if (!PasswordValidator.isStrong(requestDto.getPassword())) {
             throw new IllegalArgumentException("Password does not meet strength requirements");
         }
 
-        // 이메일 중복 확인 (한 번만 조회)
-        java.util.Optional<User> existing = userRepository.findByEmail(requestDto.getEmail());
-        if (existing != null && existing.isPresent()) {
+        // Check email uniqueness
+        if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
+            logger.warn("User creation failed: email already exists - {}", requestDto.getEmail());
             throw new RuntimeException("User with email already exists: " + requestDto.getEmail());
         }
 
+        // Create new user entity
         User user = new User();
         user.setEmail(requestDto.getEmail());
         user.setPasswordHash(passwordEncoder.encode(requestDto.getPassword()));
@@ -57,8 +93,10 @@ public class UserService {
         user.setRole(requestDto.getRole());
         user.setStatus(User.UserStatus.ACTIVE);
         user.setCreatedAt(OffsetDateTime.now());
-
+        // Save user to database
         User savedUser = userRepository.save(user);
+        logger.info("User created successfully with ID: {}", savedUser.getId());
+
         return convertToDto(savedUser);
     }
 

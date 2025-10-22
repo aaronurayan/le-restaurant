@@ -13,6 +13,7 @@ interface HomeProps {
   onFavorite: (item: MenuItem) => void;
 }
 
+// Test
 export const Home: React.FC<HomeProps> = ({
   onAddToCart,
   favoritedItems,
@@ -32,6 +33,7 @@ export const Home: React.FC<HomeProps> = ({
   } = useMenuApi();
 
   const filteredItems = useMemo(() => {
+    if (!menuItems) return [];
     if (!selectedCategory) return menuItems;
     return menuItems.filter(item => item.categoryId === selectedCategory);
   }, [selectedCategory, menuItems]);
@@ -67,7 +69,7 @@ export const Home: React.FC<HomeProps> = ({
           
           {/* Category Filter */}
           <CategoryFilter
-            categories={categories.map(cat => ({ id: cat, name: cat, description: '', displayOrder: 1, isActive: true, itemCount: 0 }))}
+            categories={(categories || []).map(cat => ({ id: cat, name: cat, description: '', displayOrder: 1, isActive: true, itemCount: 0 }))}
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategorySelect}
           />

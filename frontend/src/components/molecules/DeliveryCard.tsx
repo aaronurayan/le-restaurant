@@ -1,15 +1,16 @@
 import React from 'react';
-import { 
-  Package, 
-  User, 
-  Clock, 
-  MapPin, 
-  Phone, 
-  Mail, 
+import {
+  Package,
+  User,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
   AlertCircle,
   CheckCircle,
   Truck,
-  Navigation
+  Navigation,
+  Archive
 } from 'lucide-react';
 import { DeliveryAssignment, DeliveryPerson } from '../../types/delivery';
 import { StatusBadge } from '../atoms/StatusBadge';
@@ -22,8 +23,7 @@ interface DeliveryCardProps {
   deliveryPerson?: DeliveryPerson;
   onStatusUpdate?: (deliveryId: string, status: string) => void;
   onAssignPerson?: (deliveryId: string) => void;
-  onViewDetails?: (deliveryId: string) => void;
-  onTrackLocation?: (deliveryId: string) => void;
+  onArchive?: (deliveryId: string) => void;
   className?: string;
 }
 
@@ -49,8 +49,7 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
   deliveryPerson,
   onStatusUpdate,
   onAssignPerson,
-  onViewDetails,
-  onTrackLocation,
+  onArchive,
   className = ''
 }) => {
   const StatusIcon = statusIcons[delivery.status as keyof typeof statusIcons] || Package;
@@ -100,7 +99,7 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <StatusBadge status={delivery.status} size="sm" />
             {isOverdue() && (
@@ -151,21 +150,21 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
             <Clock className="w-4 h-4 text-neutral-400" />
             <div>
               <p className="text-neutral-500">Estimated Delivery</p>
-              <TimeDisplay 
-                time={delivery.estimatedDeliveryTime} 
+              <TimeDisplay
+                time={delivery.estimatedDeliveryTime}
                 type="datetime"
                 variant="compact"
               />
             </div>
           </div>
-          
+
           {delivery.actualDeliveryTime && (
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-green-500" />
               <div>
                 <p className="text-neutral-500">Actual Delivery</p>
-                <TimeDisplay 
-                  time={delivery.actualDeliveryTime} 
+                <TimeDisplay
+                  time={delivery.actualDeliveryTime}
                   type="datetime"
                   variant="compact"
                 />
@@ -220,7 +219,7 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
               Update Status
             </Button>
           )}
-          
+
           {canAssignPerson() && onAssignPerson && (
             <Button
               variant="outline"
@@ -230,24 +229,16 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
               Assign Person
             </Button>
           )}
-          
-          {onTrackLocation && deliveryPerson?.currentLocation && (
+
+          {delivery.status === 'delivered' && onArchive && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onTrackLocation(delivery.id)}
+              onClick={() => onArchive(delivery.id)}
+              className="text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100"
             >
-              Track Location
-            </Button>
-          )}
-          
-          {onViewDetails && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewDetails(delivery.id)}
-            >
-              View Details
+              <Archive className="w-4 h-4 mr-1" />
+              Archive
             </Button>
           )}
         </div>

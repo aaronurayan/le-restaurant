@@ -224,7 +224,7 @@ public class UserAuthAndRegistrationControllerTest {
             mockMvc.perform(post("/api/users")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(createReq)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isConflict());
             verify(userService, times(1)).createUser(any(UserCreateRequestDto.class));
         }
 

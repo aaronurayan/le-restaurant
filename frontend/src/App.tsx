@@ -2,9 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home';
 import PaymentManagementPanel from './components/organisms/PaymentManagementPanel';
+import MenuManagementPanel from './components/organisms/MenuManagementPanel';
 import DeliveryManagement from './pages/DeliveryManagement';
 import DeliveryTracking from './pages/DeliveryTracking';
 import DeliveryDashboard from './pages/DeliveryDashboard';
+import AdminDashboard from './components/organisms/AdminDashboard';
+import CustomerDashboard from './components/organisms/CustomerDashboard';
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import { UserRole } from './types/user';
@@ -81,6 +84,35 @@ function App() {
                     favoritedItems={favoritedItems}
                     onFavorite={handleFavorite}
                   />
+                } 
+              />
+              
+              {/* Admin Dashboard */}
+              <Route 
+                path="/admin/dashboard" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Customer Dashboard */}
+              <Route 
+                path="/customer/dashboard" 
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <CustomerDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/admin/menu" 
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <MenuManagementPanel />
+                  </ProtectedRoute>
                 } 
               />
               <Route 
