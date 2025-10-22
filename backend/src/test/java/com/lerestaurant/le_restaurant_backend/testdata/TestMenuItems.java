@@ -13,6 +13,7 @@ public class TestMenuItems {
         "Classic Neapolitan pizza with tomato sauce, mozzarella, and basil",
         new BigDecimal("12.99"),
         "PIZZA",
+        "pizza-margherita.jpg",
         true
     );
 
@@ -22,6 +23,7 @@ public class TestMenuItems {
         "Fettuccine pasta with creamy alfredo sauce and grilled chicken",
         new BigDecimal("15.99"),
         "PASTA",
+        "chicken-alfredo.jpg",
         true
     );
 
@@ -31,6 +33,7 @@ public class TestMenuItems {
         "Fresh romaine lettuce with caesar dressing, croutons, and parmesan",
         new BigDecimal("8.99"),
         "SALAD",
+        "caesar-salad.jpg",
         true
     );
 
@@ -40,6 +43,7 @@ public class TestMenuItems {
         "330ml soft drink",
         new BigDecimal("2.99"),
         "BEVERAGES",
+        "coca-cola.jpg",
         true
     );
 
