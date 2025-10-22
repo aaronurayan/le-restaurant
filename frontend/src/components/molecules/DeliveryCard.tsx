@@ -9,7 +9,8 @@ import {
   AlertCircle,
   CheckCircle,
   Truck,
-  Navigation
+  Navigation,
+  Archive
 } from 'lucide-react';
 import { DeliveryAssignment, DeliveryPerson } from '../../types/delivery';
 import { StatusBadge } from '../atoms/StatusBadge';
@@ -22,6 +23,7 @@ interface DeliveryCardProps {
   deliveryPerson?: DeliveryPerson;
   onStatusUpdate?: (deliveryId: string, status: string) => void;
   onAssignPerson?: (deliveryId: string) => void;
+  onArchive?: (deliveryId: string) => void;
   className?: string;
 }
 
@@ -47,6 +49,7 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
   deliveryPerson,
   onStatusUpdate,
   onAssignPerson,
+  onArchive,
   className = ''
 }) => {
   const StatusIcon = statusIcons[delivery.status as keyof typeof statusIcons] || Package;
@@ -224,6 +227,18 @@ export const DeliveryCard: React.FC<DeliveryCardProps> = ({
               onClick={() => onAssignPerson(delivery.id)}
             >
               Assign Person
+            </Button>
+          )}
+
+          {delivery.status === 'delivered' && onArchive && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onArchive(delivery.id)}
+              className="text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100"
+            >
+              <Archive className="w-4 h-4 mr-1" />
+              Archive
             </Button>
           )}
         </div>

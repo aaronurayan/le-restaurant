@@ -4,13 +4,12 @@ import {
   Users,
   Package,
   Plus,
-  Filter,
   Search,
-  RefreshCw,
   AlertCircle,
   CheckCircle,
   Clock,
-  MapPin
+  MapPin,
+  Archive
 } from 'lucide-react';
 import { DeliveryAssignment, DeliveryPerson, DeliveryFilter, DeliveryMetrics } from '../../types/delivery';
 import { useDeliveryApi } from '../../hooks/useDeliveryApi';
@@ -49,7 +48,8 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'deliveries' | 'persons' | 'metrics'>('deliveries');
+  const [activeTab, setActiveTab] = useState<'deliveries' | 'persons' | 'metrics' | 'archived'>('deliveries');
+  const [archivedDeliveryIds, setArchivedDeliveryIds] = useState<Set<string>>(new Set());
 
   // Load data on component mount
   useEffect(() => {
@@ -102,7 +102,18 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
     console.log('Assign person for delivery:', deliveryId);
   };
 
+  const handleArchive = (deliveryId: string) => {
+    // Add to archived set to hide from view
+    setArchivedDeliveryIds(prev => new Set([...prev, deliveryId]));
+    console.log('✅ Archived delivery:', deliveryId);
+  };
+
   const filteredDeliveries = deliveries.filter(delivery => {
+    // Filter out archived deliveries
+    if (archivedDeliveryIds.has(delivery.id)) {
+      return false;
+    }
+    // Filter by search term
     if (searchTerm) {
       return delivery.orderId.toLowerCase().includes(searchTerm.toLowerCase());
     }
@@ -137,16 +148,6 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
               <span>🟢 Backend Connected</span>
             </div>
           )}
-
-          <Button
-            variant="outline"
-            onClick={loadData}
-            loading={loading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </Button>
 
           <Button
             variant="primary"
@@ -245,7 +246,8 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
           {[
             { id: 'deliveries', label: 'Deliveries', icon: Package },
             { id: 'persons', label: 'Delivery Personnel', icon: Users },
-            { id: 'metrics', label: 'Analytics', icon: MapPin }
+            { id: 'metrics', label: 'Analytics', icon: MapPin },
+            { id: 'archived', label: 'Archived', icon: Archive }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -265,7 +267,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
       {/* Tab Content */}
       {activeTab === 'deliveries' && (
         <div className="space-y-4">
-          {/* Search and Filters */}
+          {/* Search */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <Input
@@ -275,12 +277,6 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
                 onChange={setSearchTerm}
                 icon={Search}
               />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                Filter
-              </Button>
             </div>
           </div>
 
@@ -295,6 +291,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
                   deliveryPerson={person}
                   onStatusUpdate={handleStatusUpdate}
                   onAssignPerson={handleAssignPerson}
+                  onArchive={handleArchive}
                 />
               );
             })}
@@ -398,6 +395,46 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Archived Tab */}
+      {activeTab === 'archived' && (
+        <div className="space-y-4">
+          {/* Archived Deliveries Header */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-neutral-600">
+              {archivedDeliveryIds.size} archived {archivedDeliveryIds.size === 1 ? 'delivery' : 'deliveries'}
+            </p>
+          </div>
+
+          {/* Archived Deliveries List */}
+          {archivedDeliveryIds.size > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {deliveries
+                .filter(delivery => archivedDeliveryIds.has(delivery.id))
+                .map((delivery) => {
+                  const person = deliveryPersons.find(p => p.id === delivery.deliveryPersonId);
+                  return (
+                    <DeliveryCard
+                      key={delivery.id}
+                      delivery={delivery}
+                      deliveryPerson={person}
+                      onStatusUpdate={handleStatusUpdate}
+                      onAssignPerson={handleAssignPerson}
+                    />
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Archive className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-neutral-900 mb-2">No archived deliveries</h3>
+              <p className="text-neutral-500">
+                Archived deliveries will appear here
+              </p>
+            </div>
+          )}
         </div>
       )}
 
