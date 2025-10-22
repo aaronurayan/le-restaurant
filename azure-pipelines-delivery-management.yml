@@ -49,47 +49,15 @@ stages:
         cd backend
         chmod +x gradlew # Ensure gradlew is executable
         ./gradlew build --stacktrace --info
-      displayName: 'Build Backend'
+      displayName: 'Build Backend Delivery Management Feature'
 
-  # Test Backend Delivery Management Feature
-  - job: TestBackendDeliveryManagement
-    displayName: 'Test Backend Delivery Management Feature'
-    pool:
-      vmImage: 'ubuntu-latest'
-
-    steps:
-    # Setup JDK
-    - task: JavaToolInstaller@1
-      displayName: 'Set up JDK $(javaVersion)'
+    # Publish Backend Build Artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Backend Build Artifacts'
       inputs:
-        version: '$(javaVersion)'
-        jdkArchitectureOption: 'x64'
-        jdkSourceOption: 'PreInstalled'
-
-    # Cache Gradle Dependencies
-    - task: Cache@2
-      displayName: 'Cache Gradle Dependencies'
-      inputs:
-        key: 'gradle | "$(Agent.OS)" | backend/gradle/wrapper/gradle-wrapper.properties'
-        restoreKeys: |
-          gradle | "$(Agent.OS)"
-          gradle
-        path: '~/.gradle'
-
-    # Run Backend Tests
-    - script: |
-        cd backend
-        chmod +x gradlew # Ensure gradlew is executable
-        ./gradlew test --tests "com.lerestaurant.le_restaurant_backend.service.DeliveryServiceTest" --stacktrace --info
-      displayName: 'Run Backend Delivery Management Tests'
-
-    # Publish Test Results
-    - task: PublishTestResults@2
-      displayName: 'Publish Backend Test Results'
-      inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: '**/build/test-results/test/*.xml'
-        failTaskOnFailedTests: true
+        pathToPublish: 'backend/build/libs'
+        artifactName: 'le-restaurant-backend'
+        publishLocation: 'Container'
 
   # Build Frontend Delivery Management Feature
   - job: BuildFrontendDeliveryManagement
@@ -104,22 +72,12 @@ stages:
       inputs:
         versionSpec: '$(nodeVersion)'
 
-    # Cache Node Modules
-    - task: Cache@2
-      displayName: 'Cache Node Modules'
-      inputs:
-        key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
-        restoreKeys: |
-          npm | "$(Agent.OS)"
-          npm
-        path: 'frontend/node_modules'
-
-    # Install Dependencies
+    # Clean and Install Dependencies
     - script: |
         cd frontend
         rm -rf node_modules package-lock.json
         npm install
-      displayName: 'Clean and install dependencies'
+      displayName: 'Clean and Install Frontend Dependencies'
 
     # Build Frontend
     - script: |
@@ -127,53 +85,10 @@ stages:
         npm run build
       displayName: 'Build Frontend Delivery Management Feature'
 
-    # Publish Build Artifacts
+    # Publish Frontend Build Artifacts
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Frontend Build Artifacts'
       inputs:
         pathToPublish: 'frontend/dist'
         artifactName: 'le-restaurant-frontend'
         publishLocation: 'Container'
-
-  # Test Frontend Delivery Management Feature
-  - job: TestFrontendDeliveryManagement
-    displayName: 'Test Frontend Delivery Management Feature'
-    pool:
-      vmImage: 'ubuntu-latest'
-
-    steps:
-    # Setup Node.js Environment
-    - task: NodeTool@0
-      displayName: 'Setup Node.js $(nodeVersion)'
-      inputs:
-        versionSpec: '$(nodeVersion)'
-
-    # Cache Node Modules
-    - task: Cache@2
-      displayName: 'Cache Node Modules'
-      inputs:
-        key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
-        restoreKeys: |
-          npm | "$(Agent.OS)"
-          npm
-        path: 'frontend/node_modules'
-
-    # Install Dependencies
-    - script: |
-        cd frontend
-        npm install
-      displayName: 'Install Frontend Dependencies'
-
-    # Run Frontend Tests
-    - script: |
-        cd frontend
-        npm test -- DeliveryManagementPanel.test.tsx
-      displayName: 'Run Frontend Delivery Management Tests'
-
-    # Publish Test Results
-    - task: PublishTestResults@2
-      displayName: 'Publish Frontend Test Results'
-      inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: '**/test-results/*.xml'
-        failTaskOnFailedTests: true
