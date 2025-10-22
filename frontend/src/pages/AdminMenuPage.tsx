@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAdminMenuApi } from '../hooks/useAdminMenuApi';
-import MenuItemForm from '../components/admin/MenuItemForm';
-import ConfirmDelete from '../components/admin/ConfirmDelete';
+import MenuItemForm from '../components/organisms/MenuItemForm';
+import ConfirmDelete from '../components/organisms/ConfirmDelete';
 import { MenuItem } from '../types/menu';
 
 const AdminMenuPage = () => {

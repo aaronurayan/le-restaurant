@@ -10,7 +10,7 @@ import AdminDashboard from './components/organisms/AdminDashboard';
 import CustomerDashboard from './components/organisms/CustomerDashboard';
 import CustomerReservationsPage from './pages/CustomerReservationsPage';
 import { MainLayout } from './components/templates/MainLayout';
-import ProtectedRoute from './components/routes/ProtectedRoute';
+import ProtectedRoute from './components/organisms/ProtectedRoute';
 import { UserRole } from './types/user';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';

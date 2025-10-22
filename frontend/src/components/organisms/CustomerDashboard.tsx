@@ -3,8 +3,8 @@ import { ShoppingBag, Calendar, Star, Award, Utensils, User } from 'lucide-react
 import { Link } from 'react-router-dom';
 import { StatCard } from '../molecules/StatCard';
 import { LoadingSpinner } from '../atoms/LoadingSpinner';
-import { ErrorMessage } from '../atoms/ErrorMessage';
-import { EmptyState } from '../atoms/EmptyState';
+import { ErrorMessage } from '../molecules/ErrorMessage';
+import { EmptyState } from '../molecules/EmptyState';
 import ReservationModal from './ReservationModal';
 
 export interface CustomerDashboardProps {

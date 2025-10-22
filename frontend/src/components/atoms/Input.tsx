@@ -68,7 +68,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           max={max}
           step={step}
           maxLength={maxLength}
-          className={'w-full px-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent' + (icon ? ' pl-10' : '') + (error ? ' border-accent-red focus:ring-accent-red' : ' border-neutral-300 focus:border-transparent') + (disabled ? ' bg-neutral-100 cursor-not-allowed' : ' bg-white')}
+          className={`
+            w-full px-4 py-2 border rounded-lg transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+            ${icon ? 'pl-10' : ''}
+            ${error 
+              ? 'border-accent-red focus:ring-accent-red' 
+              : 'border-neutral-300 focus:border-transparent'
+            }
+            ${disabled 
+              ? 'bg-neutral-100 cursor-not-allowed' 
+              : 'bg-white'
+            }
+          `}
           {...props}
         />
       </div>
