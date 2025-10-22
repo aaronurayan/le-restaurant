@@ -1,7 +1,7 @@
 export interface Reservation {
-  id: string;
-  customerId: string;
-  tableId?: string;
+  id: number;
+  customerId: number;
+  tableId?: number;
   reservationDate: string; // ISO date string
   reservationTime: string; // HH:mm format
   partySize: number;
@@ -17,7 +17,7 @@ export interface Reservation {
     phone: string;
   };
   tableInfo?: {
-    id: string;
+    id: number;
     number: string;
     capacity: number;
     location: string;
@@ -34,7 +34,8 @@ export enum ReservationStatus {
 }
 
 export interface CreateReservationRequest {
-  tableId?: string;
+  customerId?: number; // For authenticated users; guests will have this null/undefined
+  tableId?: number;
   reservationDate: string;
   reservationTime: string;
   partySize: number;
@@ -47,7 +48,7 @@ export interface CreateReservationRequest {
 }
 
 export interface UpdateReservationRequest {
-  tableId?: string;
+  tableId?: number;
   reservationDate?: string;
   reservationTime?: string;
   partySize?: number;
@@ -56,7 +57,7 @@ export interface UpdateReservationRequest {
 }
 
 export interface Table {
-  id: string;
+  id: number;
   number: string;
   capacity: number;
   location: string;

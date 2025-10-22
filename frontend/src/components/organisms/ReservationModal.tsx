@@ -18,13 +18,14 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
   const { createReservation, isBackendConnected } = useReservationApi();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [reservationId, setReservationId] = useState<string>('');
+  const [reservationId, setReservationId] = useState<number>(0);
 
   const handleSubmit = async (formData: ReservationFormData) => {
     setIsSubmitting(true);
-    
+
     try {
       const reservationRequest: CreateReservationRequest = {
+        customerId: user?.id ? Number(user.id) : undefined, // Pass user ID if authenticated
         tableId: undefined, // Will be assigned by backend
         reservationDate: formData.date,
         reservationTime: formData.time,
@@ -50,13 +51,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
 
   const handleClose = () => {
     setShowSuccess(false);
-    setReservationId('');
+    setReservationId(0);
     onClose();
   };
 
   const handleNewReservation = () => {
     setShowSuccess(false);
-    setReservationId('');
+    setReservationId(0);
   };
 
   if (!isOpen) return null;
@@ -128,6 +129,15 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
               onSubmit={handleSubmit}
               onCancel={handleClose}
               loading={isSubmitting}
+              initialCustomerData={
+                user
+                  ? {
+                    customerName: `${user.firstName} ${user.lastName}`,
+                    customerEmail: user.email,
+                    customerPhone: user.phoneNumber,
+                  }
+                  : undefined
+              }
             />
           )}
         </div>
@@ -138,7 +148,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
             <div className="flex items-center text-sm text-neutral-600">
               <AlertCircle className="w-4 h-4 mr-2 text-yellow-500" />
               <span>
-                Please arrive 5 minutes before your reservation time. 
+                Please arrive 5 minutes before your reservation time.
                 We hold tables for 15 minutes past the reservation time.
               </span>
             </div>

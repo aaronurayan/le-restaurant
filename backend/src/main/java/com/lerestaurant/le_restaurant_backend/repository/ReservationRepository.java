@@ -13,15 +13,20 @@ import java.util.List;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     List<Reservation> findByCustomerId(Long customerId);
+
     List<Reservation> findByStatus(Reservation.ReservationStatus status);
+
     List<Reservation> findByTableIdAndReservationDateAndReservationTime(Long tableId, LocalDate date, LocalTime time);
-    
+
+    List<Reservation> findByReservationDate(LocalDate date);
+
+    List<Reservation> findByReservationDateAndReservationTime(LocalDate date, LocalTime time);
+
     // For conflict checking
     default List<Reservation> findByTableIdAndReservationDateTime(Long tableId, OffsetDateTime dateTime) {
         return findByTableIdAndReservationDateAndReservationTime(
-            tableId,
-            dateTime.toLocalDate(),
-            dateTime.toLocalTime()
-        );
+                tableId,
+                dateTime.toLocalDate(),
+                dateTime.toLocalTime());
     }
 }
