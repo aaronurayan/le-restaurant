@@ -19,6 +19,7 @@
 
 # Trigger Configuration
 trigger:
+  batch: true
   branches:
     include:
       - main
@@ -36,10 +37,15 @@ pr:
     include:
       - main
       - develop
+  autoCancel: true
 
 # Pipeline Resources
 pool:
   vmImage: 'ubuntu-latest'
+
+# Concurrency Control
+options:
+  - skipScheduleQueueingPolicy
 
 # ==============================================================================
 # GLOBAL VARIABLES
@@ -54,8 +60,8 @@ variables:
   BACKEND_PATH: 'backend'
   
   # Coverage Thresholds
-  FRONTEND_COVERAGE_THRESHOLD: 80
-  BACKEND_COVERAGE_THRESHOLD: 80
+  FRONTEND_COVERAGE_THRESHOLD: '80'
+  BACKEND_COVERAGE_THRESHOLD: '80'
   
   # Azure Resource Names (Update these with your Azure resources)
   AZURE_SUBSCRIPTION: 'YOUR_AZURE_SUBSCRIPTION_NAME'
@@ -447,4 +453,8 @@ stages:
               echo "🔹 Deployed Branch: $(Build.SourceBranchName)"
               echo "🔹 Commit: $(Build.SourceVersion)"
               echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            displayName: '📊 Deployment Summary'
+            displayName: '� Deployment Summary'
+
+# ==============================================================================
+# END OF PIPELINE CONFIGURATION
+# ==============================================================================
