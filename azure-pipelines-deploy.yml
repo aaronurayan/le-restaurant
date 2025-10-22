@@ -1,7 +1,7 @@
 # ==============================================================================
 # Azure DevOps CI/CD Pipeline - Le Restaurant
 # ==============================================================================
-# 
+#
 # Complete CI/CD pipeline for Le Restaurant application:
 # - Frontend: React 18 + TypeScript + Vite → Azure Static Web Apps
 # - Backend: Spring Boot 3.x + Java 17 → Azure App Service
@@ -41,57 +41,57 @@ pr:
 
 # Pipeline Resources
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-latest
 
 # ==============================================================================
 # GLOBAL VARIABLES
 # ==============================================================================
 variables:
   # Version Configuration
-  NODE_VERSION: '20.x'
+  NODE_VERSION: 20.x
   JAVA_VERSION: '17'
-  
+
   # Path Configuration
-  FRONTEND_PATH: 'frontend'
-  BACKEND_PATH: 'backend'
-  
+  FRONTEND_PATH: frontend
+  BACKEND_PATH: backend
+
   # Coverage Thresholds
   FRONTEND_COVERAGE_THRESHOLD: '80'
   BACKEND_COVERAGE_THRESHOLD: '80'
-  
+
   # Azure Resource Names (Update these with your Azure resources)
-  AZURE_SUBSCRIPTION: 'YOUR_AZURE_SUBSCRIPTION_NAME'
-  BACKEND_APP_NAME: 'le-restaurant-backend'
-  FRONTEND_APP_NAME: 'le-restaurant-frontend'
-  RESOURCE_GROUP: 'le-restaurant-rg'
-  
+  AZURE_SUBSCRIPTION: YOUR_AZURE_SUBSCRIPTION_NAME
+  BACKEND_APP_NAME: le-restaurant-backend
+  FRONTEND_APP_NAME: le-restaurant-frontend
+  RESOURCE_GROUP: le-restaurant-rg
+
   # Build Configuration
-  BACKEND_JAR_NAME: 'le-restaurant-backend-0.0.1-SNAPSHOT.jar'
-  FRONTEND_BUILD_OUTPUT: 'dist'
+  BACKEND_JAR_NAME: le-restaurant-backend-0.0.1-SNAPSHOT.jar
+  FRONTEND_BUILD_OUTPUT: dist
 
 # ==============================================================================
 # STAGE 1: CODE QUALITY & LINTING
 # ==============================================================================
 stages:
   - stage: CodeQuality
-    displayName: '🔍 Code Quality & Linting'
+    displayName: 🔍 Code Quality & Linting
     jobs:
       # Frontend Linting
       - job: FrontendLint
-        displayName: 'Frontend ESLint Analysis'
+        displayName: Frontend ESLint Analysis
         steps:
           - checkout: self
             fetchDepth: 1
-            
+
           - task: NodeTool@0
-            displayName: 'Install Node.js $(NODE_VERSION)'
+            displayName: Install Node.js $(NODE_VERSION)
             inputs:
               versionSpec: $(NODE_VERSION)
 
           - task: Cache@2
-            displayName: 'Cache npm dependencies'
+            displayName: Cache npm dependencies
             inputs:
-              key: 'npm | "$(Agent.OS)" | $(FRONTEND_PATH)/package-lock.json'
+              key: npm | "$(Agent.OS)" | $(FRONTEND_PATH)/package-lock.json
               restoreKeys: |
                 npm | "$(Agent.OS)"
               path: $(FRONTEND_PATH)/node_modules
@@ -99,32 +99,33 @@ stages:
           - script: |
               cd $(FRONTEND_PATH)
               npm ci
-            displayName: '📦 Install Dependencies'
+            displayName: 📦 Install Dependencies
 
           - script: |
               cd $(FRONTEND_PATH)
               npm run lint
-            displayName: '🔎 Run ESLint'
+            displayName: 🔎 Run ESLint
             continueOnError: true
 
       # Backend Code Analysis
       - job: BackendLint
-        displayName: 'Backend Code Analysis'
+        displayName: Backend Code Analysis
         steps:
           - checkout: self
             fetchDepth: 1
-            
+
           - task: JavaToolInstaller@0
-            displayName: 'Install Java $(JAVA_VERSION)'
+            displayName: Install Java $(JAVA_VERSION)
             inputs:
               versionSpec: $(JAVA_VERSION)
-              jdkArchitectureOption: 'x64'
-              jdkSourceOption: 'PreInstalled'
+              jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
 
           - task: Cache@2
-            displayName: 'Cache Gradle Dependencies'
+            displayName: Cache Gradle Dependencies
             inputs:
-              key: 'gradle | "$(Agent.OS)" | $(BACKEND_PATH)/gradle/wrapper/gradle-wrapper.properties'
+              key: gradle | "$(Agent.OS)" |
+                $(BACKEND_PATH)/gradle/wrapper/gradle-wrapper.properties
               restoreKeys: |
                 gradle | "$(Agent.OS)"
               path: ~/.gradle/caches
@@ -133,33 +134,33 @@ stages:
               cd $(BACKEND_PATH)
               chmod +x gradlew
               ./gradlew check -x test
-            displayName: '🔎 Run Checkstyle'
+            displayName: 🔎 Run Checkstyle
             continueOnError: true
 
-# ==============================================================================
-# STAGE 2: BUILD & TEST
-# ==============================================================================
+  # ==============================================================================
+  # STAGE 2: BUILD & TEST
+  # ==============================================================================
   - stage: BuildAndTest
-    displayName: '🔨 Build & Test'
+    displayName: 🔨 Build & Test
     dependsOn: CodeQuality
     condition: succeeded()
     jobs:
       # Frontend Build & Test
       - job: FrontendBuildTest
-        displayName: 'Frontend Build & Test with Coverage'
+        displayName: Frontend Build & Test with Coverage
         steps:
           - checkout: self
             fetchDepth: 1
-            
+
           - task: NodeTool@0
-            displayName: 'Install Node.js $(NODE_VERSION)'
+            displayName: Install Node.js $(NODE_VERSION)
             inputs:
               versionSpec: $(NODE_VERSION)
 
           - task: Cache@2
-            displayName: 'Cache npm dependencies'
+            displayName: Cache npm dependencies
             inputs:
-              key: 'npm | "$(Agent.OS)" | $(FRONTEND_PATH)/package-lock.json'
+              key: npm | "$(Agent.OS)" | $(FRONTEND_PATH)/package-lock.json
               restoreKeys: |
                 npm | "$(Agent.OS)"
               path: $(FRONTEND_PATH)/node_modules
@@ -167,20 +168,20 @@ stages:
           - script: |
               cd $(FRONTEND_PATH)
               npm ci
-            displayName: '📦 Install Dependencies'
+            displayName: 📦 Install Dependencies
 
           - script: |
               cd $(FRONTEND_PATH)
               npm run test:coverage
-            displayName: '🧪 Run Tests with Coverage'
+            displayName: 🧪 Run Tests with Coverage
             continueOnError: false
 
           - task: PublishCodeCoverageResults@2
-            displayName: '📊 Publish Frontend Coverage'
+            displayName: 📊 Publish Frontend Coverage
             inputs:
-              codeCoverageTool: 'Cobertura'
-              summaryFileLocation: '$(FRONTEND_PATH)/coverage/cobertura-coverage.xml'
-              pathToSources: '$(FRONTEND_PATH)/src'
+              codeCoverageTool: Cobertura
+              summaryFileLocation: $(FRONTEND_PATH)/coverage/cobertura-coverage.xml
+              pathToSources: $(FRONTEND_PATH)/src
               failIfCoverageEmpty: true
 
           - script: |
@@ -191,39 +192,40 @@ stages:
                 echo "##vso[task.logissue type=error]Coverage $COVERAGE% is below threshold $(FRONTEND_COVERAGE_THRESHOLD)%"
                 exit 1
               fi
-            displayName: '✅ Verify Coverage Threshold'
+            displayName: ✅ Verify Coverage Threshold
             condition: always()
 
           - script: |
               cd $(FRONTEND_PATH)
               npm run build
-            displayName: '🏗️ Build Frontend'
+            displayName: 🏗️ Build Frontend
 
           - task: PublishPipelineArtifact@1
-            displayName: '📦 Publish Frontend Artifact'
+            displayName: 📦 Publish Frontend Artifact
             inputs:
-              targetPath: '$(FRONTEND_PATH)/$(FRONTEND_BUILD_OUTPUT)'
-              artifact: 'frontend-build'
-              publishLocation: 'pipeline'
+              targetPath: $(FRONTEND_PATH)/$(FRONTEND_BUILD_OUTPUT)
+              artifact: frontend-build
+              publishLocation: pipeline
 
       # Backend Build & Test
       - job: BackendBuildTest
-        displayName: 'Backend Build & Test with Coverage'
+        displayName: Backend Build & Test with Coverage
         steps:
           - checkout: self
             fetchDepth: 1
-            
+
           - task: JavaToolInstaller@0
-            displayName: 'Install Java $(JAVA_VERSION)'
+            displayName: Install Java $(JAVA_VERSION)
             inputs:
               versionSpec: $(JAVA_VERSION)
-              jdkArchitectureOption: 'x64'
-              jdkSourceOption: 'PreInstalled'
+              jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
 
           - task: Cache@2
-            displayName: 'Cache Gradle Dependencies'
+            displayName: Cache Gradle Dependencies
             inputs:
-              key: 'gradle | "$(Agent.OS)" | $(BACKEND_PATH)/gradle/wrapper/gradle-wrapper.properties'
+              key: gradle | "$(Agent.OS)" |
+                $(BACKEND_PATH)/gradle/wrapper/gradle-wrapper.properties
               restoreKeys: |
                 gradle | "$(Agent.OS)"
               path: ~/.gradle/caches
@@ -232,66 +234,66 @@ stages:
               cd $(BACKEND_PATH)
               chmod +x gradlew
               ./gradlew clean test jacocoTestReport --stacktrace
-            displayName: '🧪 Run Tests with Coverage'
+            displayName: 🧪 Run Tests with Coverage
 
           - task: PublishTestResults@2
-            displayName: '📊 Publish Test Results'
+            displayName: 📊 Publish Test Results
             inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: '$(BACKEND_PATH)/build/test-results/test/*.xml'
+              testResultsFormat: JUnit
+              testResultsFiles: $(BACKEND_PATH)/build/test-results/test/*.xml
               failTaskOnFailedTests: true
-              testRunTitle: 'Backend Unit Tests'
+              testRunTitle: Backend Unit Tests
 
           - task: PublishCodeCoverageResults@2
-            displayName: '📊 Publish Backend Coverage'
+            displayName: 📊 Publish Backend Coverage
             inputs:
-              codeCoverageTool: 'JaCoCo'
-              summaryFileLocation: '$(BACKEND_PATH)/build/reports/jacoco/test/jacocoTestReport.xml'
-              pathToSources: '$(BACKEND_PATH)/src/main/java'
+              codeCoverageTool: JaCoCo
+              summaryFileLocation: $(BACKEND_PATH)/build/reports/jacoco/test/jacocoTestReport.xml
+              pathToSources: $(BACKEND_PATH)/src/main/java
               failIfCoverageEmpty: true
 
           - script: |
               cd $(BACKEND_PATH)
               ./gradlew jacocoTestCoverageVerification
-            displayName: '✅ Verify Coverage Threshold'
+            displayName: ✅ Verify Coverage Threshold
             condition: always()
 
           - script: |
               cd $(BACKEND_PATH)
               ./gradlew bootJar
-            displayName: '🏗️ Build Backend JAR'
+            displayName: 🏗️ Build Backend JAR
 
           - task: CopyFiles@2
-            displayName: '📋 Copy Backend Artifact'
+            displayName: 📋 Copy Backend Artifact
             inputs:
-              sourceFolder: '$(BACKEND_PATH)/build/libs'
+              sourceFolder: $(BACKEND_PATH)/build/libs
               contents: '*.jar'
-              targetFolder: '$(Build.ArtifactStagingDirectory)/backend'
+              targetFolder: $(Build.ArtifactStagingDirectory)/backend
 
           - task: PublishPipelineArtifact@1
-            displayName: '📦 Publish Backend Artifact'
+            displayName: 📦 Publish Backend Artifact
             inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/backend'
-              artifact: 'backend-build'
-              publishLocation: 'pipeline'
+              targetPath: $(Build.ArtifactStagingDirectory)/backend
+              artifact: backend-build
+              publishLocation: pipeline
 
-# ==============================================================================
-# STAGE 3: SECURITY SCANNING
-# ==============================================================================
+  # ==============================================================================
+  # STAGE 3: SECURITY SCANNING
+  # ==============================================================================
   - stage: SecurityScan
-    displayName: '🔒 Security Scanning'
+    displayName: 🔒 Security Scanning
     dependsOn: BuildAndTest
     condition: succeeded()
     jobs:
       - job: DependencyScan
-        displayName: 'Dependency Vulnerability Scan'
+        displayName: Dependency Vulnerability Scan
         steps:
           - checkout: self
             fetchDepth: 1
 
           # Frontend Security Scan
           - task: NodeTool@0
-            displayName: 'Install Node.js $(NODE_VERSION)'
+            displayName: Install Node.js $(NODE_VERSION)
             inputs:
               versionSpec: $(NODE_VERSION)
 
@@ -299,63 +301,63 @@ stages:
               cd $(FRONTEND_PATH)
               npm ci
               npm audit --production --audit-level=high
-            displayName: '🔍 Frontend Security Audit'
+            displayName: 🔍 Frontend Security Audit
             continueOnError: true
 
           # Backend Security Scan
           - task: JavaToolInstaller@0
-            displayName: 'Install Java $(JAVA_VERSION)'
+            displayName: Install Java $(JAVA_VERSION)
             inputs:
               versionSpec: $(JAVA_VERSION)
-              jdkArchitectureOption: 'x64'
-              jdkSourceOption: 'PreInstalled'
+              jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
 
           - script: |
               cd $(BACKEND_PATH)
               chmod +x gradlew
               ./gradlew dependencyCheckAnalyze || true
-            displayName: '🔍 Backend Dependency Check'
+            displayName: 🔍 Backend Dependency Check
             continueOnError: true
 
-# ==============================================================================
-# STAGE 4: DEPLOY TO AZURE
-# ==============================================================================
+  # ==============================================================================
+  # STAGE 4: DEPLOY TO AZURE
+  # ==============================================================================
   - stage: DeployProduction
-    displayName: '🚀 Deploy to Azure Production'
-    dependsOn: 
+    displayName: 🚀 Deploy to Azure Production
+    dependsOn:
       - BuildAndTest
       - SecurityScan
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     jobs:
       # Deploy Backend to Azure App Service
       - job: DeployBackend
-        displayName: 'Deploy Backend to Azure App Service'
+        displayName: Deploy Backend to Azure App Service
         steps:
           - checkout: none
-          
+
           - task: DownloadPipelineArtifact@2
-            displayName: '⬇️ Download Backend Artifact'
+            displayName: ⬇️ Download Backend Artifact
             inputs:
-              buildType: 'current'
-              artifactName: 'backend-build'
-              targetPath: '$(Pipeline.Workspace)/backend'
+              buildType: current
+              artifactName: backend-build
+              targetPath: $(Pipeline.Workspace)/backend
 
           - task: AzureWebApp@1
-            displayName: '🚀 Deploy to Azure App Service'
+            displayName: 🚀 Deploy to Azure App Service
             inputs:
-              azureSubscription: '$(AZURE_SUBSCRIPTION)'
-              appType: 'webAppLinux'
-              appName: '$(BACKEND_APP_NAME)'
-              package: '$(Pipeline.Workspace)/backend/$(BACKEND_JAR_NAME)'
-              runtimeStack: 'JAVA|17-java17'
-              startUpCommand: 'java -jar /home/site/wwwroot/$(BACKEND_JAR_NAME)'
+              azureSubscription: $(AZURE_SUBSCRIPTION)
+              appType: webAppLinux
+              appName: $(BACKEND_APP_NAME)
+              package: $(Pipeline.Workspace)/backend/$(BACKEND_JAR_NAME)
+              runtimeStack: JAVA|17-java17
+              startUpCommand: java -jar /home/site/wwwroot/$(BACKEND_JAR_NAME)
 
           - task: AzureAppServiceSettings@1
-            displayName: '⚙️ Configure App Settings'
+            displayName: ⚙️ Configure App Settings
             inputs:
-              azureSubscription: '$(AZURE_SUBSCRIPTION)'
-              appName: '$(BACKEND_APP_NAME)'
-              resourceGroupName: '$(RESOURCE_GROUP)'
+              azureSubscription: $(AZURE_SUBSCRIPTION)
+              appName: $(BACKEND_APP_NAME)
+              resourceGroupName: $(RESOURCE_GROUP)
               appSettings: |
                 [
                   {
@@ -372,42 +374,42 @@ stages:
 
       # Deploy Frontend to Azure Static Web Apps
       - job: DeployFrontend
-        displayName: 'Deploy Frontend to Azure Static Web Apps'
+        displayName: Deploy Frontend to Azure Static Web Apps
         steps:
           - checkout: none
-          
+
           - task: DownloadPipelineArtifact@2
-            displayName: '⬇️ Download Frontend Artifact'
+            displayName: ⬇️ Download Frontend Artifact
             inputs:
-              buildType: 'current'
-              artifactName: 'frontend-build'
-              targetPath: '$(Pipeline.Workspace)/frontend'
+              buildType: current
+              artifactName: frontend-build
+              targetPath: $(Pipeline.Workspace)/frontend
 
           - task: AzureStaticWebApp@0
-            displayName: '🚀 Deploy to Azure Static Web Apps'
+            displayName: 🚀 Deploy to Azure Static Web Apps
             inputs:
-              app_location: '$(Pipeline.Workspace)/frontend'
+              app_location: $(Pipeline.Workspace)/frontend
               skip_app_build: true
-              azure_static_web_apps_api_token: '$(AZURE_STATIC_WEB_APPS_API_TOKEN)'
+              azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN)
 
-# ==============================================================================
-# STAGE 5: POST-DEPLOYMENT VALIDATION
-# ==============================================================================
+  # ==============================================================================
+  # STAGE 5: POST-DEPLOYMENT VALIDATION
+  # ==============================================================================
   - stage: PostDeploymentValidation
-    displayName: '✅ Post-Deployment Validation'
+    displayName: ✅ Post-Deployment Validation
     dependsOn: DeployProduction
     condition: succeeded()
     jobs:
       - job: HealthCheck
-        displayName: 'Health Check & Smoke Tests'
+        displayName: Health Check & Smoke Tests
         steps:
           - script: |
               echo "🏥 Running Health Checks..."
-              
+
               # Backend Health Check
               BACKEND_URL="https://$(BACKEND_APP_NAME).azurewebsites.net/actuator/health"
               echo "Checking Backend: $BACKEND_URL"
-              
+
               RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $BACKEND_URL)
               if [ $RESPONSE -eq 200 ]; then
                 echo "✅ Backend is healthy"
@@ -415,11 +417,11 @@ stages:
                 echo "❌ Backend health check failed with status: $RESPONSE"
                 exit 1
               fi
-              
+
               # Frontend Health Check
               FRONTEND_URL="https://$(FRONTEND_APP_NAME).azurestaticapps.net"
               echo "Checking Frontend: $FRONTEND_URL"
-              
+
               RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $FRONTEND_URL)
               if [ $RESPONSE -eq 200 ]; then
                 echo "✅ Frontend is accessible"
@@ -427,9 +429,9 @@ stages:
                 echo "❌ Frontend health check failed with status: $RESPONSE"
                 exit 1
               fi
-              
+
               echo "✅ All health checks passed!"
-            displayName: '🏥 Health Check'
+            displayName: 🏥 Health Check
             continueOnError: false
 
           - script: |
@@ -441,7 +443,7 @@ stages:
               echo "🔹 Deployed Branch: $(Build.SourceBranchName)"
               echo "🔹 Commit: $(Build.SourceVersion)"
               echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            displayName: '� Deployment Summary'
+            displayName: � Deployment Summary
 
 # ==============================================================================
 # END OF PIPELINE CONFIGURATION
