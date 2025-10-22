@@ -74,3 +74,11 @@ test-results/
 junit/
 
 .fake
+# Build and Package artifacts
+node_modules/
+backend/build/
+backend/out/
+frontend/dist/
+frontend/build/
+*.class
+*.jar

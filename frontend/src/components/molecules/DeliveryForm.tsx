@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Package, 
-  User, 
-  Clock, 
-  AlertCircle, 
+import {
+  Package,
+  User,
+  Clock,
+  AlertCircle,
   CheckCircle,
   Calendar,
   MapPin
 } from 'lucide-react';
 import { DeliveryPerson, CreateDeliveryAssignmentRequest } from '../../types/delivery';
-import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
 import { StatusBadge } from '../atoms/StatusBadge';
 
@@ -64,7 +63,7 @@ export const DeliveryForm: React.FC<DeliveryFormProps> = ({
       const selectedTime = new Date(formData.estimatedDeliveryTime);
       const minTime = new Date();
       minTime.setMinutes(minTime.getMinutes() + 30);
-      
+
       if (selectedTime < minTime) {
         newErrors.estimatedDeliveryTime = 'Delivery time must be at least 30 minutes from now';
       }
@@ -82,6 +81,17 @@ export const DeliveryForm: React.FC<DeliveryFormProps> = ({
   };
 
   const handleInputChange = (field: keyof CreateDeliveryAssignmentRequest, value: string) => {
+    // Round time to nearest 5 minutes for estimatedDeliveryTime
+    if (field === 'estimatedDeliveryTime' && value) {
+      const date = new Date(value);
+      const minutes = date.getMinutes();
+      const roundedMinutes = Math.round(minutes / 5) * 5;
+      date.setMinutes(roundedMinutes);
+      date.setSeconds(0);
+      date.setMilliseconds(0);
+      value = date.toISOString().slice(0, 16);
+    }
+
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -113,7 +123,7 @@ export const DeliveryForm: React.FC<DeliveryFormProps> = ({
           Delivery Person
           <span className="text-accent-red ml-1">*</span>
         </label>
-        
+
         {availablePersons.length === 0 ? (
           <div className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
             <div className="flex items-center gap-2">
@@ -130,11 +140,10 @@ export const DeliveryForm: React.FC<DeliveryFormProps> = ({
                 key={person.id}
                 type="button"
                 onClick={() => handleInputChange('deliveryPersonId', person.id)}
-                className={`w-full p-3 border rounded-lg text-left transition-all duration-200 ${
-                  formData.deliveryPersonId === person.id
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-neutral-300 hover:border-primary-300 hover:bg-neutral-50'
-                }`}
+                className={`w-full p-3 border rounded-lg text-left transition-all duration-200 ${formData.deliveryPersonId === person.id
+                  ? 'border-primary-500 bg-primary-50 text-primary-700'
+                  : 'border-neutral-300 hover:border-primary-300 hover:bg-neutral-50'
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -156,7 +165,7 @@ export const DeliveryForm: React.FC<DeliveryFormProps> = ({
             ))}
           </div>
         )}
-        
+
         {errors.deliveryPersonId && (
           <p className="mt-1 text-sm text-accent-red">{errors.deliveryPersonId}</p>
         )}
@@ -194,17 +203,58 @@ export const DeliveryForm: React.FC<DeliveryFormProps> = ({
 
       {/* Estimated Delivery Time */}
       <div>
-        <Input
-          type="datetime-local"
-          label="Estimated Delivery Time"
-          value={formData.estimatedDeliveryTime}
-          onChange={(value) => handleInputChange('estimatedDeliveryTime', value)}
-          error={errors.estimatedDeliveryTime}
-          required
-          min={getMinDateTime()}
-          max={getMaxDateTime()}
-          icon={Clock}
-        />
+        <label className="block text-sm font-medium text-neutral-700 mb-2">
+          <Clock className="w-4 h-4 inline mr-1" />
+          Estimated Delivery Time
+          <span className="text-accent-red ml-1">*</span>
+        </label>
+        
+        <div className="grid grid-cols-2 gap-3">
+          {/* Date Picker */}
+          <div>
+            <input
+              type="date"
+              value={formData.estimatedDeliveryTime.slice(0, 10)}
+              onChange={(e) => {
+                const currentTime = formData.estimatedDeliveryTime.slice(11, 16) || '12:00';
+                handleInputChange('estimatedDeliveryTime', `${e.target.value}T${currentTime}`);
+              }}
+              min={getMinDateTime().slice(0, 10)}
+              max={getMaxDateTime().slice(0, 10)}
+              required
+              className="w-full px-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent border-neutral-300"
+            />
+          </div>
+          
+          {/* Time Picker - 5 minute intervals */}
+          <div>
+            <select
+              value={formData.estimatedDeliveryTime.slice(11, 16) || ''}
+              onChange={(e) => {
+                const currentDate = formData.estimatedDeliveryTime.slice(0, 10) || new Date().toISOString().slice(0, 10);
+                handleInputChange('estimatedDeliveryTime', `${currentDate}T${e.target.value}`);
+              }}
+              required
+              className="w-full px-4 py-2 border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent border-neutral-300 bg-white"
+            >
+              <option value="">Select time</option>
+              {Array.from({ length: 24 * 12 }, (_, i) => {
+                const hours = Math.floor(i / 12);
+                const minutes = (i % 12) * 5;
+                const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                return (
+                  <option key={timeStr} value={timeStr}>
+                    {timeStr}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+        
+        {errors.estimatedDeliveryTime && (
+          <p className="mt-1 text-sm text-accent-red">{errors.estimatedDeliveryTime}</p>
+        )}
       </div>
 
       {/* Priority Selection */}
@@ -224,11 +274,10 @@ export const DeliveryForm: React.FC<DeliveryFormProps> = ({
               key={priority.id}
               type="button"
               onClick={() => handleInputChange('priority', priority.id)}
-              className={`p-2 border rounded-lg text-sm font-medium transition-all duration-200 ${
-                formData.priority === priority.id
-                  ? `${priority.color} border-current`
-                  : 'border-neutral-300 hover:border-neutral-400'
-              }`}
+              className={`p-2 border rounded-lg text-sm font-medium transition-all duration-200 ${formData.priority === priority.id
+                ? `${priority.color} border-current`
+                : 'border-neutral-300 hover:border-neutral-400'
+                }`}
             >
               {priority.name}
             </button>
