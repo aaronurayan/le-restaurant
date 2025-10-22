@@ -88,79 +88,9 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header className="bg-white shadow-md border-b border-neutral-100 sticky top-0 z-50">
-<<<<<<< HEAD
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Mobile Menu Button */}
-          <button
-            onClick={onMenuToggle}
-            className="md:hidden p-2 rounded-lg hover:bg-neutral-100 transition-colors"
-            aria-label="Toggle mobile menu"
-          >
-            <MenuIcon className="w-6 h-6 text-neutral-600" />
-          </button>
-          
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">L</span>
-              </div>
-              <span className="font-serif text-xl font-bold text-neutral-900 hidden sm:block">
-                Le Restaurant
-              </span>
-            </Link>
-          </div>
-          
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
-              Menu
-            </Link>
-            
-            <a href="#about" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
-              About
-            </a>
-            <a href="#contact" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
-              Contact
-            </a>
-            
-            {/* Admin/Manager Primary Navigation - Only Dashboard */}
-            {(user?.role === 'admin' || user?.role === 'manager') && (
-              <Link
-                to="/admin/dashboard"
-                className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Dashboard
-              </Link>
-            )}
-            
-            {/* Customer Primary Navigation - Only Dashboard */}
-            {user?.role === 'customer' && (
-              <Link
-                to="/customer/dashboard"
-                className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                My Dashboard
-              </Link>
-            )}
-            
-            {/* API Status Indicator */}
-            <div className="border-l border-neutral-200 pl-6">
-              <ApiStatusIndicator showDetails={false} />
-            </div>
-          </nav>
-          
-          {/* Right Actions */}
-          <div className="flex items-center space-x-3">
-            {/* Cart Button */}
-=======
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Mobile Menu Button */}
->>>>>>> origin
             <button
               onClick={onMenuToggle}
               className="md:hidden p-2 rounded-lg hover:bg-neutral-100 transition-colors"
