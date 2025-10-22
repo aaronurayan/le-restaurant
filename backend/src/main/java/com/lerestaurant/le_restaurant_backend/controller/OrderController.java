@@ -5,207 +5,104 @@ import com.lerestaurant.le_restaurant_backend.dto.OrderDto;
 import com.lerestaurant.le_restaurant_backend.dto.OrderUpdateRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Order;
 import com.lerestaurant.le_restaurant_backend.service.OrderService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Order Management REST Controller (F105)
  * 
- * This controller provides REST API endpoints for order management.
- * It handles order CRUD operations and status updates.
- * This controller serves as the foundation for F107 Delivery Management.
- * 
+ * Provides endpoints for order CRUD operations and status management.
  * Base URL: /api/orders
- * 
- * @author Le Restaurant Development Team
- * @version 1.0.0
- * @since 2025-10-20
- * @module F105-OrderManagement
  */
 @RestController
 @RequestMapping("/api/orders")
 @CrossOrigin(origins = "http://localhost:5173")
 public class OrderController {
 
-    @Autowired
-    private OrderService orderService;
-
-    // 📝 Place an order
-    @PostMapping
-    public ResponseEntity<Order> placeOrder(@RequestBody Order order) {
-        Order newOrder = orderService.placeOrder(order);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newOrder);
-    }
-
-    // 👀 View order status (by order ID)
-    @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrder(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOrderById(id));
-    }
-
-    // 📜 View order history (by customer ID)
-    @GetMapping("/user/{customerId}")
-    public ResponseEntity<List<Order>> getOrderHistory(@PathVariable Long customerId) {
-        return ResponseEntity.ok(orderService.getOrdersByCustomer(customerId));
-    
     private final OrderService orderService;
-    
+
     @Autowired
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
-    
-    /**
-     * Create a new order
-     * 
-     * POST /api/orders
-     * 
-     * @param requestDto Order creation request
-     * @return ResponseEntity with created OrderDto or error
-     */
+
+    /** Create a new order */
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody OrderCreateRequestDto requestDto) {
         try {
             OrderDto order = orderService.createOrder(requestDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(order);
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    
-    /**
-     * Get order by ID
-     * 
-     * GET /api/orders/{id}
-     * 
-     * @param id Order ID
-     * @return ResponseEntity with OrderDto or error
-     */
+
+    /** Get order by ID */
     @GetMapping("/{id}")
     public ResponseEntity<?> getOrderById(@PathVariable Long id) {
         try {
             OrderDto order = orderService.getOrderById(id);
             return ResponseEntity.ok(order);
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
-    
-    /**
-     * Get all orders
-     * 
-     * GET /api/orders
-     * 
-     * @return ResponseEntity with list of OrderDto
-     */
+
+    /** Get all orders */
     @GetMapping
     public ResponseEntity<List<OrderDto>> getAllOrders() {
-        List<OrderDto> orders = orderService.getAllOrders();
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orderService.getAllOrders());
     }
-    
-    /**
-     * Get orders by customer ID
-     * 
-     * GET /api/orders/customer/{customerId}
-     * 
-     * @param customerId Customer ID
-     * @return ResponseEntity with list of OrderDto
-     */
+
+    /** Get orders by customer ID */
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<OrderDto>> getOrdersByCustomerId(@PathVariable Long customerId) {
-        List<OrderDto> orders = orderService.getOrdersByCustomerId(customerId);
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orderService.getOrdersByCustomerId(customerId));
     }
-    
-    /**
-     * Get orders by status
-     * 
-     * GET /api/orders/status/{status}
-     * 
-     * @param status Order status
-     * @return ResponseEntity with list of OrderDto
-     */
+
+    /** Get orders by status */
     @GetMapping("/status/{status}")
     public ResponseEntity<List<OrderDto>> getOrdersByStatus(@PathVariable Order.OrderStatus status) {
-        List<OrderDto> orders = orderService.getOrdersByStatus(status);
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orderService.getOrdersByStatus(status));
     }
-    
-    /**
-     * Update order status
-     * 
-     * PUT /api/orders/{id}/status
-     * 
-     * @param id Order ID
-     * @param statusUpdate Map containing the new status
-     * @return ResponseEntity with updated OrderDto or error
-     */
+
+    /** Update order status */
     @PutMapping("/{id}/status")
-    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, 
-                                               @RequestBody Map<String, String> statusUpdate) {
+    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> statusUpdate) {
         try {
             Order.OrderStatus status = Order.OrderStatus.valueOf(statusUpdate.get("status"));
-            OrderDto order = orderService.updateOrderStatus(id, status);
-            return ResponseEntity.ok(order);
+            return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid status value"));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    
-    /**
-     * Update order
-     * 
-     * PUT /api/orders/{id}
-     * 
-     * @param id Order ID
-     * @param requestDto Order update request
-     * @return ResponseEntity with updated OrderDto or error
-     */
+
+    /** Update order details */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateOrder(@PathVariable Long id,
-                                        @RequestBody OrderUpdateRequestDto requestDto) {
+    public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody OrderUpdateRequestDto requestDto) {
         try {
-            OrderDto order = orderService.updateOrder(id, requestDto);
-            return ResponseEntity.ok(order);
+            return ResponseEntity.ok(orderService.updateOrder(id, requestDto));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    
-    /**
-     * Delete/cancel order
-     * 
-     * DELETE /api/orders/{id}
-     * 
-     * @param id Order ID
-     * @return ResponseEntity with success message or error
-     */
+
+    /** Delete / cancel order */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
         try {
             orderService.deleteOrder(id);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Order cancelled successfully");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of("message", "Order cancelled successfully"));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }
