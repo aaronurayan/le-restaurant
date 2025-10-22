@@ -94,7 +94,10 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
     try {
       const createdOrder = await createOrder(orderRequest);
+      
+      // Clear cart before navigation
       clearCart();
+      localStorage.removeItem('cart'); // Double ensure localStorage is cleared
       
       if (onOrderCreated && createdOrder) {
         onOrderCreated(createdOrder.id);

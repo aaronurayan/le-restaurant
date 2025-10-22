@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Home } from './pages/Home';
 import PaymentManagementPanel from './components/organisms/PaymentManagementPanel';
 import MenuManagementPanel from './components/organisms/MenuManagementPanel';
@@ -11,6 +11,8 @@ import CustomerDashboard from './components/organisms/CustomerDashboard';
 import CustomerReservationsPage from './pages/CustomerReservationsPage';
 import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CustomerOrderDetailPage from './pages/CustomerOrderDetailPage';
+import { Checkout } from './pages/Checkout';
+import Payment from './pages/Payment';
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import { UserRole } from './types/user';
@@ -20,7 +22,9 @@ import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
 import './index.css';
 
-function App() {
+// AppContent component to use hooks that require Router context
+const AppContent: React.FC = () => {
+  const location = useLocation();
   const {
     cartItems,
     cartTotal,
@@ -33,6 +37,19 @@ function App() {
   const [favoritedItems, setFavoritedItems] = React.useState<Set<string>>(new Set());
   const [isCartOpen, setIsCartOpen] = React.useState(false);
   const [redirectToCheckout, setRedirectToCheckout] = React.useState(false);
+
+  // Reset redirectToCheckout when location changes
+  useEffect(() => {
+    if (redirectToCheckout) {
+      setRedirectToCheckout(false);
+    }
+    
+    // Clear cart storage when navigating to order history
+    // This ensures we don't have a stale cart after checkout
+    if (location.pathname === '/customer/orders' || location.pathname.startsWith('/customer/orders/')) {
+      localStorage.removeItem('cart');
+    }
+  }, [location, redirectToCheckout]);
 
   // ✅ Normalize ID to string for safe handling
   const handleFavorite = (item: MenuItem) => {
@@ -62,36 +79,34 @@ function App() {
   };
 
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <MainLayout
-            cartItemCount={cartItemCount}
-            onCartClick={handleCartClick}
-          >
-            {redirectToCheckout && <Navigate to="/checkout" replace />}
-            <CartSidebar
-              isOpen={isCartOpen}
-              onClose={() => setIsCartOpen(false)}
-              cartItems={cartItems}
-              cartTotal={cartTotal}
-              onUpdateQuantity={updateQuantity}
-              onRemoveItem={removeFromCart}
-              onCheckout={handleCheckout}
-            />
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <Home
-                    onAddToCart={handleAddToCart}
-                    favoritedItems={favoritedItems}
-                    onFavorite={handleFavorite}
-                  />
-                }
+    <div className="App">
+      <MainLayout
+        cartItemCount={cartItemCount}
+        onCartClick={handleCartClick}
+      >
+        {redirectToCheckout && <Navigate to="/checkout" replace />}
+        <CartSidebar
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          cartItems={cartItems}
+          cartTotal={cartTotal}
+          onUpdateQuantity={updateQuantity}
+          onRemoveItem={removeFromCart}
+          onCheckout={handleCheckout}
+        />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Home
+                onAddToCart={handleAddToCart}
+                favoritedItems={favoritedItems}
+                onFavorite={handleFavorite}
               />
+            }
+          />
 
-              {/* Admin Dashboard */}
+          {/* Admin Dashboard */}
               <Route
                 path="/admin/dashboard"
                 element={
@@ -184,19 +199,38 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-            </Routes>
-          </MainLayout>
 
-          <CartSidebar
-            isOpen={isCartOpen}
-            onClose={() => setIsCartOpen(false)}
-            cartItems={cartItems}
-            cartTotal={cartTotal}
-            onUpdateQuantity={updateQuantity}
-            onRemoveItem={removeFromCart}
-            onCheckout={handleCheckout}
+              {/* Checkout Route (F105) */}
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+              
+          {/* Payment Route (F105/F106 integration) */}
+          <Route
+            path="/payment"
+            element={
+              <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                <Payment />
+              </ProtectedRoute>
+            }
           />
-        </div>
+        </Routes>
+      </MainLayout>
+    </div>
+  );
+};
+
+// Main App component
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppContent />
       </Router>
     </AuthProvider>
   );
