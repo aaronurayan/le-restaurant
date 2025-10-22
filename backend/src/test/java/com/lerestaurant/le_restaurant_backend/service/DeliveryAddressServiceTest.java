@@ -14,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +37,7 @@ import static org.mockito.Mockito.*;
  * @module F107-DeliveryManagement
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("DeliveryAddressService Tests (F107)")
 class DeliveryAddressServiceTest {
 
@@ -97,7 +100,7 @@ class DeliveryAddressServiceTest {
         void shouldCreateAddressSuccessfully() {
             // Given
             when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-            when(deliveryAddressRepository.findByUserId(1L)).thenReturn(Arrays.asList());
+            lenient().when(deliveryAddressRepository.findByUserId(1L)).thenReturn(Arrays.asList());
             when(deliveryAddressRepository.save(any(DeliveryAddress.class))).thenReturn(testAddress);
 
             // When

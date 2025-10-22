@@ -56,6 +56,18 @@ function App() {
     setRedirectToPayments(true);
   };
 
+  const handleLogin = (email: string) => {
+    setUser(email);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  const handleRegister = (email: string) => {
+    setUser(email);
+  };
+
   return (
     <AuthProvider>
       <Router>

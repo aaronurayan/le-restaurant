@@ -10,8 +10,9 @@ version = '0.0.1-SNAPSHOT'
 description = 'Le Restaurant Backend flow controls'
 
 java {
-	sourceCompatibility = '17'
-	targetCompatibility = '17'
+    toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 repositories {
@@ -36,9 +37,9 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
-	finalizedBy jacocoTestReport
+	finalizedBy jacocoTestReport // Generate coverage report after tests
 }
-
+// JaCoCo Configuration for Code Coverage
 // JaCoCo Configuration for Code Coverage
 jacoco {
 	toolVersion = "0.8.11"
@@ -53,7 +54,7 @@ jacocoTestReport {
 		xml.outputLocation = layout.buildDirectory.file('reports/jacoco/test/jacocoTestReport.xml')
 		html.outputLocation = layout.buildDirectory.dir('reports/jacoco/test/html')
 	}
-	
+    
 	// Exclude generated code and configurations
 	afterEvaluate {
 		classDirectories.setFrom(files(classDirectories.files.collect {
@@ -75,19 +76,19 @@ jacocoTestCoverageVerification {
 		rule {
 			enabled = true
 			element = 'CLASS'
-			
+            
 			limit {
 				counter = 'LINE'
 				value = 'COVEREDRATIO'
 				minimum = 0.80
 			}
-			
+            
 			limit {
 				counter = 'BRANCH'
 				value = 'COVEREDRATIO'
 				minimum = 0.80
 			}
-			
+            
 			// Exclude generated code and configurations
 			excludes = [
 				'com.lerestaurant.le_restaurant_backend.config.*',
