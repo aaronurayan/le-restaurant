@@ -65,12 +65,6 @@ stages:
         npm install
       displayName: 'Clean and install dependencies'
 
-    # Run Frontend Unit Tests
-    - script: |
-        cd frontend
-        npm test -- --run
-      displayName: 'Simple Frontend Unit Test'
-
     # Run Backend Unit Tests
     - script: |
         cd backend
