@@ -1,0 +1,39 @@
+package com.lerestaurant.le_restaurant_backend.service;
+
+import com.lerestaurant.le_restaurant_backend.entity.Delivery;
+import com.lerestaurant.le_restaurant_backend.repository.DeliveryRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class DeliveryService {
+    private final DeliveryRepository deliveryRepository;
+
+    public DeliveryService(DeliveryRepository deliveryRepository) {
+        this.deliveryRepository = deliveryRepository;
+    }
+
+    public Delivery createDelivery(Delivery delivery) {
+        return deliveryRepository.save(delivery);
+    }
+
+    public List<Delivery> getAllDeliveries() {
+        return deliveryRepository.findAll();
+    }
+
+    public Delivery updateDelivery(Long id, Delivery updatedDelivery) {
+        return deliveryRepository.findById(id).map(delivery -> {
+            delivery.setCustomerName(updatedDelivery.getCustomerName());
+            delivery.setPhoneNumber(updatedDelivery.getPhoneNumber());
+            delivery.setAddress(updatedDelivery.getAddress());
+            delivery.setOrderedItems(updatedDelivery.getOrderedItems());
+            delivery.setStatus(updatedDelivery.getStatus());
+            return deliveryRepository.save(delivery);
+        }).orElseThrow(() -> new RuntimeException("Delivery not found"));
+    }
+
+    public void deleteDelivery(Long id) {
+        deliveryRepository.deleteById(id);
+    }
+}

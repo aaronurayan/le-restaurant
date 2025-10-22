@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.lerestaurant.le_restaurant_backend.util.PasswordValidator;
 
 /**
  * User Management Service (F102)
@@ -40,10 +41,9 @@ import java.util.stream.Collectors;
 public class UserService {
     
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-    
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    
+
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -54,7 +54,8 @@ public class UserService {
      * Create a new user
      * 
      * This method creates a new user with the provided information.
-     * It validates email uniqueness, encrypts the password, and sets default values.
+     * It validates input, checks password strength, enforces email uniqueness,
+     * encrypts the password, and sets default values.
      * 
      * @param requestDto User creation request data
      * @return UserDto Created user data
@@ -62,13 +63,26 @@ public class UserService {
      */
     public UserDto createUser(UserCreateRequestDto requestDto) {
         logger.info("Creating new user with email: {}", requestDto.getEmail());
-        
+
+        // Basic input validation
+        if (requestDto.getEmail() == null || requestDto.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email must not be null or empty");
+        }
+        if (requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password must not be null or empty");
+        }
+
+        // Validate password strength
+        if (!PasswordValidator.isStrong(requestDto.getPassword())) {
+            throw new IllegalArgumentException("Password does not meet strength requirements");
+        }
+
         // Check email uniqueness
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
             logger.warn("User creation failed: email already exists - {}", requestDto.getEmail());
             throw new RuntimeException("User with email already exists: " + requestDto.getEmail());
         }
-        
+
         // Create new user entity
         User user = new User();
         user.setEmail(requestDto.getEmail());
@@ -79,51 +93,50 @@ public class UserService {
         user.setRole(requestDto.getRole());
         user.setStatus(User.UserStatus.ACTIVE);
         user.setCreatedAt(OffsetDateTime.now());
-        
         // Save user to database
         User savedUser = userRepository.save(user);
         logger.info("User created successfully with ID: {}", savedUser.getId());
-        
+
         return convertToDto(savedUser);
     }
-    
+
     public UserDto getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         return convertToDto(user);
     }
-    
+
     public UserDto getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         return convertToDto(user);
     }
-    
+
     public List<UserDto> getAllUsers() {
         return userRepository.findAll()
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-    
+
     public List<UserDto> getUsersByRole(User.UserRole role) {
         return userRepository.findByRole(role)
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-    
+
     public List<UserDto> getUsersByStatus(User.UserStatus status) {
         return userRepository.findByStatus(status)
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
-    
+
     public UserDto updateUser(Long id, UserUpdateRequestDto requestDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
+
         if (requestDto.getPhoneNumber() != null) {
             user.setPhoneNumber(requestDto.getPhoneNumber());
         }
@@ -139,45 +152,66 @@ public class UserService {
         if (requestDto.getProfileImageUrl() != null) {
             user.setProfileImageUrl(requestDto.getProfileImageUrl());
         }
-        
+
         user.setUpdatedAt(OffsetDateTime.now());
-        
+
         User updatedUser = userRepository.save(user);
         return convertToDto(updatedUser);
     }
-    
+
     public UserDto updateUserStatus(Long id, User.UserStatus status) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
+
         user.setStatus(status);
         user.setUpdatedAt(OffsetDateTime.now());
-        
+
         User updatedUser = userRepository.save(user);
         return convertToDto(updatedUser);
     }
-    
+
     public UserDto updateLastLogin(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
+
         user.setLastLogin(OffsetDateTime.now());
-        
+
         User updatedUser = userRepository.save(user);
         return convertToDto(updatedUser);
     }
-    
+
+    public UserDto authenticateUser(String email, String rawPassword) {
+        if (email == null) {
+            throw new IllegalArgumentException("Email must not be null");
+        }
+        if (rawPassword == null) {
+            throw new IllegalArgumentException("Password must not be null");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        user.setLastLogin(OffsetDateTime.now());
+        userRepository.save(user);
+
+        return convertToDto(user);
+    }
+
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
+
         userRepository.delete(user);
     }
-    
+
     public boolean existsByEmail(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
-    
+
     private UserDto convertToDto(User user) {
         return new UserDto(
                 user.getId(),
@@ -190,7 +224,7 @@ public class UserService {
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
                 user.getLastLogin(),
-                user.getProfileImageUrl()
-        );
+                user.getProfileImageUrl());
     }
+
 }

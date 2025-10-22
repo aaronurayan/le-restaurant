@@ -74,3 +74,34 @@ test-results/
 junit/
 
 .fake
+
+# Build and Package artifacts
+node_modules/
+backend/build/
+backend/out/
+frontend/dist/
+frontend/build/
+*.class
+*.jar
+
+# Test coverage and reports (generated files, not tracked)
+frontend/coverage/
+frontend/test-results/
+backend/build/reports/
+*.xml
+!.github/
+
+# Temporary documentation (merge reviews, status reports)
+*_MERGE_REVIEW*.md
+*_TEST_QUICK_START.md
+*_TEST_SUITE_SUMMARY.md
+*_IMPLEMENTATION_COMPLETE.md
+*_INTEGRATION_TEST_STATUS.md
+*STRATEGY*.md
+*_COMPLETE.md
+
+# IDE workspace and local configs (should not be committed)
+.idea/workspace.xml
+.idea/inspectionProfiles/
+.vscode/settings.json
+*.userprefs

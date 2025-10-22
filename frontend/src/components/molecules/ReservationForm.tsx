@@ -10,6 +10,11 @@ interface ReservationFormProps {
   onCancel: () => void;
   loading?: boolean;
   className?: string;
+  initialCustomerData?: {
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+  };
 }
 
 export const ReservationForm: React.FC<ReservationFormProps> = ({
@@ -17,22 +22,27 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   onCancel,
   loading = false,
   className = '',
+  initialCustomerData,
 }) => {
   const { getAvailableTables, getTimeSlots } = useReservationApi();
-  
+
   const [formData, setFormData] = useState<ReservationFormData>({
     date: '',
     time: '',
     partySize: 2,
     specialRequests: '',
-    customerName: '',
-    customerEmail: '',
-    customerPhone: '',
+    customerName: initialCustomerData?.customerName || '',
+    customerEmail: initialCustomerData?.customerEmail || '',
+    customerPhone: initialCustomerData?.customerPhone || '',
   });
 
   const [availableTables, setAvailableTables] = useState<Table[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+<<<<<<< HEAD
   const [selectedTable, setSelectedTable] = useState<string>('');
+=======
+  const [selectedTable, setSelectedTable] = useState<number | undefined>(undefined);
+>>>>>>> origin
   const [errors, setErrors] = useState<Partial<Record<keyof ReservationFormData, string>>>({});
 
   // 날짜가 변경될 때 시간대 업데이트
@@ -55,6 +65,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
       setTimeSlots(slots);
     } catch (error) {
       console.error('Failed to load time slots:', error);
+      setTimeSlots([]); // Clear time slots on error
     }
   };
 
@@ -133,7 +144,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
             icon={Calendar}
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-2">
             <Clock className="w-4 h-4 inline mr-1" />
@@ -148,8 +159,8 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
           >
             <option value="">Select time</option>
             {timeSlots.map((slot) => (
-              <option 
-                key={slot.time} 
+              <option
+                key={slot.time}
                 value={slot.time}
                 disabled={!slot.isAvailable}
               >
@@ -236,7 +247,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
       {/* Customer Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-neutral-900">Contact Information</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             type="text"
@@ -247,7 +258,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
             required
             icon={User}
           />
-          
+
           <Input
             type="email"
             label="Email Address"
@@ -258,7 +269,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
             icon={Mail}
           />
         </div>
-        
+
         <Input
           type="tel"
           label="Phone Number"

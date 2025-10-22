@@ -2,13 +2,18 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home';
 import PaymentManagementPanel from './components/organisms/PaymentManagementPanel';
+import MenuManagementPanel from './components/organisms/MenuManagementPanel';
 import DeliveryManagement from './pages/DeliveryManagement';
 import DeliveryTracking from './pages/DeliveryTracking';
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import AdminDashboard from './components/organisms/AdminDashboard';
 import CustomerDashboard from './components/organisms/CustomerDashboard';
+<<<<<<< HEAD
 import { Orders } from './pages/Orders';
 import { Checkout } from './pages/Checkout';
+=======
+import CustomerReservationsPage from './pages/CustomerReservationsPage';
+>>>>>>> origin
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import { UserRole } from './types/user';
@@ -16,6 +21,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
+import { placeOrder } from "./services/orderService";
 import './index.css';
 
 function App() {
@@ -57,6 +63,18 @@ function App() {
   const handleCheckout = () => {
     setIsCartOpen(false);
     setRedirectToCheckout(true);
+  };
+
+  const handleLogin = (email: string) => {
+    setUser(email);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  const handleRegister = (email: string) => {
+    setUser(email);
   };
 
   return (
@@ -109,6 +127,27 @@ function App() {
                 }
               />
 
+<<<<<<< HEAD
+=======
+              {/* Customer Reservations (F108) */}
+              <Route
+                path="/customer/reservations"
+                element={
+                  <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                    <CustomerReservationsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/menu"
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <MenuManagementPanel />
+                  </ProtectedRoute>
+                }
+              />
+>>>>>>> origin
               <Route
                 path="/payments"
                 element={
@@ -143,6 +182,7 @@ function App() {
                     <DeliveryTracking />
                   </ProtectedRoute>
                 }
+<<<<<<< HEAD
               />
               <Route path="/checkout" element={<Checkout />} />
               <Route
@@ -160,6 +200,8 @@ function App() {
                     <Orders />
                   </ProtectedRoute>
                 }
+=======
+>>>>>>> origin
               />
             </Routes>
           </MainLayout>
