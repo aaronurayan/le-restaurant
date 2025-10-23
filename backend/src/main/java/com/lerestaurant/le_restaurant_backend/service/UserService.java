@@ -201,11 +201,43 @@ public class UserService {
         return convertToDto(user);
     }
 
+    /**
+     * Delete a user
+     * 
+     * This method deletes a user from the system.
+     * It checks for existing orders and related data before deletion
+     * to prevent data integrity issues.
+     * 
+     * For F102 User Management: Managers can safely delete users
+     * who have no order history. Users with orders cannot be deleted
+     * to maintain transaction records (soft delete recommended instead).
+     * 
+     * @param id User ID to delete
+     * @throws RuntimeException if user not found or has existing orders
+     */
     public void deleteUser(Long id) {
+        logger.info("Attempting to delete user with ID: {}", id);
+        
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-
+                .orElseThrow(() -> {
+                    logger.error("Delete failed: user not found - {}", id);
+                    return new RuntimeException("User not found with id: " + id);
+                });
+        
+        // Check if user has any orders (prevent deletion if they have transaction history)
+        // This is a business rule to maintain financial records
+        if (user.getOrders() != null && !user.getOrders().isEmpty()) {
+            logger.warn("Delete failed: user has {} orders - {}", user.getOrders().size(), id);
+            throw new RuntimeException(
+                "Cannot delete user with existing orders. " +
+                "User has " + user.getOrders().size() + " order(s). " +
+                "Consider deactivating the user instead."
+            );
+        }
+        
+        // Safe to delete - no order history
         userRepository.delete(user);
+        logger.info("User deleted successfully: {}", id);
     }
 
     public boolean existsByEmail(String email) {

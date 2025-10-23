@@ -26,12 +26,12 @@ class Scenario7_UnauthorizedAccessAttemptTest extends BaseE2ETest {
         // Step 1: Customer Login (F101)
         UserDto customer = createTestCustomer("unauthorized@example.com", "Unauthorized", "User");
         assertNotNull(customer);
-        assertEquals("CUSTOMER", customer.getRole());
+        assertEquals(User.UserRole.CUSTOMER, customer.getRole());
 
         // Steps 2-4: Verify customer cannot perform manager operations
         // In a real implementation with Spring Security, these would return 403 Forbidden
         // For now, we verify the user doesn't have manager role
-        assertNotEquals("MANAGER", customer.getRole());
+        assertNotEquals(User.UserRole.MANAGER, customer.getRole());
 
         // Additional verification: Create a manager and verify role difference
         UserCreateRequestDto managerDto = new UserCreateRequestDto();

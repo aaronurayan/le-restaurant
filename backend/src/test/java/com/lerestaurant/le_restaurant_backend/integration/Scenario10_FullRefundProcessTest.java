@@ -34,7 +34,7 @@ class Scenario10_FullRefundProcessTest extends BaseE2ETest {
 
         PaymentDto payment = processPayment(orderId, BigDecimal.valueOf(35.00));
         assertNotNull(payment);
-        assertEquals("COMPLETED", payment.getStatus());
+        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getStatus());
         Long paymentId = payment.getId();
 
         // Create delivery
@@ -65,10 +65,10 @@ class Scenario10_FullRefundProcessTest extends BaseE2ETest {
         // For now, we'll verify the payment was initially completed and order was delivered
         PaymentDto verifiedPayment = paymentService.getPaymentById(paymentId);
         assertNotNull(verifiedPayment);
-        assertEquals("COMPLETED", verifiedPayment.getStatus());
+        assertEquals(Payment.PaymentStatus.COMPLETED, verifiedPayment.getStatus());
 
         // Verify order can be cancelled after delivery
         OrderDto deliveredOrder = orderService.getOrderById(orderId);
-        assertEquals("COMPLETED", deliveredOrder.getStatus());
+        assertEquals(Order.OrderStatus.COMPLETED, deliveredOrder.getStatus());
     }
 }

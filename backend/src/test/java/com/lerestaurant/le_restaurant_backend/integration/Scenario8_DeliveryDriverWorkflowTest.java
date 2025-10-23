@@ -34,7 +34,7 @@ class Scenario8_DeliveryDriverWorkflowTest extends BaseE2ETest {
 
         PaymentDto payment = processPayment(orderId, BigDecimal.valueOf(18.00));
         assertNotNull(payment);
-        assertEquals("COMPLETED", payment.getStatus());
+        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getStatus());
 
         // Create delivery
         DeliveryDto delivery = createDelivery(orderId);

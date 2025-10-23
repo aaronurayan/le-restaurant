@@ -48,11 +48,11 @@ class Scenario1_NewCustomerFullJourneyTest extends BaseE2ETest {
         // Step 4: Process Payment (F106)
         PaymentDto payment = processPayment(orderId, BigDecimal.valueOf(49.98));
         assertNotNull(payment);
-        assertEquals("COMPLETED", payment.getStatus());
+        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getStatus());
 
         // Verify order status updated to PREPARING
         OrderDto paidOrder = orderService.getOrderById(orderId);
-        assertEquals("PREPARING", paidOrder.getStatus());
+        assertEquals(Order.OrderStatus.PREPARING, paidOrder.getStatus());
 
         // Step 5: Manage Delivery (F107)
         DeliveryDto delivery = createDelivery(orderId);
@@ -92,6 +92,6 @@ class Scenario1_NewCustomerFullJourneyTest extends BaseE2ETest {
         
         ReservationDto approvedReservation = reservationService.approveReservation(reservationId, manager.getId());
         assertNotNull(approvedReservation);
-        assertEquals("CONFIRMED", approvedReservation.getStatus());
+        assertEquals(Reservation.ReservationStatus.CONFIRMED, approvedReservation.getStatus());
     }
 }

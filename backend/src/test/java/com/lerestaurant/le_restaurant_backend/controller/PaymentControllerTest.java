@@ -59,7 +59,10 @@ class PaymentControllerTest {
             "Test payment details",
             OffsetDateTime.now(),
             OffsetDateTime.now(),
-            "Gateway success response"
+            "Gateway success response",
+            1L,  // customerId
+            "John Doe",  // customerName
+            "john@example.com"  // customerEmail
         );
 
         testPaymentRequest = new PaymentRequestDto();

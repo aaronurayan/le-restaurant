@@ -15,13 +15,19 @@ public class PaymentDto {
     private OffsetDateTime paymentTime;
     private OffsetDateTime processedAt;
     private String gatewayResponse;
+    
+    // Customer information (F106 Enhancement)
+    private Long customerId;
+    private String customerName;
+    private String customerEmail;
 
     // Constructors
     public PaymentDto() {}
 
     public PaymentDto(Long id, Long orderId, BigDecimal amount, Payment.PaymentMethod paymentMethod,
                      String transactionId, Payment.PaymentStatus status, String paymentDetails,
-                     OffsetDateTime paymentTime, OffsetDateTime processedAt, String gatewayResponse) {
+                     OffsetDateTime paymentTime, OffsetDateTime processedAt, String gatewayResponse,
+                     Long customerId, String customerName, String customerEmail) {
         this.id = id;
         this.orderId = orderId;
         this.amount = amount;
@@ -32,6 +38,9 @@ public class PaymentDto {
         this.paymentTime = paymentTime;
         this.processedAt = processedAt;
         this.gatewayResponse = gatewayResponse;
+        this.customerId = customerId;
+        this.customerName = customerName;
+        this.customerEmail = customerEmail;
     }
 
     // Getters and Setters
@@ -64,4 +73,14 @@ public class PaymentDto {
 
     public String getGatewayResponse() { return gatewayResponse; }
     public void setGatewayResponse(String gatewayResponse) { this.gatewayResponse = gatewayResponse; }
+    
+    // Customer information getters and setters
+    public Long getCustomerId() { return customerId; }
+    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    
+    public String getCustomerEmail() { return customerEmail; }
+    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
 }

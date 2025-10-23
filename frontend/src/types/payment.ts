@@ -9,6 +9,7 @@ export interface Payment {
   processedAt?: string;
   createdAt: string;
   updatedAt: string;
+  customerId?: number;  // F106 Enhancement: Customer ID for admin tracking
   customerEmail: string;
   customerName: string;
 }

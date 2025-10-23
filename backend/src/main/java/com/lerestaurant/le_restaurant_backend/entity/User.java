@@ -2,6 +2,8 @@ package com.lerestaurant.le_restaurant_backend.entity;
 
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users", indexes = {
@@ -57,6 +59,10 @@ public class User {
 
     @Column(name = "profile_image_url")
     private String profileImageUrl;
+    
+    // Relationship with Orders (for F102 User Management deletion check)
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
+    private List<Order> orders = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -152,5 +158,13 @@ public class User {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+    
+    public List<Order> getOrders() {
+        return orders;
+    }
+    
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
     }
 }

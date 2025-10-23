@@ -57,11 +57,11 @@ class Scenario5_ReservationConflictAndRejectionTest extends BaseE2ETest {
         UserDto manager = createTestCustomer("manager-res@example.com", "Manager", "Res");
         ReservationDto approvedA = reservationService.approveReservation(reservationAId, manager.getId());
         assertNotNull(approvedA);
-        assertEquals("CONFIRMED", approvedA.getStatus());
+        assertEquals(Reservation.ReservationStatus.CONFIRMED, approvedA.getStatus());
 
         // Step 4: Manager Rejects B (F109)
         ReservationDto rejectedB = reservationService.rejectReservation(reservationBId, "Table not available at requested time", manager.getId());
         assertNotNull(rejectedB);
-        assertEquals("REJECTED", rejectedB.getStatus());
+        assertEquals(Reservation.ReservationStatus.REJECTED, rejectedB.getStatus());
     }
 }

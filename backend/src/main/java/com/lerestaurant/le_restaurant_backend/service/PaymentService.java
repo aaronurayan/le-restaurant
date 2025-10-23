@@ -4,6 +4,7 @@ import com.lerestaurant.le_restaurant_backend.dto.PaymentDto;
 import com.lerestaurant.le_restaurant_backend.dto.PaymentRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Payment;
 import com.lerestaurant.le_restaurant_backend.entity.Order;
+import com.lerestaurant.le_restaurant_backend.entity.User;
 import com.lerestaurant.le_restaurant_backend.repository.PaymentRepository;
 import com.lerestaurant.le_restaurant_backend.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -150,6 +151,13 @@ public class PaymentService {
     }
     
     private PaymentDto convertToDto(Payment payment) {
+        User customer = payment.getOrder().getCustomer();
+        String customerName = customer != null 
+            ? customer.getFirstName() + " " + customer.getLastName() 
+            : "Unknown";
+        String customerEmail = customer != null ? customer.getEmail() : "N/A";
+        Long customerId = customer != null ? customer.getId() : null;
+        
         return new PaymentDto(
                 payment.getId(),
                 payment.getOrder().getId(),
@@ -160,7 +168,10 @@ public class PaymentService {
                 payment.getPaymentDetails(),
                 payment.getPaymentTime(),
                 payment.getProcessedAt(),
-                payment.getGatewayResponse()
+                payment.getGatewayResponse(),
+                customerId,
+                customerName,
+                customerEmail
         );
     }
 }

@@ -41,10 +41,10 @@ class Scenario4_PaymentFailureAndRetryTest extends BaseE2ETest {
         // Step 3: Payment Succeeds (F106)
         PaymentDto successPayment = processPayment(orderId, BigDecimal.valueOf(15.00));
         assertNotNull(successPayment);
-        assertEquals("COMPLETED", successPayment.getStatus());
+        assertEquals(Payment.PaymentStatus.COMPLETED, successPayment.getStatus());
 
         // Verify order status updated to PREPARING
         OrderDto paidOrder = orderService.getOrderById(orderId);
-        assertEquals("PREPARING", paidOrder.getStatus());
+        assertEquals(Order.OrderStatus.PREPARING, paidOrder.getStatus());
     }
 }

@@ -33,7 +33,7 @@ class Scenario6_OrderCancellationByManagerTest extends BaseE2ETest {
 
         PaymentDto payment = processPayment(orderId, BigDecimal.valueOf(12.00));
         assertNotNull(payment);
-        assertEquals("COMPLETED", payment.getStatus());
+        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getStatus());
 
         // Verify order is now PREPARING (or some prepared status)
         OrderDto paidOrder = orderService.getOrderById(orderId);
