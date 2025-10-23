@@ -13,6 +13,15 @@ A modern restaurant management system built with **Spring Boot** backend and **R
 
 ## 🚀 Quick Start
 
+### 🌐 Live Deployment (Azure)
+**The application is live on Azure!**
+
+- **Backend API**: https://le-restaurant-adbrdddye6cbdjf2.australiaeast-01.azurewebsites.net
+- **Database**: PostgreSQL 14 on Azure (Australia East)
+- **Auto-Deployment**: GitHub Actions (push to `main` branch)
+
+### 💻 Local Development
+
 ### Prerequisites
 - **Java 17+** (for backend)
 - **Node.js 18+** (for frontend)
