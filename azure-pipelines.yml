@@ -134,7 +134,7 @@ stages:
               key: 'gradle | "$(Agent.OS)" | $(BACKEND_PATH)/gradle/wrapper/gradle-wrapper.properties'
               restoreKeys: |
                 gradle | "$(Agent.OS)"
-              path: $(Agent.HomeDirectory)/.gradle/caches
+              path: /home/vsts/.gradle/caches
 
           - script: |
               cd $(BACKEND_PATH)
@@ -233,7 +233,7 @@ stages:
               key: 'gradle | "$(Agent.OS)" | $(BACKEND_PATH)/gradle/wrapper/gradle-wrapper.properties'
               restoreKeys: |
                 gradle | "$(Agent.OS)"
-              path: $(Agent.HomeDirectory)/.gradle/caches
+              path: /home/vsts/.gradle/caches
 
           - script: |
               cd $(BACKEND_PATH)
@@ -303,7 +303,7 @@ stages:
               key: 'gradle | "$(Agent.OS)" | $(BACKEND_PATH)/gradle/wrapper/gradle-wrapper.properties'
               restoreKeys: |
                 gradle | "$(Agent.OS)"
-              path: $(Agent.HomeDirectory)/.gradle/caches
+              path: /home/vsts/.gradle/caches
 
           - script: |
               cd $(BACKEND_PATH)
