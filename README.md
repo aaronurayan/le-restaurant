@@ -17,8 +17,28 @@ A modern restaurant management system built with **Spring Boot** backend and **R
 **The application is live on Azure!**
 
 - **Backend API**: https://le-restaurant-adbrdddye6cbdjf2.australiaeast-01.azurewebsites.net
+- **Frontend**: https://le-restaurant-frontend.azurestaticapps.net
 - **Database**: PostgreSQL 14 on Azure (Australia East)
-- **Auto-Deployment**: GitHub Actions (push to `main` branch)
+- **Auto-Deployment**: Azure DevOps Pipelines (push to `main` branch)
+
+#### 🔧 Azure Pipeline Configuration
+The frontend automatically connects to the backend via environment variable injection:
+- **Pipeline Variable**: `VITE_API_BASE_URL` is dynamically set during deployment
+- **Backend URL Retrieval**: Pipeline automatically fetches the deployed backend URL
+- **Environment Variable Injection**: URL is injected into the Static Web App during build
+
+For manual deployment or testing:
+```bash
+# Set the backend URL environment variable
+export VITE_API_BASE_URL=https://your-backend-url.azurewebsites.net
+
+# Or for Windows PowerShell
+$env:VITE_API_BASE_URL="https://your-backend-url.azurewebsites.net"
+
+# Then build the frontend
+cd frontend
+npm run build
+```
 
 ### 💻 Local Development
 

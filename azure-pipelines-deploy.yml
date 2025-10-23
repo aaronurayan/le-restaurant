@@ -436,9 +436,28 @@ stages:
                   }
                 ]
 
+          # 🔑 CRITICAL: Get Backend URL and expose as output variable
+          - task: AzureCLI@2
+            name: GetBackendUrl
+            displayName: 🔗 Get Backend URL for Frontend
+            inputs:
+              azureSubscription: $(AZURE_SUBSCRIPTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "🔍 Retrieving backend URL..."
+                BACKEND_HOSTNAME=$(az webapp show --name $(BACKEND_APP_NAME) --resource-group $(RESOURCE_GROUP) --query "defaultHostName" -o tsv)
+                BACKEND_FULL_URL="https://${BACKEND_HOSTNAME}"
+                echo "✅ Backend URL: $BACKEND_FULL_URL"
+                echo "##vso[task.setvariable variable=backendUrl;isOutput=true]$BACKEND_FULL_URL"
+
       # Deploy Frontend to Azure Static Web Apps
       - job: DeployFrontend
         displayName: Deploy Frontend to Azure Static Web Apps
+        dependsOn: DeployBackend
+        variables:
+          # 🔑 CRITICAL: Consume backend URL from previous job
+          BACKEND_API_URL: $[ dependencies.DeployBackend.outputs['GetBackendUrl.backendUrl'] ]
         steps:
           - checkout: none
 
@@ -449,12 +468,19 @@ stages:
               artifactName: frontend-build
               targetPath: $(Pipeline.Workspace)/frontend
 
+          - script: |
+              echo "🔗 Backend API URL that will be injected: $(BACKEND_API_URL)"
+            displayName: 🔍 Display Backend URL
+
           - task: AzureStaticWebApp@0
             displayName: 🚀 Deploy to Azure Static Web Apps
             inputs:
               app_location: $(Pipeline.Workspace)/frontend
               skip_app_build: true
               azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN)
+              # 🔑 CRITICAL: Inject backend URL as environment variable
+              app_build_args: |
+                VITE_API_BASE_URL=$(BACKEND_API_URL)
 
   # ==============================================================================
   # STAGE 5: POST-DEPLOYMENT VALIDATION

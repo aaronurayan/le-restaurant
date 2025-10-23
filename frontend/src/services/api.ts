@@ -50,7 +50,12 @@ import { MenuItem, Order, CartItem } from '../types';
 // - 사용자 행동 분석
 
 // API 기본 설정
-const API_BASE_URL = 'http://localhost:8080/api';
+// 🔑 CRITICAL: Use environment variable from Azure pipeline or fallback to localhost
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : 'http://localhost:8080/api';
+
+console.log('🔗 API Base URL:', API_BASE_URL);
 
 // API 응답 타입 (TODO: 표준화 필요)
 // interface ApiResponse<T> {
