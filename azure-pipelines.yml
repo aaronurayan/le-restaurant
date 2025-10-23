@@ -66,10 +66,11 @@ variables:
   BACKEND_COVERAGE_THRESHOLD: '80'
 
   # Azure Resource Names (Update these with your Azure resources)
-  AZURE_SUBSCRIPTION: YOUR_AZURE_SUBSCRIPTION_NAME
-  BACKEND_APP_NAME: le-restaurant-backend
-  FRONTEND_APP_NAME: le-restaurant-frontend
-  RESOURCE_GROUP: le-restaurant-rg
+  # TODO: Replace with your actual Azure service connection name from Azure DevOps
+  # AZURE_SUBSCRIPTION: YOUR_AZURE_SUBSCRIPTION_NAME
+  # BACKEND_APP_NAME: le-restaurant-backend
+  # FRONTEND_APP_NAME: le-restaurant-frontend
+  # RESOURCE_GROUP: le-restaurant-rg
 
   # Build Configuration
   BACKEND_JAR_NAME: le-restaurant-backend-0.0.1-SNAPSHOT.jar
@@ -381,156 +382,156 @@ stages:
             continueOnError: true
 
   # ==============================================================================
-  # STAGE 4: DEPLOY TO AZURE
+  # STAGE 4: DEPLOY TO AZURE (DISABLED - Uncomment when Azure is configured)
   # ==============================================================================
-  - stage: DeployProduction
-    displayName: '🚀 Deploy to Azure Production'
-    dependsOn:
-      - BuildAndTest
-      - SecurityScan
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-    jobs:
-      # Deploy Backend to Azure App Service
-      - job: DeployBackend
-        displayName: Deploy Backend to Azure App Service
-        steps:
-          - checkout: none
-
-          - task: DownloadPipelineArtifact@2
-            displayName: '⬇️ Download Backend Artifact'
-            inputs:
-              buildType: current
-              artifactName: backend-build
-              targetPath: $(Pipeline.Workspace)/backend
-
-          - task: AzureWebApp@1
-            displayName: '🚀 Deploy to Azure App Service'
-            inputs:
-              azureSubscription: $(AZURE_SUBSCRIPTION)
-              appType: webAppLinux
-              appName: $(BACKEND_APP_NAME)
-              package: '$(Pipeline.Workspace)/backend/$(BACKEND_JAR_NAME)'
-              runtimeStack: 'JAVA|17-java17'
-              startUpCommand: 'java -jar /home/site/wwwroot/$(BACKEND_JAR_NAME)'
-
-          - task: AzureAppServiceSettings@1
-            displayName: '⚙️ Configure App Settings'
-            inputs:
-              azureSubscription: $(AZURE_SUBSCRIPTION)
-              appName: $(BACKEND_APP_NAME)
-              resourceGroupName: $(RESOURCE_GROUP)
-              appSettings: |
-                [
-                  {
-                    "name": "SPRING_PROFILES_ACTIVE",
-                    "value": "prod",
-                    "slotSetting": false
-                  },
-                  {
-                    "name": "SERVER_PORT",
-                    "value": "8080",
-                    "slotSetting": false
-                  }
-                ]
-
-          # 🔑 CRITICAL: Get Backend URL and expose as output variable
-          - task: AzureCLI@2
-            name: GetBackendUrl
-            displayName: '🔗 Get Backend URL for Frontend'
-            inputs:
-              azureSubscription: $(AZURE_SUBSCRIPTION)
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                echo "🔍 Retrieving backend URL..."
-                BACKEND_HOSTNAME=$(az webapp show --name $(BACKEND_APP_NAME) --resource-group $(RESOURCE_GROUP) --query "defaultHostName" -o tsv)
-                BACKEND_FULL_URL="https://${BACKEND_HOSTNAME}"
-                echo "✅ Backend URL: $BACKEND_FULL_URL"
-                echo "##vso[task.setvariable variable=backendUrl;isOutput=true]$BACKEND_FULL_URL"
-
-      # Deploy Frontend to Azure Static Web Apps
-      - job: DeployFrontend
-        displayName: Deploy Frontend to Azure Static Web Apps
-        dependsOn: DeployBackend
-        variables:
-          # 🔑 CRITICAL: Consume backend URL from previous job
-          BACKEND_API_URL: $[ dependencies.DeployBackend.outputs['GetBackendUrl.backendUrl'] ]
-        steps:
-          - checkout: none
-
-          - task: DownloadPipelineArtifact@2
-            displayName: '⬇️ Download Frontend Artifact'
-            inputs:
-              buildType: current
-              artifactName: frontend-build
-              targetPath: $(Pipeline.Workspace)/frontend
-
-          - script: |
-              echo "🔗 Backend API URL that will be injected: $(BACKEND_API_URL)"
-            displayName: '🔍 Display Backend URL'
-
-          - task: AzureStaticWebApp@0
-            displayName: '🚀 Deploy to Azure Static Web Apps'
-            inputs:
-              app_location: '$(Pipeline.Workspace)/frontend'
-              skip_app_build: true
-              azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN)
-              # 🔑 CRITICAL: Inject backend URL as environment variable
-              app_build_args: |
-                VITE_API_BASE_URL=$(BACKEND_API_URL)
-
-  # ==============================================================================
-  # STAGE 5: POST-DEPLOYMENT VALIDATION
-  # ==============================================================================
-  - stage: PostDeploymentValidation
-    displayName: '✅ Post-Deployment Validation'
-    dependsOn: DeployProduction
-    condition: succeeded()
-    jobs:
-      - job: HealthCheck
-        displayName: 'Health Check & Smoke Tests'
-        steps:
-          - script: |
-              echo "🏥 Running Health Checks..."
-
-              # Backend Health Check
-              BACKEND_URL="https://$(BACKEND_APP_NAME).azurewebsites.net/actuator/health"
-              echo "Checking Backend: $BACKEND_URL"
-
-              RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $BACKEND_URL)
-              if [ $RESPONSE -eq 200 ]; then
-                echo "✅ Backend is healthy"
-              else
-                echo "❌ Backend health check failed with status: $RESPONSE"
-                exit 1
-              fi
-
-              # Frontend Health Check
-              FRONTEND_URL="https://$(FRONTEND_APP_NAME).azurestaticapps.net"
-              echo "Checking Frontend: $FRONTEND_URL"
-
-              RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $FRONTEND_URL)
-              if [ $RESPONSE -eq 200 ]; then
-                echo "✅ Frontend is accessible"
-              else
-                echo "❌ Frontend health check failed with status: $RESPONSE"
-                exit 1
-              fi
-
-              echo "✅ All health checks passed!"
-            displayName: '🏥 Health Check'
-            continueOnError: false
-
-          - script: |
-              echo "📊 Deployment Summary:"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              echo "🔹 Backend URL: https://$(BACKEND_APP_NAME).azurewebsites.net"
-              echo "🔹 Frontend URL: https://$(FRONTEND_APP_NAME).azurestaticapps.net"
-              echo "🔹 Build Number: $(Build.BuildNumber)"
-              echo "🔹 Deployed Branch: $(Build.SourceBranchName)"
-              echo "🔹 Commit: $(Build.SourceVersion)"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            displayName: '📊 Deployment Summary'
+  # - stage: DeployProduction
+  #   displayName: '🚀 Deploy to Azure Production'
+  #   dependsOn:
+  #     - BuildAndTest
+  #     - SecurityScan
+  #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  #   jobs:
+  #     # Deploy Backend to Azure App Service
+  #     - job: DeployBackend
+  #       displayName: Deploy Backend to Azure App Service
+  #       steps:
+  #         - checkout: none
+  #
+  #         - task: DownloadPipelineArtifact@2
+  #           displayName: '⬇️ Download Backend Artifact'
+  #           inputs:
+  #             buildType: current
+  #             artifactName: backend-build
+  #             targetPath: $(Pipeline.Workspace)/backend
+  #
+  #         - task: AzureWebApp@1
+  #           displayName: '🚀 Deploy to Azure App Service'
+  #           inputs:
+  #             azureSubscription: $(AZURE_SUBSCRIPTION)
+  #             appType: webAppLinux
+  #             appName: $(BACKEND_APP_NAME)
+  #             package: '$(Pipeline.Workspace)/backend/$(BACKEND_JAR_NAME)'
+  #             runtimeStack: 'JAVA|17-java17'
+  #             startUpCommand: 'java -jar /home/site/wwwroot/$(BACKEND_JAR_NAME)'
+  #
+  #         - task: AzureAppServiceSettings@1
+  #           displayName: '⚙️ Configure App Settings'
+  #           inputs:
+  #             azureSubscription: $(AZURE_SUBSCRIPTION)
+  #             appName: $(BACKEND_APP_NAME)
+  #             resourceGroupName: $(RESOURCE_GROUP)
+  #             appSettings: |
+  #               [
+  #                 {
+  #                   "name": "SPRING_PROFILES_ACTIVE",
+  #                   "value": "prod",
+  #                   "slotSetting": false
+  #                 },
+  #                 {
+  #                   "name": "SERVER_PORT",
+  #                   "value": "8080",
+  #                   "slotSetting": false
+  #                 }
+  #               ]
+  #
+  #         # 🔑 CRITICAL: Get Backend URL and expose as output variable
+  #         - task: AzureCLI@2
+  #           name: GetBackendUrl
+  #           displayName: '🔗 Get Backend URL for Frontend'
+  #           inputs:
+  #             azureSubscription: $(AZURE_SUBSCRIPTION)
+  #             scriptType: bash
+  #             scriptLocation: inlineScript
+  #             inlineScript: |
+  #               echo "🔍 Retrieving backend URL..."
+  #               BACKEND_HOSTNAME=$(az webapp show --name $(BACKEND_APP_NAME) --resource-group $(RESOURCE_GROUP) --query "defaultHostName" -o tsv)
+  #               BACKEND_FULL_URL="https://${BACKEND_HOSTNAME}"
+  #               echo "✅ Backend URL: $BACKEND_FULL_URL"
+  #               echo "##vso[task.setvariable variable=backendUrl;isOutput=true]$BACKEND_FULL_URL"
+  #
+  #     # Deploy Frontend to Azure Static Web Apps
+  #     - job: DeployFrontend
+  #       displayName: Deploy Frontend to Azure Static Web Apps
+  #       dependsOn: DeployBackend
+  #       variables:
+  #         # 🔑 CRITICAL: Consume backend URL from previous job
+  #         BACKEND_API_URL: $[ dependencies.DeployBackend.outputs['GetBackendUrl.backendUrl'] ]
+  #       steps:
+  #         - checkout: none
+  #
+  #         - task: DownloadPipelineArtifact@2
+  #           displayName: '⬇️ Download Frontend Artifact'
+  #           inputs:
+  #             buildType: current
+  #             artifactName: frontend-build
+  #             targetPath: $(Pipeline.Workspace)/frontend
+  #
+  #         - script: |
+  #             echo "🔗 Backend API URL that will be injected: $(BACKEND_API_URL)"
+  #           displayName: '🔍 Display Backend URL'
+  #
+  #         - task: AzureStaticWebApp@0
+  #           displayName: '🚀 Deploy to Azure Static Web Apps'
+  #           inputs:
+  #             app_location: '$(Pipeline.Workspace)/frontend'
+  #             skip_app_build: true
+  #             azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN)
+  #             # 🔑 CRITICAL: Inject backend URL as environment variable
+  #             app_build_args: |
+  #               VITE_API_BASE_URL=$(BACKEND_API_URL)
+  #
+  # # ==============================================================================
+  # # STAGE 5: POST-DEPLOYMENT VALIDATION (DISABLED)
+  # # ==============================================================================
+  # - stage: PostDeploymentValidation
+  #   displayName: '✅ Post-Deployment Validation'
+  #   dependsOn: DeployProduction
+  #   condition: succeeded()
+  #   jobs:
+  #     - job: HealthCheck
+  #       displayName: 'Health Check & Smoke Tests'
+  #       steps:
+  #         - script: |
+  #             echo "🏥 Running Health Checks..."
+  #
+  #             # Backend Health Check
+  #             BACKEND_URL="https://$(BACKEND_APP_NAME).azurewebsites.net/actuator/health"
+  #             echo "Checking Backend: $BACKEND_URL"
+  #
+  #             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $BACKEND_URL)
+  #             if [ $RESPONSE -eq 200 ]; then
+  #               echo "✅ Backend is healthy"
+  #             else
+  #               echo "❌ Backend health check failed with status: $RESPONSE"
+  #               exit 1
+  #             fi
+  #
+  #             # Frontend Health Check
+  #             FRONTEND_URL="https://$(FRONTEND_APP_NAME).azurestaticapps.net"
+  #             echo "Checking Frontend: $FRONTEND_URL"
+  #
+  #             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $FRONTEND_URL)
+  #             if [ $RESPONSE -eq 200 ]; then
+  #               echo "✅ Frontend is accessible"
+  #             else
+  #               echo "❌ Frontend health check failed with status: $RESPONSE"
+  #               exit 1
+  #             fi
+  #
+  #             echo "✅ All health checks passed!"
+  #           displayName: '🏥 Health Check'
+  #           continueOnError: false
+  #
+  #         - script: |
+  #             echo "📊 Deployment Summary:"
+  #             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  #             echo "🔹 Backend URL: https://$(BACKEND_APP_NAME).azurewebsites.net"
+  #             echo "🔹 Frontend URL: https://$(FRONTEND_APP_NAME).azurestaticapps.net"
+  #             echo "🔹 Build Number: $(Build.BuildNumber)"
+  #             echo "🔹 Deployed Branch: $(Build.SourceBranchName)"
+  #             echo "🔹 Commit: $(Build.SourceVersion)"
+  #             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  #           displayName: '📊 Deployment Summary'
 
 # ==============================================================================
 # END OF PIPELINE CONFIGURATION
