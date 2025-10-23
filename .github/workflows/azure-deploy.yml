@@ -1,0 +1,41 @@
+# GitHub Actions Workflow for Le Restaurant
+# Builds and deploys Spring Boot backend to Azure App Service
+
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: le-restaurant
+  JAVA_VERSION: '17'
+  
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: 'gradle'
+        
+    - name: Build with Gradle
+      run: |
+        cd backend
+        chmod +x gradlew
+        ./gradlew clean bootJar -x test
+        
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: backend/build/libs/*.jar
