@@ -1,0 +1,9 @@
+# Security Analysis: F102 - User Management Access Control
+
+| Section | Details |
+| :--- | :--- |
+| **Name (Feature ID/s)** | Jungwook Van (F102) |
+| **Main Security Concerns** | - **Unauthorized Access**: Non-manager users or anonymous users attempting to access manager-only endpoints for user management (`/api/users`).<br>- **Privilege Escalation**: A standard user potentially exploiting a vulnerability to gain manager-level permissions to view, edit, or delete other users. |
+| **Security Measures Implemented** | - **Role-Based Access Control (RBAC)**: Implemented using Spring Security to secure endpoints. Controller methods related to user management are annotated with `@PreAuthorize("hasRole('MANAGER')")` to ensure only users with the `MANAGER` role can access them.<br>- **Centralized Security Configuration**: All security rules, including endpoint protection, are defined in a central `SecurityConfig` class, making it easy to audit and manage access policies.<br>- **Deny-by-Default Principle**: Spring Security is configured to deny access to all protected endpoints by default, only granting access if a specific rule is met. |
+| **Relevant Non-Functional or Design Requirements (if applicable)** | - **NFR-SEC-01: Access Control**: "The system must enforce strict role-based access control. Manager-specific functionalities must be inaccessible to customers and staff."<br>- **DEF-SEC-02: Role-Based Permissions**: "API endpoints must be secured based on user roles (e.g., `USER`, `MANAGER`)." |
+| **Impact on Overall Security** | This implementation is critical for system-wide security. It establishes a clear separation of privileges, preventing unauthorized data manipulation and ensuring that only trusted administrators can manage user accounts. This measure directly mitigates the risk of unauthorized administrative access, which is a high-impact security threat. |
