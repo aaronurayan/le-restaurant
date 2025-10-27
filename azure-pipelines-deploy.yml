@@ -65,9 +65,9 @@ variables:
   FRONTEND_COVERAGE_THRESHOLD: '80'
   BACKEND_COVERAGE_THRESHOLD: '80'
 
-  # Azure Resource Names (Update these with your Azure resources)
-  AZURE_SUBSCRIPTION: YOUR_AZURE_SUBSCRIPTION_NAME
-  BACKEND_APP_NAME: le-restaurant-backend
+  # Azure Resource Names (Updated with actual resources)
+  AZURE_SUBSCRIPTION: le-restaurant-azure-connection
+  BACKEND_APP_NAME: le-restaurant
   FRONTEND_APP_NAME: le-restaurant-frontend
   RESOURCE_GROUP: le-restaurant-rg
 
@@ -433,6 +433,16 @@ stages:
                     "name": "SERVER_PORT",
                     "value": "8080",
                     "slotSetting": false
+                  },
+                  {
+                    "name": "WEBSITES_PORT",
+                    "value": "8080",
+                    "slotSetting": false
+                  },
+                  {
+                    "name": "CORS_ALLOWED_ORIGINS",
+                    "value": "https://yellow-ground-042c31000.3.azurestaticapps.net,http://localhost:5173",
+                    "slotSetting": false
                   }
                 ]
 
@@ -459,28 +469,33 @@ stages:
           # 🔑 CRITICAL: Consume backend URL from previous job
           BACKEND_API_URL: $[ dependencies.DeployBackend.outputs['GetBackendUrl.backendUrl'] ]
         steps:
-          - checkout: none
+          - checkout: self
+            fetchDepth: 1
 
-          - task: DownloadPipelineArtifact@2
-            displayName: ⬇️ Download Frontend Artifact
+          - task: NodeTool@0
+            displayName: Install Node.js $(NODE_VERSION)
             inputs:
-              buildType: current
-              artifactName: frontend-build
-              targetPath: $(Pipeline.Workspace)/frontend
+              versionSpec: $(NODE_VERSION)
 
           - script: |
-              echo "🔗 Backend API URL that will be injected: $(BACKEND_API_URL)"
-            displayName: 🔍 Display Backend URL
+              echo "🔗 Backend API URL: $(BACKEND_API_URL)"
+              cd $(FRONTEND_PATH)
+              npm ci
+            displayName: 📦 Install Dependencies
+
+          - script: |
+              cd $(FRONTEND_PATH)
+              echo "VITE_API_BASE_URL=$(BACKEND_API_URL)/api" > .env.production
+              cat .env.production
+              npm run build
+            displayName: 🏗️ Build Frontend with Backend URL
 
           - task: AzureStaticWebApp@0
             displayName: 🚀 Deploy to Azure Static Web Apps
             inputs:
-              app_location: $(Pipeline.Workspace)/frontend
+              app_location: $(FRONTEND_PATH)/$(FRONTEND_BUILD_OUTPUT)
               skip_app_build: true
               azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN)
-              # 🔑 CRITICAL: Inject backend URL as environment variable
-              app_build_args: |
-                VITE_API_BASE_URL=$(BACKEND_API_URL)
 
   # ==============================================================================
   # STAGE 5: POST-DEPLOYMENT VALIDATION
