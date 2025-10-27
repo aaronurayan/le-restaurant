@@ -149,7 +149,7 @@ stages:
   - stage: BuildAndTest
     displayName: 🔨 Build & Test
     dependsOn: CodeQuality
-    condition: succeeded()
+    condition: succeededOrFailed()
     jobs:
       # Frontend Build & Test
       - job: FrontendBuildTest
