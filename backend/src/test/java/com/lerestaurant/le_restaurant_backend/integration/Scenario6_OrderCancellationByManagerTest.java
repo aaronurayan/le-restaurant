@@ -2,6 +2,7 @@ package com.lerestaurant.le_restaurant_backend.integration;
 
 import com.lerestaurant.le_restaurant_backend.dto.*;
 import com.lerestaurant.le_restaurant_backend.entity.MenuItem;
+import com.lerestaurant.le_restaurant_backend.entity.Payment;
 import org.junit.jupiter.api.*;
 import org.springframework.transaction.annotation.Transactional;
 

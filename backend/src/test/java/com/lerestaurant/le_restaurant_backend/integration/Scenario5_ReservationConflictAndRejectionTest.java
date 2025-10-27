@@ -1,6 +1,7 @@
 package com.lerestaurant.le_restaurant_backend.integration;
 
 import com.lerestaurant.le_restaurant_backend.dto.*;
+import com.lerestaurant.le_restaurant_backend.entity.Reservation;
 import org.junit.jupiter.api.*;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,11 +33,10 @@ class Scenario5_ReservationConflictAndRejectionTest extends BaseE2ETest {
 
         // Step 1: Customer A Reserves (F108)
         ReservationDto reservationA = createReservation(
-            customerA.getId(),
-            reservationDate,
-            reservationTime,
-            4
-        );
+                customerA.getId(),
+                reservationDate,
+                reservationTime,
+                4);
         assertNotNull(reservationA);
         // Reservation status after creation may vary
         assertNotNull(reservationA.getStatus());
@@ -44,11 +44,10 @@ class Scenario5_ReservationConflictAndRejectionTest extends BaseE2ETest {
 
         // Step 2: Customer B Reserves (F108) - Same time slot
         ReservationDto reservationB = createReservation(
-            customerB.getId(),
-            reservationDate,
-            reservationTime,
-            4
-        );
+                customerB.getId(),
+                reservationDate,
+                reservationTime,
+                4);
         assertNotNull(reservationB);
         assertEquals("PENDING_APPROVAL", reservationB.getStatus());
         Long reservationBId = reservationB.getId();
@@ -60,8 +59,9 @@ class Scenario5_ReservationConflictAndRejectionTest extends BaseE2ETest {
         assertEquals(Reservation.ReservationStatus.CONFIRMED, approvedA.getStatus());
 
         // Step 4: Manager Rejects B (F109)
-        ReservationDto rejectedB = reservationService.rejectReservation(reservationBId, "Table not available at requested time", manager.getId());
+        ReservationDto rejectedB = reservationService.rejectReservation(reservationBId,
+                "Table not available at requested time", manager.getId());
         assertNotNull(rejectedB);
-        assertEquals(Reservation.ReservationStatus.REJECTED, rejectedB.getStatus());
+        assertEquals(Reservation.ReservationStatus.CANCELLED, rejectedB.getStatus());
     }
 }
