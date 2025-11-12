@@ -1,6 +1,7 @@
 package com.lerestaurant.le_restaurant_backend.controller;
 
 import com.lerestaurant.le_restaurant_backend.dto.AuthRequestDto;
+import com.lerestaurant.le_restaurant_backend.dto.UserCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserDto;
 import com.lerestaurant.le_restaurant_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,30 @@ public class AuthController {
             error.put("error", msg);
             // Always return 401 for any login failure, including user not found
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody UserCreateRequestDto requestDto) {
+        try {
+            UserDto user = userService.createUser(requestDto);
+            Map<String, Object> response = new HashMap<>();
+            response.put("user", user);
+            // In a real app you'd return a signed JWT or session token here
+            response.put("token", "mock-token");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            // Return 409 Conflict for duplicate email
+            if (e.getMessage().contains("already exists") || e.getMessage().contains("duplicate")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+            }
+            return ResponseEntity.badRequest().body(error);
         }
     }
 }

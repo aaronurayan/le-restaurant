@@ -115,13 +115,11 @@ const Payment: React.FC = () => {
       // Step 2: Process payment (simulate payment gateway processing)
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Step 3: Update payment status to COMPLETED
+      // Step 3: Process payment (updates payment status to COMPLETED and order status to CONFIRMED automatically)
       if (createdPayment.id) {
         await processPayment(createdPayment.id);
+        // Note: Order status is now automatically updated to CONFIRMED by PaymentService.processPayment()
       }
-      
-      // Step 4: Update order status to CONFIRMED after successful payment
-      await updateOrderStatus(orderId, 'CONFIRMED' as OrderStatus);
       
       // Clear the cart after successful payment
       clearCart();

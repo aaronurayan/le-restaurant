@@ -140,6 +140,16 @@ public class PaymentService {
         payment.setGatewayResponse("Payment processed successfully");
         
         Payment updatedPayment = paymentRepository.save(payment);
+        
+        // 결제 완료 후 주문 상태 자동 업데이트
+        // PENDING -> CONFIRMED (결제 완료 후)
+        Order order = payment.getOrder();
+        if (order.getStatus() == Order.OrderStatus.PENDING) {
+            order.setStatus(Order.OrderStatus.CONFIRMED);
+            orderRepository.save(order);
+            logger.info("Order {} status automatically updated to CONFIRMED after payment completion", order.getId());
+        }
+        
         return convertToDto(updatedPayment);
     }
     

@@ -96,68 +96,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       dispatch({ type: 'LOGIN_START' });
       
-      // TODO: 실제 API 호출로 교체
-      // const response = await authApi.login(credentials);
+      // 실제 API 호출
+      const { apiClient } = await import('../services/apiClient.unified');
+      const { API_ENDPOINTS } = await import('../config/api.config');
       
-      // Mock login logic with role-based accounts
-      const mockUsers = {
-        'admin@lerestaurant.com': {
-          id: 1,
-          email: 'admin@lerestaurant.com',
-          passwordHash: '',
-          phoneNumber: '010-1234-5678',
-          firstName: 'Admin',
-          lastName: 'User',
-          role: 'admin' as any,
-          status: 'active' as any,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        'manager@lerestaurant.com': {
-          id: 2,
-          email: 'manager@lerestaurant.com',
-          passwordHash: '',
-          phoneNumber: '010-2345-6789',
-          firstName: 'Manager',
-          lastName: 'User',
-          role: 'manager' as any,
-          status: 'active' as any,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        'customer@lerestaurant.com': {
-          id: 3,
-          email: 'customer@lerestaurant.com',
-          passwordHash: '',
-          phoneNumber: '010-3456-7890',
-          firstName: 'Customer',
-          lastName: 'User',
-          role: 'customer' as any,
-          status: 'active' as any,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      };
+      const res = await fetch(`${apiClient.getBaseUrl()}${API_ENDPOINTS.auth.login}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password
+        }),
+      });
 
-      const mockUser = mockUsers[credentials.email as keyof typeof mockUsers];
-      
-      if (!mockUser || credentials.password !== 'password123') {
-        throw new Error('Invalid credentials');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Login failed' }));
+        throw new Error(errorData.error || 'Invalid credentials');
       }
+
+      const data = await res.json();
+      const user = data.user;
       
-      const mockToken = 'mock-jwt-token-' + Date.now();
-      const mockExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      // UserDto를 User 타입으로 변환
+      const authUser: User = {
+        id: user.id,
+        email: user.email,
+        passwordHash: '',
+        phoneNumber: user.phoneNumber || '',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        role: user.role || 'customer',
+        status: user.status || 'active',
+        createdAt: user.createdAt || new Date().toISOString(),
+        updatedAt: user.updatedAt || new Date().toISOString()
+      };
+      
+      const token = data.token || 'mock-token-' + Date.now();
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       
       dispatch({
         type: 'LOGIN_SUCCESS',
-        payload: { user: mockUser, token: mockToken, expiresAt: mockExpiresAt }
+        payload: { user: authUser, token, expiresAt }
       });
       
       // localStorage에 저장
       localStorage.setItem('auth', JSON.stringify({
-        user: mockUser,
-        token: mockToken,
-        expiresAt: mockExpiresAt
+        user: authUser,
+        token,
+        expiresAt
       }));
       
     } catch (error) {
@@ -176,36 +162,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       dispatch({ type: 'REGISTER_START' });
       
-      // TODO: 실제 API 호출로 교체
-      // const response = await authApi.register(userData);
+      // 실제 API 호출
+      const { apiClient } = await import('../services/apiClient.unified');
+      const { API_ENDPOINTS } = await import('../config/api.config');
       
-      // 임시 회원가입 로직 (테스트용)
-      const mockUser: User = {
-        id: Date.now(),
-        email: userData.email,
+      const res = await fetch(`${apiClient.getBaseUrl()}${API_ENDPOINTS.auth.register}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password,
+          phoneNumber: userData.phoneNumber,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          role: userData.role || 'CUSTOMER'
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Registration failed' }));
+        throw new Error(errorData.error || 'Registration failed');
+      }
+
+      const user = await res.json();
+      
+      // UserDto를 User 타입으로 변환
+      const authUser: User = {
+        id: user.id,
+        email: user.email,
         passwordHash: '',
-        phoneNumber: userData.phoneNumber,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        role: userData.role || 'customer' as any,
-        status: userData.status || 'active' as any,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        phoneNumber: user.phoneNumber || '',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        role: user.role || 'customer',
+        status: user.status || 'active',
+        createdAt: user.createdAt || new Date().toISOString(),
+        updatedAt: user.updatedAt || new Date().toISOString()
       };
       
-      const mockToken = 'mock-jwt-token-' + Date.now();
-      const mockExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const token = 'mock-token-' + Date.now();
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       
       dispatch({
         type: 'REGISTER_SUCCESS',
-        payload: { user: mockUser, token: mockToken, expiresAt: mockExpiresAt }
+        payload: { user: authUser, token, expiresAt }
       });
       
       // localStorage에 저장
       localStorage.setItem('auth', JSON.stringify({
-        user: mockUser,
-        token: mockToken,
-        expiresAt: mockExpiresAt
+        user: authUser,
+        token,
+        expiresAt
       }));
       
     } catch (error) {

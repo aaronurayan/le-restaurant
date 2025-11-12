@@ -20,15 +20,19 @@
 export const getApiBaseUrl = (): string => {
   // Production: Azure App Service or environment variable
   if (import.meta.env.PROD) {
-    return (
+    const url = (
       import.meta.env.VITE_API_BASE_URL ||
       import.meta.env.VITE_API_URL ||
-      'https://le-restaurant-adbrdddye6cbdjf2.australiaeast-01.azurewebsites.net/api'
+      'https://le-restaurant-adbrdddye6cbdjf2.australiaeast-01.azurewebsites.net'
     );
+    // Remove trailing /api if present (API_ENDPOINTS already includes /api)
+    return url.replace(/\/api$/, '');
   }
   
   // Development: localhost
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+  const url = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+  // Remove trailing /api if present (API_ENDPOINTS already includes /api)
+  return url.replace(/\/api$/, '');
 };
 
 /**
