@@ -20,7 +20,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/menu-items")
-@CrossOrigin(origins = "http://localhost:5173")
+// CORS is handled globally in WebConfig
 public class MenuController {
     
     private final MenuService menuService;

@@ -25,7 +25,7 @@ import com.lerestaurant.le_restaurant_backend.service.PaymentService;
 
 @RestController
 @RequestMapping("/api/payments")
-@CrossOrigin(origins = "http://localhost:5173")
+// CORS is handled globally in WebConfig
 public class PaymentController {
     
     private final PaymentService paymentService;

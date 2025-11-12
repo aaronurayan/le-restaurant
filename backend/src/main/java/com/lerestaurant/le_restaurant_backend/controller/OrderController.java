@@ -22,7 +22,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = "http://localhost:5173")
+// CORS is handled globally in WebConfig
 public class OrderController {
 
     private final OrderService orderService;

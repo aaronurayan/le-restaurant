@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+// CORS is handled globally in WebConfig
 public class AuthController {
 
     private final UserService userService;

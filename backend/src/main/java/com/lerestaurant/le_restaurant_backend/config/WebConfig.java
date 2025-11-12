@@ -15,10 +15,12 @@ public class WebConfig implements WebMvcConfigurer {
         String allowed = System.getenv("CORS_ALLOWED_ORIGINS");
         String[] origins;
         if (allowed == null || allowed.trim().isEmpty()) {
-            // Default: allow localhost dev + Azure Static Web App
+            // Default: allow localhost dev + Azure Static Web Apps
             origins = new String[] {
                     "http://localhost:5173",
-                    "https://yellow-ground-042c31000.3.azurestaticapps.net"
+                    "http://localhost:3000",
+                    "https://le-restaurant-frontend.azurestaticapps.net",
+                    "https://*.azurestaticapps.net"
             };
         } else {
             origins = Arrays.stream(allowed.split(","))
@@ -29,9 +31,15 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addMapping("/**")
                 .allowedOrigins(origins)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
+        
+        // Log CORS configuration for debugging
+        System.out.println("🌐 CORS Configuration:");
+        System.out.println("   Allowed Origins: " + Arrays.toString(origins));
+        System.out.println("   Allowed Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS");
+        System.out.println("   Allow Credentials: true");
     }
 }

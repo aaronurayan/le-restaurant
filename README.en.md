@@ -1,10 +1,4 @@
-<div align="center">
-
-![header](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,2,5,30&height=200&section=header&text=🍽️%20Le%20Restaurant&fontSize=60&fontAlignY=35&animation=twinkling&fontColor=ffffff&desc=Modern%20Restaurant%20Management%20System&descAlignY=65&descSize=25&descColor=ffffff)
-
-</div>
-
-<div align="center">
+# 🍽️ Le Restaurant
 
 ![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green?style=flat-square&logo=spring)
@@ -15,9 +9,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14-336791?style=flat-square&logo=postgresql)
 ![Azure](https://img.shields.io/badge/Azure-Cloud-0078D4?style=flat-square&logo=microsoft-azure)
 
-**한국어** | [English](README.en.md) | [日本語](README.ja.md) | [Русский](README.ru.md)
-
-</div>
+[한국어](README.md) | English | [日本語](README.ja.md) | [Русский](README.ru.md)
 
 ---
 
@@ -125,20 +117,11 @@ le-restaurant/
 ├── backend/                          # Spring Boot API
 │   ├── src/main/java/
 │   │   ├── controller/              # REST controllers
-│   │   │   ├── AuthController.java
-│   │   │   ├── UserController.java
-│   │   │   ├── MenuController.java
-│   │   │   ├── OrderController.java
-│   │   │   ├── PaymentController.java
-│   │   │   ├── DeliveryController.java
-│   │   │   └── ReservationController.java
 │   │   ├── service/                # Business logic
 │   │   ├── repository/            # Data access
 │   │   ├── entity/               # Domain models
 │   │   ├── dto/                  # Data transfer objects
 │   │   └── config/               # Configuration
-│   ├── src/main/resources/
-│   │   └── application.properties
 │   └── pom.xml
 │
 ├── frontend/                       # React + TypeScript app
@@ -151,20 +134,10 @@ le-restaurant/
 │   │   ├── pages/                # Route components
 │   │   ├── hooks/                # Custom React hooks
 │   │   ├── services/             # API services
-│   │   ├── contexts/             # Global state
-│   │   ├── types/                # TypeScript types
-│   │   └── config/               # Configuration
-│   ├── package.json
-│   └── vite.config.ts
+│   │   └── contexts/             # Global state
+│   └── package.json
 │
-├── docs/                           # Documentation
-│   ├── frontend/                  # Frontend docs
-│   ├── backend/                   # Backend docs
-│   ├── design/                    # Design docs
-│   ├── testing/                   # Test guides
-│   └── requirements/              # Requirements
-│
-└── README.md                      # This file
+└── docs/                           # Documentation
 ```
 
 ---
@@ -294,3 +267,4 @@ This project is developed for academic purposes as part of the UTS Advanced Soft
 ---
 
 **Last Updated**: 2025-01-27
+

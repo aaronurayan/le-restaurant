@@ -25,7 +25,7 @@ import com.lerestaurant.le_restaurant_backend.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5173")
+// CORS is handled globally in WebConfig
 public class UserController {
     
     private final UserService userService;

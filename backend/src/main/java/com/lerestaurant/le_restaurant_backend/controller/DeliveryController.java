@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/deliveries")
-@CrossOrigin(origins = "http://localhost:5173")
+// CORS is handled globally in WebConfig
 public class DeliveryController {
     
     private static final Logger logger = LoggerFactory.getLogger(DeliveryController.class);
