@@ -197,14 +197,16 @@ export const usePayment = () => {
   /**
    * Create new payment
    */
-  const createPayment = useCallback(async (paymentData: CreatePaymentRequest) => {
-    const result = await apiHook.executeOperationWithoutData(
-      async () => {
-        const newPayment = await paymentApiService.createPayment(paymentData);
-        apiHook.setData(newPayment);
-      }
-    );
-    return result;
+  const createPayment = useCallback(async (paymentData: CreatePaymentRequest): Promise<Payment | null> => {
+    try {
+      const newPayment = await paymentApiService.createPayment(paymentData);
+      apiHook.setData(newPayment);
+      return newPayment;
+    } catch (error) {
+      console.error('Failed to create payment:', error);
+      apiHook.setError(error instanceof Error ? error.message : 'Failed to create payment');
+      return null;
+    }
   }, [apiHook]);
 
   /**

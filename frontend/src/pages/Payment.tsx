@@ -5,8 +5,11 @@ import { Button } from '../components/atoms/Button';
 import { Input } from '../components/atoms/Input';
 import { LoadingSpinner } from '../components/atoms/LoadingSpinner';
 import { useOrderApi } from '../hooks/useOrderApi';
+import { usePayment } from '../hooks/usePaymentApi';
+import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../hooks/useCart';
 import { OrderStatus } from '../types/order';
+import { PaymentMethod } from '../types/payment';
 
 /**
  * Payment Page Component (F105/F106 integration)
@@ -15,10 +18,13 @@ import { OrderStatus } from '../types/order';
 const Payment: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { getOrderById, updateOrderStatus, loading, error } = useOrderApi();
+  const { getOrderById, updateOrderStatus, loading: orderLoading, error: orderError } = useOrderApi();
+  const { createPayment, processPayment, loading: paymentLoading, error: paymentError } = usePayment();
+  const { user } = useAuth();
   const { clearCart } = useCart();
   
   const [orderId, setOrderId] = useState<number | null>(null);
+  const [order, setOrder] = useState<any>(null);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [formValues, setFormValues] = useState({
@@ -27,6 +33,9 @@ const Payment: React.FC = () => {
     expiryDate: '',
     cvv: '',
   });
+  
+  const loading = orderLoading || paymentLoading;
+  const error = orderError || paymentError;
 
   useEffect(() => {
     // Get orderId from location state
@@ -34,10 +43,14 @@ const Payment: React.FC = () => {
     if (state?.orderId) {
       setOrderId(state.orderId);
       
-      // Load order details if needed
-      getOrderById(state.orderId).catch(err => {
-        console.error('Error loading order:', err);
-      });
+      // Load order details
+      getOrderById(state.orderId)
+        .then(orderData => {
+          setOrder(orderData);
+        })
+        .catch(err => {
+          console.error('Error loading order:', err);
+        });
     } else {
       // No orderId provided, redirect to orders page
       navigate('/customer/orders');
@@ -69,17 +82,45 @@ const Payment: React.FC = () => {
   const handleSubmitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!orderId || !validateForm()) {
+    if (!orderId || !order || !user || !validateForm()) {
       return;
     }
 
     setProcessingPayment(true);
 
     try {
-      // Simulate payment processing delay
+      // Step 1: Create payment record (F106)
+      const totalAmount = order.totalAmount || (order.subtotal || 0) + (order.taxAmount || 0) + (order.tipAmount || 0);
+      
+      const paymentData = {
+        orderId: orderId,
+        amount: totalAmount,
+        currency: 'USD',
+        method: PaymentMethod.CREDIT_CARD,
+        paymentDetails: {
+          cardLast4: formValues.cardNumber.replace(/\s/g, '').slice(-4),
+          cardName: formValues.cardName,
+          expiryDate: formValues.expiryDate,
+        },
+        customerName: (user.firstName || '') + ' ' + (user.lastName || ''),
+        customerEmail: user.email || '',
+      };
+      
+      const createdPayment = await createPayment(paymentData);
+      
+      if (!createdPayment) {
+        throw new Error('Failed to create payment');
+      }
+      
+      // Step 2: Process payment (simulate payment gateway processing)
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Update order status to CONFIRMED after successful payment
+      // Step 3: Update payment status to COMPLETED
+      if (createdPayment.id) {
+        await processPayment(createdPayment.id);
+      }
+      
+      // Step 4: Update order status to CONFIRMED after successful payment
       await updateOrderStatus(orderId, 'CONFIRMED' as OrderStatus);
       
       // Clear the cart after successful payment
@@ -94,6 +135,7 @@ const Payment: React.FC = () => {
       }, 2000);
     } catch (err) {
       console.error('Payment processing error:', err);
+      alert('Payment processing failed. Please try again.');
     } finally {
       setProcessingPayment(false);
     }
