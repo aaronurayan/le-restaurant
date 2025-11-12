@@ -18,7 +18,8 @@
  * @module F102-UserManagement
  */
 
-import { apiClient } from '../utils/apiClient';
+import { apiClient } from '../services/apiClient.unified';
+import { API_ENDPOINTS } from '../config/api.config';
 import { User, UserRole, UserStatus } from '../types/user';
 
 // =============================================================================
@@ -188,7 +189,7 @@ export class UserApiService {
       if (filters.page) queryParams.append('page', filters.page.toString());
       if (filters.limit) queryParams.append('limit', filters.limit.toString());
 
-      const endpoint = `/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `${API_ENDPOINTS.users.base}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await apiClient.get<UserListResponse>(endpoint);
       
       return response;
@@ -206,7 +207,7 @@ export class UserApiService {
    */
   public async getUserById(id: number): Promise<User> {
     try {
-      const response = await apiClient.get<User>(`/users/${id}`);
+      const response = await apiClient.get<User>(API_ENDPOINTS.users.byId(id));
       return response;
     } catch (error) {
       console.warn('Failed to fetch user by ID from API, using mock data:', error);
@@ -226,7 +227,7 @@ export class UserApiService {
    */
   public async getUserByEmail(email: string): Promise<User> {
     try {
-      const response = await apiClient.get<User>(`/users/email/${encodeURIComponent(email)}`);
+      const response = await apiClient.get<User>(API_ENDPOINTS.users.byEmail(email));
       return response;
     } catch (error) {
       console.warn('Failed to fetch user by email from API, using mock data:', error);
@@ -246,7 +247,7 @@ export class UserApiService {
    */
   public async getUsersByRole(role: UserRole): Promise<User[]> {
     try {
-      const response = await apiClient.get<User[]>(`/users/role/${role}`);
+      const response = await apiClient.get<User[]>(API_ENDPOINTS.users.byRole(role));
       return response;
     } catch (error) {
       console.warn('Failed to fetch users by role from API, using mock data:', error);
@@ -262,7 +263,7 @@ export class UserApiService {
    */
   public async getUsersByStatus(status: UserStatus): Promise<User[]> {
     try {
-      const response = await apiClient.get<User[]>(`/users/status/${status}`);
+      const response = await apiClient.get<User[]>(API_ENDPOINTS.users.byStatus(status));
       return response;
     } catch (error) {
       console.warn('Failed to fetch users by status from API, using mock data:', error);
@@ -278,7 +279,7 @@ export class UserApiService {
    */
   public async createUser(userData: CreateUserRequest): Promise<User> {
     try {
-      const response = await apiClient.post<User>('/users', userData);
+      const response = await apiClient.post<User>(API_ENDPOINTS.users.base, userData);
       return response;
     } catch (error) {
       console.warn('Failed to create user via API, using mock data:', error);
@@ -306,7 +307,7 @@ export class UserApiService {
    */
   public async updateUser(id: number, userData: UpdateUserRequest): Promise<User> {
     try {
-      const response = await apiClient.put<User>(`/users/${id}`, userData);
+      const response = await apiClient.put<User>(API_ENDPOINTS.users.byId(id), userData);
       return response;
     } catch (error) {
       console.warn('Failed to update user via API, using mock data:', error);
@@ -344,7 +345,7 @@ export class UserApiService {
    */
   public async deleteUser(id: number): Promise<void> {
     try {
-      await apiClient.delete(`/users/${id}`);
+      await apiClient.delete(API_ENDPOINTS.users.byId(id));
     } catch (error) {
       console.warn('Failed to delete user via API, using mock data:', error);
       const userIndex = MOCK_USERS.findIndex(user => user.id === id);

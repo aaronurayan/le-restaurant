@@ -1,24 +1,20 @@
+/**
+ * Order API Hook (F105)
+ * 
+ * This hook provides comprehensive order management functionality.
+ * Uses the unified API client for all backend communications.
+ * 
+ * @author Le Restaurant Development Team
+ * @version 2.0.0
+ * @since 2025-01-27
+ * @module F105-OrderManagement
+ */
+
 import { useState, useCallback } from 'react';
 import { OrderDto, OrderCreateRequestDto, OrderUpdateRequestDto, OrderStatus } from '../types/order';
-
-const API_BASE_URL = 'http://localhost:8080/api';
-
-/**
- * Helper to get auth headers
- * Note: Backend OrderController has @CrossOrigin but may require auth in production
- */
-const getAuthHeaders = (): HeadersInit => {
-  const token = localStorage.getItem('authToken');
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  
-  return headers;
-};
+import { apiClient } from '../services/apiClient.unified';
+import { API_ENDPOINTS } from '../config/api.config';
+import { ApiError } from '../services/apiClient.unified';
 
 /**
  * Hook for Order API operations (F105)
@@ -30,20 +26,22 @@ export const useOrderApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get all orders
+  /**
+   * Get all orders
+   */
   const getAllOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders`, {
-        headers: getAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Failed to fetch orders');
-      const data = await response.json();
+      const data = await apiClient.get<OrderDto[]>(API_ENDPOINTS.orders.base);
       setOrders(data);
       return data;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Error fetching orders';
+      const errorMsg = err instanceof ApiError 
+        ? err.message 
+        : err instanceof Error 
+        ? err.message 
+        : 'Error fetching orders';
       setError(errorMsg);
       throw err;
     } finally {
@@ -51,20 +49,22 @@ export const useOrderApi = () => {
     }
   }, []);
 
-  // Get order by ID
+  /**
+   * Get order by ID
+   */
   const getOrderById = useCallback(async (orderId: number) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
-        headers: getAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Failed to fetch order');
-      const data = await response.json();
+      const data = await apiClient.get<OrderDto>(API_ENDPOINTS.orders.byId(orderId));
       setCurrentOrder(data);
       return data;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Error fetching order';
+      const errorMsg = err instanceof ApiError 
+        ? err.message 
+        : err instanceof Error 
+        ? err.message 
+        : 'Error fetching order';
       setError(errorMsg);
       throw err;
     } finally {
@@ -72,20 +72,22 @@ export const useOrderApi = () => {
     }
   }, []);
 
-  // Get orders by customer ID
+  /**
+   * Get orders by customer ID
+   */
   const getOrdersByCustomer = useCallback(async (customerId: number) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/customer/${customerId}`, {
-        headers: getAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Failed to fetch customer orders');
-      const data = await response.json();
+      const data = await apiClient.get<OrderDto[]>(API_ENDPOINTS.orders.byCustomer(customerId));
       setOrders(data);
       return data;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Error fetching customer orders';
+      const errorMsg = err instanceof ApiError 
+        ? err.message 
+        : err instanceof Error 
+        ? err.message 
+        : 'Error fetching customer orders';
       setError(errorMsg);
       throw err;
     } finally {
@@ -93,20 +95,22 @@ export const useOrderApi = () => {
     }
   }, []);
 
-  // Get orders by status
+  /**
+   * Get orders by status
+   */
   const getOrdersByStatus = useCallback(async (status: OrderStatus) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/status/${status}`, {
-        headers: getAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Failed to fetch orders by status');
-      const data = await response.json();
+      const data = await apiClient.get<OrderDto[]>(API_ENDPOINTS.orders.byStatus(status));
       setOrders(data);
       return data;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Error fetching orders by status';
+      const errorMsg = err instanceof ApiError 
+        ? err.message 
+        : err instanceof Error 
+        ? err.message 
+        : 'Error fetching orders by status';
       setError(errorMsg);
       throw err;
     } finally {
@@ -114,22 +118,22 @@ export const useOrderApi = () => {
     }
   }, []);
 
-  // Create new order
+  /**
+   * Create new order
+   */
   const createOrder = useCallback(async (orderData: OrderCreateRequestDto) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(orderData),
-      });
-      if (!response.ok) throw new Error('Failed to create order');
-      const data = await response.json();
+      const data = await apiClient.post<OrderDto>(API_ENDPOINTS.orders.base, orderData);
       setCurrentOrder(data);
       return data;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Error creating order';
+      const errorMsg = err instanceof ApiError 
+        ? err.message 
+        : err instanceof Error 
+        ? err.message 
+        : 'Error creating order';
       setError(errorMsg);
       throw err;
     } finally {
@@ -137,22 +141,22 @@ export const useOrderApi = () => {
     }
   }, []);
 
-  // Update order
+  /**
+   * Update order
+   */
   const updateOrder = useCallback(async (orderId: number, updateData: OrderUpdateRequestDto) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(updateData),
-      });
-      if (!response.ok) throw new Error('Failed to update order');
-      const data = await response.json();
+      const data = await apiClient.put<OrderDto>(API_ENDPOINTS.orders.byId(orderId), updateData);
       setCurrentOrder(data);
       return data;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Error updating order';
+      const errorMsg = err instanceof ApiError 
+        ? err.message 
+        : err instanceof Error 
+        ? err.message 
+        : 'Error updating order';
       setError(errorMsg);
       throw err;
     } finally {
@@ -160,22 +164,25 @@ export const useOrderApi = () => {
     }
   }, []);
 
-  // Update order status
+  /**
+   * Update order status
+   */
   const updateOrderStatus = useCallback(async (orderId: number, status: OrderStatus) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ status }),
-      });
-      if (!response.ok) throw new Error('Failed to update order status');
-      const data = await response.json();
+      const data = await apiClient.put<OrderDto>(
+        API_ENDPOINTS.orders.updateStatus(orderId), 
+        { status }
+      );
       setCurrentOrder(data);
       return data;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Error updating order status';
+      const errorMsg = err instanceof ApiError 
+        ? err.message 
+        : err instanceof Error 
+        ? err.message 
+        : 'Error updating order status';
       setError(errorMsg);
       throw err;
     } finally {
@@ -183,26 +190,28 @@ export const useOrderApi = () => {
     }
   }, []);
 
-  // Delete order
+  /**
+   * Delete order
+   */
   const deleteOrder = useCallback(async (orderId: number) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Failed to delete order');
+      await apiClient.delete<void>(API_ENDPOINTS.orders.byId(orderId));
       setCurrentOrder(null);
-      setOrders(orders.filter(o => o.id !== orderId));
+      setOrders(prev => prev.filter(o => o.id !== orderId));
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Error deleting order';
+      const errorMsg = err instanceof ApiError 
+        ? err.message 
+        : err instanceof Error 
+        ? err.message 
+        : 'Error deleting order';
       setError(errorMsg);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [orders]);
+  }, []);
 
   return {
     orders,

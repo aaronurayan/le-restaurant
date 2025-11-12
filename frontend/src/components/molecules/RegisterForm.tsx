@@ -65,7 +65,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     setIsLoading(true);
 
     try {
-      const res = await fetch('http://localhost:8080/api/auth/register', {
+      // Use unified API client
+      const { apiClient } = await import('../../services/apiClient.unified');
+      const { API_ENDPOINTS } = await import('../../config/api.config');
+      
+      const res = await fetch(`${apiClient.getBaseUrl()}${API_ENDPOINTS.auth.register}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,

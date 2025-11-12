@@ -17,7 +17,8 @@
  * @since 2024-01-15
  */
 
-import { apiClient } from '../utils/apiClient';
+import { apiClient } from '../services/apiClient.unified';
+import { API_ENDPOINTS } from '../config/api.config';
 import { MenuItem } from '../types';
 
 // =============================================================================
