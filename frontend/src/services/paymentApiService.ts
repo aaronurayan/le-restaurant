@@ -19,7 +19,8 @@
  * @module F106-PaymentManagement
  */
 
-import { apiClient } from '../utils/apiClient';
+import { apiClient } from '../services/apiClient.unified';
+import { API_ENDPOINTS } from '../config/api.config';
 import { Payment, PaymentMethod, PaymentStatus } from '../types/payment';
 
 // =============================================================================
@@ -215,7 +216,7 @@ export class PaymentApiService {
       if (filters.page) queryParams.append('page', filters.page.toString());
       if (filters.limit) queryParams.append('limit', filters.limit.toString());
 
-      const endpoint = `/payments${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `${API_ENDPOINTS.payments.base}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await apiClient.get<PaymentListResponse>(endpoint);
       
       return response;
@@ -233,7 +234,7 @@ export class PaymentApiService {
    */
   public async getPaymentById(id: number): Promise<Payment> {
     try {
-      const response = await apiClient.get<Payment>(`/payments/${id}`);
+      const response = await apiClient.get<Payment>(API_ENDPOINTS.payments.byId(id));
       return response;
     } catch (error) {
       console.warn('Failed to fetch payment by ID from API, using mock data:', error);
@@ -253,7 +254,7 @@ export class PaymentApiService {
    */
   public async getPaymentsByOrderId(orderId: number): Promise<Payment[]> {
     try {
-      const response = await apiClient.get<Payment[]>(`/payments/order/${orderId}`);
+      const response = await apiClient.get<Payment[]>(API_ENDPOINTS.payments.byOrder(orderId));
       return response;
     } catch (error) {
       console.warn('Failed to fetch payments by order ID from API, using mock data:', error);
@@ -269,7 +270,7 @@ export class PaymentApiService {
    */
   public async getPaymentsByStatus(status: PaymentStatus): Promise<Payment[]> {
     try {
-      const response = await apiClient.get<Payment[]>(`/payments/status/${status}`);
+      const response = await apiClient.get<Payment[]>(API_ENDPOINTS.payments.byStatus(status));
       return response;
     } catch (error) {
       console.warn('Failed to fetch payments by status from API, using mock data:', error);
@@ -285,19 +286,60 @@ export class PaymentApiService {
    */
   public async createPayment(paymentData: CreatePaymentRequest): Promise<Payment> {
     try {
-      const response = await apiClient.post<Payment>('/payments', paymentData);
-      return response;
+      // Transform frontend data to backend format
+      // Map frontend PaymentMethod enum to backend enum
+      const methodMapping: Record<string, string> = {
+        'credit_card': 'CREDIT_CARD',
+        'debit_card': 'DEBIT_CARD',
+        'cash': 'CASH',
+        'bank_transfer': 'CASH', // Backend doesn't have BANK_TRANSFER, map to CASH
+        'digital_wallet': 'DIGITAL_WALLET',
+      };
+      
+      const backendRequest = {
+        orderId: paymentData.orderId,
+        amount: paymentData.amount,
+        paymentMethod: methodMapping[paymentData.method] || 'CREDIT_CARD',
+        paymentDetails: paymentData.paymentDetails 
+          ? JSON.stringify(paymentData.paymentDetails)
+          : JSON.stringify({ method: paymentData.method }),
+      };
+      
+      const response = await apiClient.post<any>(API_ENDPOINTS.payments.base, backendRequest);
+      
+      // Map backend response to frontend Payment type
+      // Backend returns PaymentDto which may have different field names
+      return {
+        id: response.id,
+        orderId: response.orderId,
+        amount: typeof response.amount === 'number' ? response.amount : parseFloat(response.amount),
+        currency: paymentData.currency || 'USD',
+        method: paymentData.method, // Keep frontend enum format
+        status: response.status?.toLowerCase() || PaymentStatus.PENDING,
+        transactionId: response.transactionId,
+        processedAt: response.processedAt,
+        createdAt: response.paymentTime || new Date().toISOString(),
+        updatedAt: response.processedAt || new Date().toISOString(),
+        customerEmail: response.customerEmail || paymentData.customerEmail,
+        customerName: response.customerName || paymentData.customerName,
+        customerId: response.customerId,
+      };
     } catch (error) {
       console.warn('Failed to create payment via API, using mock data:', error);
       // Create mock payment
       const newPayment: Payment = {
-        id: Math.max(...MOCK_PAYMENTS.map(p => p.id)) + 1,
-        ...paymentData,
+        id: Math.max(...MOCK_PAYMENTS.map(p => p.id), 0) + 1,
+        orderId: paymentData.orderId,
+        amount: paymentData.amount,
+        currency: paymentData.currency || 'USD',
+        method: paymentData.method,
         status: PaymentStatus.PENDING,
         transactionId: undefined,
         processedAt: undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        customerEmail: paymentData.customerEmail,
+        customerName: paymentData.customerName,
       };
       MOCK_PAYMENTS.push(newPayment);
       return newPayment;
@@ -313,7 +355,7 @@ export class PaymentApiService {
    */
   public async updatePayment(id: number, paymentData: UpdatePaymentRequest): Promise<Payment> {
     try {
-      const response = await apiClient.put<Payment>(`/payments/${id}`, paymentData);
+      const response = await apiClient.put<Payment>(API_ENDPOINTS.payments.byId(id), paymentData);
       return response;
     } catch (error) {
       console.warn('Failed to update payment via API, using mock data:', error);
@@ -351,7 +393,7 @@ export class PaymentApiService {
    */
   public async processPayment(id: number): Promise<PaymentProcessingResult> {
     try {
-      const response = await apiClient.post<PaymentProcessingResult>(`/payments/${id}/process`);
+      const response = await apiClient.post<PaymentProcessingResult>(API_ENDPOINTS.payments.process(id));
       return response;
     } catch (error) {
       console.warn('Failed to process payment via API, using mock processing:', error);
@@ -405,7 +447,7 @@ export class PaymentApiService {
    */
   public async refundPayment(id: number, amount?: number): Promise<Payment> {
     try {
-      const response = await apiClient.post<Payment>(`/payments/${id}/refund`, { amount });
+      const response = await apiClient.post<Payment>(API_ENDPOINTS.payments.refund(id), { amount });
       return response;
     } catch (error) {
       console.warn('Failed to refund payment via API, using mock refund:', error);
@@ -433,7 +475,7 @@ export class PaymentApiService {
    */
   public async deletePayment(id: number): Promise<void> {
     try {
-      await apiClient.delete(`/payments/${id}`);
+      await apiClient.delete(API_ENDPOINTS.payments.byId(id));
     } catch (error) {
       console.warn('Failed to delete payment via API, using mock deletion:', error);
       const paymentIndex = MOCK_PAYMENTS.findIndex(payment => payment.id === id);
