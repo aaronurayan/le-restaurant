@@ -80,7 +80,7 @@ export const FEATURE_FLAGS = {
  */
 export const API_ENDPOINTS = {
   // Health Check
-  health: '/health',
+  health: '/api/health',
   
   // Authentication
   auth: {
@@ -150,6 +150,14 @@ export const API_ENDPOINTS = {
     updateStatus: (id: string) => `/api/deliveries/${id}/status`,
     assign: (id: string) => `/api/deliveries/${id}/assign`,
     progress: (id: string) => `/api/deliveries/${id}/progress`,
+  },
+  
+  // Delivery Addresses
+  deliveryAddresses: {
+    base: '/api/delivery-addresses',
+    byId: (id: number) => `/api/delivery-addresses/${id}`,
+    byUser: (userId: number) => `/api/delivery-addresses/user/${userId}`,
+    setDefault: (id: number) => `/api/delivery-addresses/${id}/set-default`,
   },
 } as const;
 

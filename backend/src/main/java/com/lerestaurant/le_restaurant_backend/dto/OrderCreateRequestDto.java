@@ -1,6 +1,8 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
 import com.lerestaurant.le_restaurant_backend.entity.Order;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -17,11 +19,20 @@ import java.util.List;
  */
 public class OrderCreateRequestDto {
     
+    @NotNull(message = "Customer ID is required")
     private Long customerId;
+    
     private Long tableId; // nullable for delivery orders
+    
     private Order.OrderType orderType;
+    
+    @DecimalMin(value = "0.0", message = "Tip amount cannot be negative")
     private BigDecimal tipAmount;
+    
     private String specialInstructions;
+    
+    @NotEmpty(message = "Order must contain at least one item")
+    @Valid
     private List<OrderItemRequestDto> items;
     
     // Constructors

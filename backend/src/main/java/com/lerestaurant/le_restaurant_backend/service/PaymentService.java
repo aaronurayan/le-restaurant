@@ -73,6 +73,26 @@ public class PaymentService {
                     return new RuntimeException("Order not found with id: " + requestDto.getOrderId());
                 });
         
+        // Validate payment amount matches order total
+        BigDecimal orderTotal = order.getTotalAmount();
+        if (requestDto.getAmount().compareTo(orderTotal) != 0) {
+            logger.error("Payment amount mismatch: expected {}, got {}", 
+                        orderTotal, requestDto.getAmount());
+            throw new IllegalArgumentException(
+                String.format("Payment amount (%.2f) does not match order total (%.2f)", 
+                             requestDto.getAmount(), orderTotal));
+        }
+        
+        // Check for existing completed payments (prevent duplicate payments)
+        List<Payment> existingPayments = paymentRepository.findByOrderId(requestDto.getOrderId());
+        boolean hasCompletedPayment = existingPayments.stream()
+            .anyMatch(p -> p.getStatus() == Payment.PaymentStatus.COMPLETED);
+        if (hasCompletedPayment) {
+            logger.warn("Payment creation failed: order already has a completed payment - {}", 
+                       requestDto.getOrderId());
+            throw new IllegalStateException("Order already has a completed payment");
+        }
+        
         // Create payment entity
         Payment payment = new Payment();
         payment.setOrder(order);

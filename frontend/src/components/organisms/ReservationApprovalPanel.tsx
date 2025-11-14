@@ -21,6 +21,7 @@ import {
 import { Reservation, ReservationStatus } from '../../types/reservation';
 import { useReservationApi } from '../../hooks/useReservationApi';
 import { ReservationCard } from '../molecules/ReservationCard';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
 
 interface ReservationApprovalPanelProps {
   className?: string;
@@ -144,18 +145,33 @@ export const ReservationApprovalPanel: React.FC<ReservationApprovalPanelProps> =
     }
   };
 
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [reservationToCancel, setReservationToCancel] = useState<string | null>(null);
+
   /**
    * Cancel reservation (customer or manager initiated)
    */
-  const handleCancel = async (reservationId: string) => {
-    if (!confirm('Are you sure you want to cancel this reservation?')) return;
+  const handleCancel = (reservationId: string) => {
+    setReservationToCancel(reservationId);
+    setShowCancelConfirm(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!reservationToCancel) return;
 
     try {
-      await cancelReservation(reservationId);
+      await cancelReservation(reservationToCancel);
       await loadReservations();
+      setShowCancelConfirm(false);
+      setReservationToCancel(null);
     } catch (err) {
       console.error('Error cancelling reservation:', err);
     }
+  };
+
+  const handleCancelCancel = () => {
+    setShowCancelConfirm(false);
+    setReservationToCancel(null);
   };
 
   /**
@@ -396,6 +412,23 @@ export const ReservationApprovalPanel: React.FC<ReservationApprovalPanelProps> =
           </div>
         </div>
       )}
+
+      {/* Cancel Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showCancelConfirm}
+        title="Cancel Reservation"
+        message={
+          reservationToCancel
+            ? 'Are you sure you want to cancel this reservation? This action cannot be undone.'
+            : ''
+        }
+        confirmText="Cancel Reservation"
+        cancelText="Keep Reservation"
+        confirmVariant="primary"
+        loading={apiLoading}
+        onConfirm={handleConfirmCancel}
+        onCancel={handleCancelCancel}
+      />
     </div>
   );
 };

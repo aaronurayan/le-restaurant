@@ -268,7 +268,7 @@ All project documentation is organized in the [`docs/`](docs/) directory:
 
 ## 🎓 Academic Project
 
-This project is developed as part of **41029 Advanced Software Development** at the University of Technology Sydney (UTS), Spring Semester 2025.
+This project is developed as part of **41026 Advanced Software Development** at the University of Technology Sydney (UTS), Spring Semester 2025.
 
 ### 👨‍🎓 Team Members
 - **Junayeed Halim** - User Registration & Authentication (F100, F101)
@@ -278,7 +278,7 @@ This project is developed as part of **41029 Advanced Software Development** at 
 - **Aaron Urayan** - Delivery Management & Reservation Management (F107, F109)
 
 ### 🏫 University Information
-- **Course**: 41029 Advanced Software Development
+- **Course**: [41026 Advanced Software Development](https://coursehandbook.uts.edu.au/subject/2026/41026) (6 Credit Points)
 - **Institution**: University of Technology Sydney (UTS)
 - **Semester**: Spring 2025
 - **Project Type**: Collaborative Group Assignment
@@ -293,4 +293,10 @@ This project is developed for academic purposes as part of the UTS Advanced Soft
 
 ---
 
-**Last Updated**: 2025-01-27
+**Last Updated**: 2025-11-15
+
+---
+
+## 📚 Course Reference
+
+- **UTS Course Handbook**: [41026 Advanced Software Development](https://coursehandbook.uts.edu.au/subject/2026/41026)

@@ -1,5 +1,6 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 /**
@@ -9,11 +10,19 @@ import java.math.BigDecimal;
  * @author Le Restaurant Development Team
  */
 public class MenuItemUpdateRequestDto {
+    @Size(min = 1, message = "Name must not be empty if provided")
     private String name;
+    
     private String description;
+    
+    @DecimalMin(value = "0.01", message = "Price must be greater than 0 if provided")
     private BigDecimal price;
+    
+    @Size(min = 1, message = "Category must not be empty if provided")
     private String category;
+    
     private Boolean available;
+    
     private String imageUrl;
     
     // Default constructor

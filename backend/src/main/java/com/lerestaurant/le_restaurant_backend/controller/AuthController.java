@@ -4,6 +4,7 @@ import com.lerestaurant.le_restaurant_backend.dto.AuthRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserDto;
 import com.lerestaurant.le_restaurant_backend.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,17 +26,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequestDto request) {
-        if (request.getEmail() == null || request.getEmail().isEmpty()) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Email must not be null or empty");
-            return ResponseEntity.badRequest().body(error);
-        }
-        if (request.getPassword() == null || request.getPassword().isEmpty()) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Password must not be null or empty");
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequestDto request) {
+        // Validation is now handled by @Valid annotation and GlobalExceptionHandler
         try {
             UserDto user = userService.authenticateUser(request.getEmail(), request.getPassword());
             Map<String, Object> response = new HashMap<>();
@@ -53,7 +45,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserCreateRequestDto requestDto) {
+    public ResponseEntity<?> register(@Valid @RequestBody UserCreateRequestDto requestDto) {
         try {
             UserDto user = userService.createUser(requestDto);
             Map<String, Object> response = new HashMap<>();

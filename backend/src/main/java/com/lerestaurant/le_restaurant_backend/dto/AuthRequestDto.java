@@ -1,7 +1,13 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
+import jakarta.validation.constraints.*;
+
 public class AuthRequestDto {
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be valid")
     private String email;
+    
+    @NotBlank(message = "Password is required")
     private String password;
 
     public AuthRequestDto() {

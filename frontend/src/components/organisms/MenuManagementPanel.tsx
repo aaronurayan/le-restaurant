@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useMenuManagementApi, MenuItem, MenuItemCreateRequest } from '../../hooks/useMenuManagementApi';
 import toast from 'react-hot-toast';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import { useFormValidation, ValidationRules } from '../../hooks/useFormValidation';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { ErrorMessage } from '../molecules/ErrorMessage';
+import { LoadingSpinner } from '../atoms/LoadingSpinner';
 
 /**
  * Menu Management Panel Component (F103, F104)
@@ -38,6 +43,8 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: number; name: string } | null>(null);
   
   const [formData, setFormData] = useState<MenuItemCreateRequest>({
     name: '',
@@ -47,6 +54,30 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
     available: true,
     imageUrl: ''
   });
+
+  // Form validation
+  const validationSchema = {
+    name: [
+      ValidationRules.required('Menu item name is required'),
+      ValidationRules.minLength(2, 'Name must be at least 2 characters'),
+      ValidationRules.maxLength(100, 'Name must be no more than 100 characters'),
+    ],
+    description: [
+      ValidationRules.maxLength(500, 'Description must be no more than 500 characters'),
+    ],
+    price: [
+      ValidationRules.required('Price is required'),
+      ValidationRules.min(0.01, 'Price must be greater than 0'),
+    ],
+    category: [
+      ValidationRules.required('Category is required'),
+    ],
+  };
+
+  const { errors: validationErrors, validate, validateFieldRealTime, clearErrors: clearValidationErrors } = useFormValidation(validationSchema);
+  
+  // Error handling
+  const { error: apiError, handleError, clearError } = useErrorHandler();
   
   // Load menu items and categories on mount
   useEffect(() => {
@@ -55,11 +86,12 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
   
   const loadData = async () => {
     try {
+      clearError();
       await fetchMenuItems();
       const cats = await fetchCategories();
       setCategories(cats);
-    } catch {
-      toast.error('Failed to load menu data');
+    } catch (err) {
+      handleError(err, 'Failed to load menu data');
     }
   };
   
@@ -68,15 +100,12 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearError();
+    clearValidationErrors();
     
-    // Validation
-    if (!formData.name || !formData.description || !formData.category) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-    
-    if (formData.price <= 0) {
-      toast.error('Price must be greater than 0');
+    // Validate form using validation hook
+    if (!validate(formData)) {
+      // Validation errors are already set by validate()
       return;
     }
     
@@ -92,26 +121,41 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
       setIsModalOpen(false);
       setEditingItem(null);
       resetForm();
+      clearValidationErrors();
       await fetchMenuItems();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Operation failed';
-      toast.error(errorMessage);
+      handleError(err, 'Failed to save menu item');
     }
   };
   
   /**
    * HANDLE DELETE (F104)
    */
-  const handleDelete = async (id: number, name: string) => {
-    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
-      try {
-        await deleteMenuItem(id);
-        toast.success('Menu item deleted successfully!');
-        await fetchMenuItems();
-      } catch {
-        toast.error('Failed to delete menu item');
-      }
+  const handleDelete = (id: number, name: string) => {
+    setItemToDelete({ id, name });
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    try {
+      clearError();
+      await deleteMenuItem(itemToDelete.id);
+      toast.success('Menu item deleted successfully!');
+      await fetchMenuItems();
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
+    } catch (err) {
+      handleError(err, 'Failed to delete menu item');
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
   };
   
   /**
@@ -185,6 +229,7 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              aria-label="Filter by category"
             >
               <option value="">All Categories</option>
               {categories.map(cat => (
@@ -215,14 +260,28 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
         {/* LOADING STATE */}
         {loading && (
           <div className="flex justify-center items-center h-64">
-            <div className="spinner border-4 border-orange-600 border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
+            <LoadingSpinner size="lg" text="Loading menu items..." variant="primary" />
           </div>
         )}
         
         {/* ERROR STATE */}
-        {error && (
-          <div className="m-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            <strong>Error:</strong> {error}
+        {(error || apiError) && (
+          <div className="m-6">
+            <ErrorMessage
+              message={apiError?.message || error || 'An error occurred'}
+              onRetry={apiError?.recoverable ? loadData : undefined}
+              size="md"
+            />
+            {apiError?.suggestions && apiError.suggestions.length > 0 && (
+              <div className="mt-2 text-sm text-neutral-600">
+                <p className="font-medium mb-1">Suggestions:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {apiError.suggestions.map((suggestion, idx) => (
+                    <li key={idx}>{suggestion}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
         
@@ -333,10 +392,20 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      setFormData({ ...formData, name: newValue });
+                      validateFieldRealTime('name', newValue, formData);
+                    }}
+                    onBlur={() => validateFieldRealTime('name', formData.name, formData)}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      validationErrors.name ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="e.g., Margherita Pizza"
                   />
+                  {validationErrors.name && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>
+                  )}
                 </div>
                 
                 {/* Description */}
@@ -347,11 +416,21 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
                   <textarea
                     required
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      setFormData({ ...formData, description: newValue });
+                      validateFieldRealTime('description', newValue, formData);
+                    }}
+                    onBlur={() => validateFieldRealTime('description', formData.description, formData)}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                      validationErrors.description ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     rows={3}
                     placeholder="Describe the menu item..."
                   />
+                  {validationErrors.description && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.description}</p>
+                  )}
                 </div>
                 
                 {/* Price and Category Row */}
@@ -367,10 +446,20 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
                       min="0"
                       required
                       value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      onChange={(e) => {
+                        const newValue = parseFloat(e.target.value) || 0;
+                        setFormData({ ...formData, price: newValue });
+                        validateFieldRealTime('price', newValue, formData);
+                      }}
+                      onBlur={() => validateFieldRealTime('price', formData.price, formData)}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                        validationErrors.price ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder="0.00"
                     />
+                    {validationErrors.price && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.price}</p>
+                    )}
                   </div>
                   
                   {/* Category */}
@@ -380,9 +469,18 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
                     </label>
                     <select
                       required
+                      id="category-select"
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        setFormData({ ...formData, category: newValue });
+                        validateFieldRealTime('category', newValue, formData);
+                      }}
+                      onBlur={() => validateFieldRealTime('category', formData.category, formData)}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                        validationErrors.category ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      aria-label="Select menu item category"
                     >
                       <option value="">Select Category</option>
                       <option value="STARTER">Starter</option>
@@ -390,6 +488,9 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
                       <option value="DESSERT">Dessert</option>
                       <option value="BEVERAGE">Beverage</option>
                     </select>
+                    {validationErrors.category && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.category}</p>
+                    )}
                   </div>
                 </div>
                 
@@ -421,9 +522,11 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
                 <div className="flex items-center">
                   <input
                     type="checkbox"
+                    id="available-checkbox"
                     checked={formData.available}
                     onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
                     className="mr-3 w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    aria-label="Menu item availability"
                   />
                   <label className="text-sm font-semibold text-gray-700">
                     Available for customers
@@ -455,6 +558,23 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Menu Item"
+        message={
+          itemToDelete
+            ? `Are you sure you want to delete "${itemToDelete.name}"? This action cannot be undone.`
+            : ''
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="primary"
+        loading={loading}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 };

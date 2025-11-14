@@ -9,7 +9,12 @@ import java.util.List;
 @Repository
 public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     List<Delivery> findByStatus(Delivery.DeliveryStatus status);
+    
     List<Delivery> findByDriverId(Long driverId);
+    
+    List<Delivery> findByOrderId(Long orderId);
+    
+    List<Delivery> findByStatusAndDriverId(Delivery.DeliveryStatus status, Long driverId);
 }
 
 

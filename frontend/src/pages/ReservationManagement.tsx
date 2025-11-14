@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useReservationApi, Reservation } from '../hooks/useReservationApi';
+import { ConfirmDialog } from '../components/molecules/ConfirmDialog';
 
 const ReservationManagement: React.FC = () => {
     const { fetchReservations, createReservation, updateReservation, deleteReservation } = useReservationApi();
@@ -9,6 +10,8 @@ const ReservationManagement: React.FC = () => {
         guestCount: 0,
         dateTime: '',
     });
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [reservationToDelete, setReservationToDelete] = useState<number | null>(null);
 
     useEffect(() => {
         // Fetch reservations when the component mounts
@@ -40,12 +43,24 @@ const ReservationManagement: React.FC = () => {
         setForm({ id: reservation.id, guestCount: reservation.guestCount, dateTime: reservation.dateTime });
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this reservation?')) {
-            await deleteReservation(id);
-            const data = await fetchReservations(); // Refresh reservations after delete
-            setReservations(data);
-        }
+    const handleDelete = (id: number) => {
+        setReservationToDelete(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!reservationToDelete) return;
+        
+        await deleteReservation(reservationToDelete);
+        const data = await fetchReservations(); // Refresh reservations after delete
+        setReservations(data);
+        setShowDeleteConfirm(false);
+        setReservationToDelete(null);
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteConfirm(false);
+        setReservationToDelete(null);
     };
 
     return (
@@ -97,7 +112,23 @@ const ReservationManagement: React.FC = () => {
                     </li>
                 ))}
             </ul>
-        </div>
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+            isOpen={showDeleteConfirm}
+            title="Delete Reservation"
+            message={
+                reservationToDelete
+                    ? `Are you sure you want to delete reservation #${reservationToDelete}? This action cannot be undone.`
+                    : ''
+            }
+            confirmText="Delete"
+            cancelText="Cancel"
+            confirmVariant="primary"
+            onConfirm={handleConfirmDelete}
+            onCancel={handleCancelDelete}
+        />
+    </div>
     );
 };
 

@@ -64,21 +64,16 @@ public class UserService {
     public UserDto createUser(UserCreateRequestDto requestDto) {
         logger.info("Creating new user with email: {}", requestDto.getEmail());
 
-        // Basic input validation
-        if (requestDto.getEmail() == null || requestDto.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email must not be null or empty");
-        }
-        if (requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) {
-            throw new IllegalArgumentException("Password must not be null or empty");
-        }
+        // Basic input validation is now handled by Bean Validation (@Valid in Controller)
+        // Only business logic validation remains here
 
         // Validate password strength
         if (!PasswordValidator.isStrong(requestDto.getPassword())) {
             throw new IllegalArgumentException("Password does not meet strength requirements");
         }
 
-        // Check email uniqueness
-        if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
+        // Check email uniqueness (using existsByEmail for better performance)
+        if (userRepository.existsByEmail(requestDto.getEmail())) {
             logger.warn("User creation failed: email already exists - {}", requestDto.getEmail());
             throw new RuntimeException("User with email already exists: " + requestDto.getEmail());
         }

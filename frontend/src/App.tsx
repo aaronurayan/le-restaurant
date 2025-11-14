@@ -20,6 +20,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
+import { ErrorBoundary } from './components/errors/ErrorBoundary';
 import './index.css';
 
 // AppContent component to use hooks that require Router context
@@ -228,11 +229,13 @@ const AppContent: React.FC = () => {
 // Main App component
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

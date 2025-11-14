@@ -41,6 +41,7 @@ export interface ApiResponse<T> {
  */
 export interface ApiRequestConfig extends RequestInit {
   timeout?: number;
+  cancelPrevious?: boolean; // Cancel previous identical requests
   retries?: number;
   useMockData?: boolean;
   skipAuth?: boolean;
@@ -85,6 +86,8 @@ class UnifiedApiClient {
   private authToken: string | null = null;
   private requestCache: Map<string, { data: any; timestamp: number }> = new Map();
   private healthStatus: HealthStatus | null = null;
+  private pendingRequests: Map<string, Promise<any>> = new Map();
+  private abortControllers: Map<string, AbortController> = new Map();
 
   private constructor() {
     this.baseUrl = API_CONFIG.baseURL;
@@ -280,6 +283,7 @@ class UnifiedApiClient {
 
   /**
    * Main request method
+   * Includes request deduplication and cancellation support
    */
   public async request<T>(
     endpoint: string,
@@ -292,12 +296,14 @@ class UnifiedApiClient {
       skipAuth = false,
       cache = false,
       cacheTTL = 60000, // 1 minute default
+      cancelPrevious = false, // Cancel previous identical requests
       ...requestConfig
     } = config;
 
     const requestId = this.generateRequestId();
     const url = `${this.baseUrl}${endpoint}`;
     const cacheKey = cache ? this.getCacheKey(endpoint, config) : null;
+    const dedupeKey = `${requestConfig.method || 'GET'}:${endpoint}`;
 
     // Check cache first
     if (cache && cacheKey && this.isCacheValid(cacheKey, cacheTTL)) {
@@ -308,50 +314,90 @@ class UnifiedApiClient {
       }
     }
 
-    // Build headers
-    const headers: HeadersInit = {
-      ...API_CONFIG.headers,
-      'X-Request-ID': requestId,
-      ...requestConfig.headers,
-    };
-
-    // Add auth token if available
-    if (!skipAuth && this.authToken) {
-      headers['Authorization'] = `Bearer ${this.authToken}`;
+    // Cancel previous identical request if requested
+    if (cancelPrevious && this.pendingRequests.has(dedupeKey)) {
+      const previousController = this.abortControllers.get(dedupeKey);
+      if (previousController) {
+        previousController.abort();
+        console.log('🚫 Cancelled previous request for:', endpoint);
+      }
     }
 
-    // Build request config
-    const finalConfig: RequestInit = {
-      ...requestConfig,
-      headers,
-      signal: AbortSignal.timeout(timeout),
-    };
-
-    try {
-      const data = await this.executeWithRetry<T>(url, finalConfig, retries, requestId);
-      
-      // Cache response if enabled
-      if (cache && cacheKey) {
-        this.setCachedResponse(cacheKey, data);
-      }
-      
-      return data;
-    } catch (error) {
-      // Log error
-      console.error('API request failed:', {
-        endpoint,
-        requestId,
-        error,
-      });
-
-      // Try mock data fallback if enabled
-      if (useMockData && error instanceof ApiError && error.status >= 500) {
-        console.warn('Attempting mock data fallback for:', endpoint);
-        // Mock data fallback would be handled by the calling service
-      }
-
-      throw error;
+    // Check for duplicate pending request (deduplication)
+    if (this.pendingRequests.has(dedupeKey) && !cancelPrevious) {
+      console.log('🔄 Reusing pending request for:', endpoint);
+      return this.pendingRequests.get(dedupeKey)!;
     }
+
+    // Create abort controller for this request
+    const abortController = new AbortController();
+    this.abortControllers.set(dedupeKey, abortController);
+
+    // Create request promise
+    const requestPromise = (async (): Promise<T> => {
+      try {
+        // Build headers
+        const headers: HeadersInit = {
+          ...API_CONFIG.headers,
+          'X-Request-ID': requestId,
+          ...requestConfig.headers,
+        };
+
+        // Add auth token if available
+        if (!skipAuth && this.authToken) {
+          headers['Authorization'] = `Bearer ${this.authToken}`;
+        }
+
+        // Create timeout signal
+        const timeoutId = setTimeout(() => {
+          abortController.abort();
+        }, timeout);
+
+        // Build request config
+        const finalConfig: RequestInit = {
+          ...requestConfig,
+          headers,
+          signal: abortController.signal,
+        };
+
+        try {
+          const data = await this.executeWithRetry<T>(url, finalConfig, retries, requestId);
+          
+          // Cache response if enabled
+          if (cache && cacheKey) {
+            this.setCachedResponse(cacheKey, data);
+          }
+          
+          return data;
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      } catch (error) {
+        // Log error
+        console.error('API request failed:', {
+          endpoint,
+          requestId,
+          error,
+        });
+
+        // Try mock data fallback if enabled
+        if (useMockData && error instanceof ApiError && error.status >= 500) {
+          console.warn('Attempting mock data fallback for:', endpoint);
+          // Mock data fallback would be handled by the calling service
+        }
+
+        throw error;
+      } finally {
+        // Clean up
+        this.pendingRequests.delete(dedupeKey);
+        this.abortControllers.delete(dedupeKey);
+      }
+    })();
+
+    // Store pending request for deduplication
+    this.pendingRequests.set(dedupeKey, requestPromise);
+
+    return requestPromise;
   }
 
   /**

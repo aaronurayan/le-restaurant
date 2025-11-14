@@ -7,6 +7,7 @@ import { EmptyState } from '../components/molecules/EmptyState';
 import OrderDetailsPanel from '../components/organisms/OrderDetailsPanel';
 import { OrderStatus } from '../types/order';
 import { OrderStatusBadge } from '../components/atoms/OrderStatusBadge';
+import { ConfirmDialog } from '../components/molecules/ConfirmDialog';
 
 /**
  * Orders Page (F105)
@@ -33,6 +34,8 @@ export const Orders: React.FC<OrdersProps> = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<number | null>(null);
 
   useEffect(() => {
     if (user && user.id) {
@@ -53,18 +56,32 @@ export const Orders: React.FC<OrdersProps> = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleCancelOrder = async (orderId: number) => {
-    if (window.confirm('Are you sure you want to cancel this order?')) {
-      try {
-        await deleteOrder(orderId);
-        // Refresh orders
-        if (user && user.id) {
-          await getOrdersByCustomer(user.id);
-        }
-      } catch (err) {
-        console.error('Failed to cancel order:', err);
+  const handleCancelOrder = (orderId: number) => {
+    setOrderToCancel(orderId);
+    setShowCancelConfirm(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!orderToCancel) return;
+    
+    try {
+      await deleteOrder(orderToCancel);
+      // Refresh orders
+      if (user && user.id) {
+        await getOrdersByCustomer(user.id);
       }
+      setShowCancelConfirm(false);
+      setOrderToCancel(null);
+    } catch (err) {
+      console.error('Failed to cancel order:', err);
+      setShowCancelConfirm(false);
+      setOrderToCancel(null);
     }
+  };
+
+  const handleCancelCancel = () => {
+    setShowCancelConfirm(false);
+    setOrderToCancel(null);
   };
 
   return (
@@ -218,6 +235,23 @@ export const Orders: React.FC<OrdersProps> = () => {
           )}
         </div>
       </div>
+
+      {/* Cancel Order Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showCancelConfirm}
+        title="Cancel Order"
+        message={
+          orderToCancel
+            ? `Are you sure you want to cancel order #${orderToCancel}? This action cannot be undone.`
+            : ''
+        }
+        confirmText="Cancel Order"
+        cancelText="Keep Order"
+        confirmVariant="primary"
+        loading={loading}
+        onConfirm={handleConfirmCancel}
+        onCancel={handleCancelCancel}
+      />
     </section>
   );
 };

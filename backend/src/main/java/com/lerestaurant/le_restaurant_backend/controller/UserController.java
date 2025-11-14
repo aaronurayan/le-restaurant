@@ -22,6 +22,7 @@ import com.lerestaurant.le_restaurant_backend.dto.UserDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserUpdateRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.User;
 import com.lerestaurant.le_restaurant_backend.service.UserService;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
@@ -36,47 +37,24 @@ public class UserController {
     }
     
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody UserCreateRequestDto requestDto) {
-        try {
-            UserDto user = userService.createUser(requestDto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
-        } catch (IllegalArgumentException e) {
-            // Handle duplicate email or validation errors with 409 Conflict
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            if (e.getMessage().contains("already exists") || e.getMessage().contains("duplicate")) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-            }
-            return ResponseEntity.badRequest().body(error);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserCreateRequestDto requestDto) {
+        // Exception handling is done by GlobalExceptionHandler
+        UserDto user = userService.createUser(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
     
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
-        try {
-            UserDto user = userService.getUserById(id);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        UserDto user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
     
     @GetMapping("/email/{email}")
     public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
-        try {
-            UserDto user = userService.getUserByEmail(email);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        UserDto user = userService.getUserByEmail(email);
+        return ResponseEntity.ok(user);
     }
     
     @GetMapping
@@ -98,52 +76,32 @@ public class UserController {
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserUpdateRequestDto requestDto) {
-        try {
-            UserDto user = userService.updateUser(id, requestDto);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequestDto requestDto) {
+        // Exception handling is done by GlobalExceptionHandler
+        UserDto user = userService.updateUser(id, requestDto);
+        return ResponseEntity.ok(user);
     }
     
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateUserStatus(@PathVariable Long id, @RequestBody Map<String, User.UserStatus> statusRequest) {
-        try {
-            User.UserStatus status = statusRequest.get("status");
-            UserDto user = userService.updateUserStatus(id, status);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        User.UserStatus status = statusRequest.get("status");
+        UserDto user = userService.updateUserStatus(id, status);
+        return ResponseEntity.ok(user);
     }
     
     @PutMapping("/{id}/login")
     public ResponseEntity<?> updateLastLogin(@PathVariable Long id) {
-        try {
-            UserDto user = userService.updateLastLogin(id);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        UserDto user = userService.updateLastLogin(id);
+        return ResponseEntity.ok(user);
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        try {
-            userService.deleteUser(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
     
     @GetMapping("/exists/{email}")

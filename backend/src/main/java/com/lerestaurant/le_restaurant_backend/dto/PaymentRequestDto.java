@@ -1,12 +1,20 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
 import com.lerestaurant.le_restaurant_backend.entity.Payment;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 public class PaymentRequestDto {
+    @NotNull(message = "Order ID is required")
     private Long orderId;
+    
+    @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private BigDecimal amount;
+    
+    @NotNull(message = "Payment method is required")
     private Payment.PaymentMethod paymentMethod;
+    
     private String paymentDetails;
 
     // Constructors

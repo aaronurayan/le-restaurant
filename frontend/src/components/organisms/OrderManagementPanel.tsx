@@ -3,6 +3,10 @@ import { OrderDto, OrderStatus } from '../../types/order';
 import { useOrderApi } from '../../hooks/useOrderApi';
 import { OrderCard } from '../molecules/OrderCard';
 import { Button } from '../atoms/Button';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { ErrorMessage } from '../molecules/ErrorMessage';
+import { LoadingSpinner } from '../atoms/LoadingSpinner';
 
 interface OrderManagementPanelProps {
   customerId?: number;
@@ -21,6 +25,11 @@ export const OrderManagementPanel: React.FC<OrderManagementPanelProps> = ({
   const [filteredOrders, setFilteredOrders] = useState<OrderDto[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | 'ALL'>('ALL');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
+
+  // Error handling
+  const { error: apiError, handleError, clearError } = useErrorHandler();
 
   // Load orders on mount
   useEffect(() => {
@@ -47,14 +56,29 @@ export const OrderManagementPanel: React.FC<OrderManagementPanelProps> = ({
     }
   };
 
-  const handleDeleteOrder = async (orderId: number) => {
-    if (window.confirm('Are you sure you want to delete this order?')) {
-      try {
-        await deleteOrder(orderId);
-      } catch (err) {
-        console.error('Error deleting order:', err);
-      }
+  const handleDeleteOrder = (orderId: number) => {
+    setOrderToDelete(orderId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!orderToDelete) return;
+    
+    try {
+      clearError();
+      await deleteOrder(orderToDelete);
+      setShowDeleteConfirm(false);
+      setOrderToDelete(null);
+    } catch (err) {
+      handleError(err, 'Failed to delete order');
+      setShowDeleteConfirm(false);
+      setOrderToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setOrderToDelete(null);
   };
 
   const statusOptions: (OrderStatus | 'ALL')[] = [
@@ -104,18 +128,28 @@ export const OrderManagementPanel: React.FC<OrderManagementPanelProps> = ({
       {/* Loading State */}
       {loading && (
         <div className="flex justify-center items-center py-12">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-600">Loading orders...</p>
-          </div>
+          <LoadingSpinner size="lg" text="Loading orders..." variant="primary" />
         </div>
       )}
 
       {/* Error State */}
-      {error && (
-        <div className="p-4 bg-red-100 border border-red-400 rounded mb-6">
-          <p className="text-red-800 font-semibold">Error</p>
-          <p className="text-red-700">{error}</p>
+      {(error || apiError) && (
+        <div className="mb-4">
+          <ErrorMessage
+            message={apiError?.message || error || 'An error occurred'}
+            onRetry={apiError?.recoverable ? (customerId ? () => getOrdersByCustomer(customerId) : getAllOrders) : undefined}
+            size="md"
+          />
+          {apiError?.suggestions && apiError.suggestions.length > 0 && (
+            <div className="mt-2 text-sm text-neutral-600">
+              <p className="font-medium mb-1">Suggestions:</p>
+              <ul className="list-disc list-inside space-y-1">
+                {apiError.suggestions.map((suggestion, idx) => (
+                  <li key={idx}>{suggestion}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
@@ -157,6 +191,23 @@ export const OrderManagementPanel: React.FC<OrderManagementPanelProps> = ({
           onClose={() => setSelectedOrderId(null)}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Order"
+        message={
+          orderToDelete
+            ? `Are you sure you want to delete order #${orderToDelete}? This action cannot be undone.`
+            : ''
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="primary"
+        loading={loading}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 };

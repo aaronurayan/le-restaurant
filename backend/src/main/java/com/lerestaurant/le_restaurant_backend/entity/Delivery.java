@@ -56,8 +56,18 @@ public class Delivery {
     @Column(name = "delivery_photo_url")
     private String deliveryPhotoUrl;
 
+    // Note: customerName, phoneNumber, address are redundant as they can be accessed via:
+    // - order.customer (for customer info)
+    // - deliveryAddress (for address info)
+    // Keeping these fields for backward compatibility and performance (denormalization)
+    // Consider removing if not actively used
+    @Transient
     private String customerName;
+    
+    @Transient
     private String phoneNumber;
+    
+    @Transient
     private String address;
 
     @ElementCollection

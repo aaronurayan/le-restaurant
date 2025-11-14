@@ -4,6 +4,7 @@ import com.lerestaurant.le_restaurant_backend.dto.MenuItemDto;
 import com.lerestaurant.le_restaurant_backend.dto.MenuItemCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.MenuItemUpdateRequestDto;
 import com.lerestaurant.le_restaurant_backend.service.MenuService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,23 +42,20 @@ public class MenuController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean available
     ) {
-        try {
-            List<MenuItemDto> items;
-            
-            if (category != null && !category.isEmpty()) {
-                items = menuService.findByCategory(category);
-            } else if (search != null && !search.isEmpty()) {
-                items = menuService.searchByName(search);
-            } else if (available != null) {
-                items = menuService.findByAvailability(available);
-            } else {
-                items = menuService.findAllMenuItems();
-            }
-            
-            return ResponseEntity.ok(items);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        // Exception handling is done by GlobalExceptionHandler
+        List<MenuItemDto> items;
+        
+        if (category != null && !category.isEmpty()) {
+            items = menuService.findByCategory(category);
+        } else if (search != null && !search.isEmpty()) {
+            items = menuService.searchByName(search);
+        } else if (available != null) {
+            items = menuService.findByAvailability(available);
+        } else {
+            items = menuService.findAllMenuItems();
         }
+        
+        return ResponseEntity.ok(items);
     }
     
     /**
@@ -65,46 +63,19 @@ public class MenuController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getMenuItemById(@PathVariable Long id) {
-        try {
-            MenuItemDto item = menuService.findMenuItemById(id);
-            return ResponseEntity.ok(item);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Menu item not found with id: " + id));
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        MenuItemDto item = menuService.findMenuItemById(id);
+        return ResponseEntity.ok(item);
     }
     
     /**
      * CREATE MENU ITEM (F104 - Manager only) **CRITICAL**
      */
     @PostMapping
-    public ResponseEntity<?> createMenuItem(@RequestBody MenuItemCreateRequestDto request) {
-        try {
-            // Validate required fields
-            if (request.getName() == null || request.getName().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Menu item name is required"));
-            }
-            
-            if (request.getPrice() == null || request.getPrice().doubleValue() <= 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Menu item price must be greater than 0"));
-            }
-            
-            if (request.getCategory() == null || request.getCategory().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Menu item category is required"));
-            }
-            
-            MenuItemDto createdItem = menuService.createMenuItem(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<?> createMenuItem(@Valid @RequestBody MenuItemCreateRequestDto request) {
+        // Exception handling is done by GlobalExceptionHandler
+        MenuItemDto createdItem = menuService.createMenuItem(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
     }
     
     /**
@@ -113,15 +84,11 @@ public class MenuController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateMenuItem(
             @PathVariable Long id,
-            @RequestBody MenuItemUpdateRequestDto request
+            @Valid @RequestBody MenuItemUpdateRequestDto request
     ) {
-        try {
-            MenuItemDto updatedItem = menuService.updateMenuItem(id, request);
-            return ResponseEntity.ok(updatedItem);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Menu item not found with id: " + id));
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        MenuItemDto updatedItem = menuService.updateMenuItem(id, request);
+        return ResponseEntity.ok(updatedItem);
     }
     
     /**
@@ -129,13 +96,9 @@ public class MenuController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteMenuItem(@PathVariable Long id) {
-        try {
-            menuService.deleteMenuItem(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Menu item not found with id: " + id));
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        menuService.deleteMenuItem(id);
+        return ResponseEntity.noContent().build();
     }
     
     /**
@@ -143,11 +106,8 @@ public class MenuController {
      */
     @GetMapping("/categories")
     public ResponseEntity<List<String>> getAllCategories() {
-        try {
-            List<String> categories = menuService.getAllCategories();
-            return ResponseEntity.ok(categories);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        List<String> categories = menuService.getAllCategories();
+        return ResponseEntity.ok(categories);
     }
 }

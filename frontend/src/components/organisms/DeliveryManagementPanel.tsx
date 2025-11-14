@@ -20,6 +20,9 @@ import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { StatusBadge } from '../atoms/StatusBadge';
 import { ProgressBar } from '../atoms/ProgressBar';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { ErrorMessage } from '../molecules/ErrorMessage';
+import { LoadingSpinner } from '../atoms/LoadingSpinner';
 
 interface DeliveryManagementPanelProps {
   className?: string;
@@ -41,6 +44,9 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
     deliveryStatuses
   } = useDeliveryApi();
 
+  // Error handling
+  const { error: apiError, handleError, clearError } = useErrorHandler();
+
   const [deliveries, setDeliveries] = useState<DeliveryAssignment[]>([]);
   const [deliveryPersons, setDeliveryPersons] = useState<DeliveryPerson[]>([]);
   const [metrics, setMetrics] = useState<DeliveryMetrics | null>(null);
@@ -58,6 +64,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
 
   const loadData = async () => {
     try {
+      clearError();
       const [deliveriesData, personsData, metricsData] = await Promise.all([
         getDeliveries(filter),
         getDeliveryPersons(),
@@ -68,32 +75,32 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
       setDeliveryPersons(personsData);
       setMetrics(metricsData);
     } catch (err) {
-      console.error('Failed to load delivery data:', err);
+      handleError(err, 'Failed to load delivery data');
     }
   };
 
   const handleCreateAssignment = async (data: any) => {
     try {
+      clearError();
       const result = await createDeliveryAssignment(data);
       console.log('✅ Delivery assignment created successfully:', result);
       setShowCreateForm(false);
       setSelectedOrderId('');
       await loadData(); // Reload the deliveries to show the new one
-      // Show success message
-      alert(`✅ Successfully created delivery assignment for Order #${data.orderId}`);
     } catch (err) {
-      console.error('❌ Failed to create delivery assignment:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create delivery assignment';
-      alert(`❌ Error: ${errorMessage}`);
+      handleError(err, 'Failed to create delivery assignment');
+      setShowCreateForm(false);
+      setSelectedOrderId('');
     }
   };
 
   const handleStatusUpdate = async (deliveryId: string, status: string) => {
     try {
+      clearError();
       await updateDeliveryStatus(deliveryId, { status });
       loadData();
     } catch (err) {
-      console.error('Failed to update delivery status:', err);
+      handleError(err, 'Failed to update delivery status');
     }
   };
 
@@ -172,11 +179,39 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
 
       {/* Error Display */}
       {error && (
-        <div className="p-4 bg-red-100 border border-red-200 rounded-lg">
-          <div className="flex items-center text-red-800">
+        <div className="p-4 bg-yellow-100 border border-yellow-200 rounded-lg">
+          <div className="flex items-center text-yellow-800">
             <AlertCircle className="w-4 h-4 mr-2" />
-            <span className="text-sm font-medium">Error: {error}</span>
+            <span className="text-sm font-medium">⚠️ Using Mock Data: {error}</span>
           </div>
+        </div>
+      )}
+
+      {/* API Error Display */}
+      {apiError && (
+        <div className="mb-4">
+          <ErrorMessage
+            message={apiError.message}
+            onRetry={apiError.recoverable ? loadData : undefined}
+            size="md"
+          />
+          {apiError.suggestions && apiError.suggestions.length > 0 && (
+            <div className="mt-2 text-sm text-neutral-600">
+              <p className="font-medium mb-1">Suggestions:</p>
+              <ul className="list-disc list-inside space-y-1">
+                {apiError.suggestions.map((suggestion, idx) => (
+                  <li key={idx}>{suggestion}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <LoadingSpinner size="lg" text="Loading delivery data..." variant="primary" />
         </div>
       )}
 
@@ -265,7 +300,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'deliveries' && (
+      {activeTab === 'deliveries' && !loading && (
         <div className="space-y-4">
           {/* Search */}
           <div className="flex flex-col md:flex-row gap-4">
@@ -313,7 +348,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
         </div>
       )}
 
-      {activeTab === 'persons' && (
+      {activeTab === 'persons' && !loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {deliveryPersons.map((person) => (
             <DeliveryPersonCard
@@ -331,7 +366,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
         </div>
       )}
 
-      {activeTab === 'metrics' && (
+      {activeTab === 'metrics' && !loading && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
@@ -399,7 +434,7 @@ export const DeliveryManagementPanel: React.FC<DeliveryManagementPanelProps> = (
       )}
 
       {/* Archived Tab */}
-      {activeTab === 'archived' && (
+      {activeTab === 'archived' && !loading && (
         <div className="space-y-4">
           {/* Archived Deliveries Header */}
           <div className="flex items-center justify-between">

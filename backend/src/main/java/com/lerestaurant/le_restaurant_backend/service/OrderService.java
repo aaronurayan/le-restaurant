@@ -92,11 +92,8 @@ public class OrderService {
                     });
         }
         
-        // Validate order has items
-        if (requestDto.getItems() == null || requestDto.getItems().isEmpty()) {
-            logger.error("Order creation failed: no items provided");
-            throw new RuntimeException("Order must contain at least one item");
-        }
+        // Order items validation is now handled by Bean Validation (@NotEmpty in DTO)
+        // Additional business logic validation (menu item existence, availability) remains here
         
         // Create order entity
         Order order = new Order();

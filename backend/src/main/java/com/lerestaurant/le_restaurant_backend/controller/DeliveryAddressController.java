@@ -3,6 +3,7 @@ package com.lerestaurant.le_restaurant_backend.controller;
 import com.lerestaurant.le_restaurant_backend.dto.DeliveryAddressCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.DeliveryAddressDto;
 import com.lerestaurant.le_restaurant_backend.service.DeliveryAddressService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,17 +47,11 @@ public class DeliveryAddressController {
      * @return Created address
      */
     @PostMapping
-    public ResponseEntity<?> createAddress(@RequestBody DeliveryAddressCreateRequestDto requestDto) {
-        try {
-            logger.info("Creating new delivery address for user ID: {}", requestDto.getUserId());
-            DeliveryAddressDto addressDto = deliveryAddressService.createAddress(requestDto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(addressDto);
-        } catch (RuntimeException e) {
-            logger.error("Error creating delivery address: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<?> createAddress(@Valid @RequestBody DeliveryAddressCreateRequestDto requestDto) {
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Creating new delivery address for user ID: {}", requestDto.getUserId());
+        DeliveryAddressDto addressDto = deliveryAddressService.createAddress(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(addressDto);
     }
     
     /**
@@ -68,16 +63,10 @@ public class DeliveryAddressController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getAddressById(@PathVariable Long id) {
-        try {
-            logger.info("Fetching delivery address with ID: {}", id);
-            DeliveryAddressDto addressDto = deliveryAddressService.getAddressById(id);
-            return ResponseEntity.ok(addressDto);
-        } catch (RuntimeException e) {
-            logger.error("Error fetching delivery address: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Fetching delivery address with ID: {}", id);
+        DeliveryAddressDto addressDto = deliveryAddressService.getAddressById(id);
+        return ResponseEntity.ok(addressDto);
     }
     
     /**
@@ -89,16 +78,10 @@ public class DeliveryAddressController {
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getAddressesByUserId(@PathVariable Long userId) {
-        try {
-            logger.info("Fetching all delivery addresses for user ID: {}", userId);
-            List<DeliveryAddressDto> addresses = deliveryAddressService.getAddressesByUserId(userId);
-            return ResponseEntity.ok(addresses);
-        } catch (RuntimeException e) {
-            logger.error("Error fetching delivery addresses: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Fetching all delivery addresses for user ID: {}", userId);
+        List<DeliveryAddressDto> addresses = deliveryAddressService.getAddressesByUserId(userId);
+        return ResponseEntity.ok(addresses);
     }
     
     /**
@@ -110,19 +93,13 @@ public class DeliveryAddressController {
      */
     @GetMapping("/user/{userId}/default")
     public ResponseEntity<?> getDefaultAddress(@PathVariable Long userId) {
-        try {
-            logger.info("Fetching default delivery address for user ID: {}", userId);
-            DeliveryAddressDto addressDto = deliveryAddressService.getDefaultAddress(userId);
-            if (addressDto == null) {
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.ok(addressDto);
-        } catch (RuntimeException e) {
-            logger.error("Error fetching default delivery address: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Fetching default delivery address for user ID: {}", userId);
+        DeliveryAddressDto addressDto = deliveryAddressService.getDefaultAddress(userId);
+        if (addressDto == null) {
+            return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.ok(addressDto);
     }
     
     /**
@@ -134,18 +111,12 @@ public class DeliveryAddressController {
      * @return Updated address
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateAddress(@PathVariable Long id, 
-                                          @RequestBody DeliveryAddressCreateRequestDto requestDto) {
-        try {
-            logger.info("Updating delivery address with ID: {}", id);
-            DeliveryAddressDto addressDto = deliveryAddressService.updateAddress(id, requestDto);
-            return ResponseEntity.ok(addressDto);
-        } catch (RuntimeException e) {
-            logger.error("Error updating delivery address: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<?> updateAddress(@PathVariable Long id,
+                                          @Valid @RequestBody DeliveryAddressCreateRequestDto requestDto) {
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Updating delivery address with ID: {}", id);
+        DeliveryAddressDto addressDto = deliveryAddressService.updateAddress(id, requestDto);
+        return ResponseEntity.ok(addressDto);
     }
     
     /**
@@ -157,16 +128,10 @@ public class DeliveryAddressController {
      */
     @PutMapping("/{id}/set-default")
     public ResponseEntity<?> setAsDefault(@PathVariable Long id) {
-        try {
-            logger.info("Setting delivery address {} as default", id);
-            DeliveryAddressDto addressDto = deliveryAddressService.setAsDefault(id);
-            return ResponseEntity.ok(addressDto);
-        } catch (RuntimeException e) {
-            logger.error("Error setting default delivery address: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Setting delivery address {} as default", id);
+        DeliveryAddressDto addressDto = deliveryAddressService.setAsDefault(id);
+        return ResponseEntity.ok(addressDto);
     }
     
     /**
@@ -178,17 +143,11 @@ public class DeliveryAddressController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteAddress(@PathVariable Long id) {
-        try {
-            logger.info("Deleting delivery address with ID: {}", id);
-            deliveryAddressService.deleteAddress(id);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Delivery address deleted successfully");
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            logger.error("Error deleting delivery address: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Deleting delivery address with ID: {}", id);
+        deliveryAddressService.deleteAddress(id);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Delivery address deleted successfully");
+        return ResponseEntity.ok(response);
     }
 }

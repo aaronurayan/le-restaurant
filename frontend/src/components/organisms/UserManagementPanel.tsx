@@ -15,6 +15,10 @@ import {
 import { User, UserRole, UserStatus, CreateUserRequest, UpdateUserRequest } from '../../types/user';
 import UserFormModal from './UserFormModal';
 import { useUserApi } from '../../hooks/useUserApi';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { ErrorMessage } from '../molecules/ErrorMessage';
+import { LoadingSpinner } from '../atoms/LoadingSpinner';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
 
 interface UserManagementPanelProps {
   isOpen: boolean;
@@ -40,6 +44,9 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
     updateUser,
     deleteUser
   } = useUserApi();
+
+  // Error handling
+  const { error: apiError, handleError, clearError } = useErrorHandler();
 
 
   useEffect(() => {
@@ -76,6 +83,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
 
   const handleCreateUser = async (userData: CreateUserRequest | UpdateUserRequest) => {
     try {
+      clearError();
       // Type guard to ensure we have CreateUserRequest
       if (!('password' in userData) || !userData.password) {
         throw new Error('Password is required for creating a new user');
@@ -93,29 +101,48 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
       
       await createUser(createData);
       setShowCreateModal(false);
-    } catch (error) {
-      console.error('Failed to create user:', error);
+    } catch (err) {
+      handleError(err, 'Failed to create user');
     }
   };
 
   const handleUpdateUser = async (userId: number, userData: UpdateUserRequest) => {
     try {
+      clearError();
       await updateUser(userId, userData);
       setShowEditModal(false);
       setSelectedUser(null);
-    } catch (error) {
-      console.error('Failed to update user:', error);
+    } catch (err) {
+      handleError(err, 'Failed to update user');
     }
   };
 
-  const handleDeleteUser = async (userId: number) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<number | null>(null);
+
+  const handleDeleteUser = (userId: number) => {
+    setUserToDelete(userId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
     
     try {
-      await deleteUser(userId);
-    } catch (error) {
-      console.error('Failed to delete user:', error);
+      clearError();
+      await deleteUser(userToDelete);
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
+    } catch (err) {
+      handleError(err, 'Failed to delete user');
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setUserToDelete(null);
   };
 
   const getRoleIcon = (role: UserRole) => {
@@ -247,11 +274,32 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
           </div>
         )}
 
+        {/* Error Display (API Errors) */}
+        {apiError && (
+          <div className="p-4 mb-4">
+            <ErrorMessage
+              message={apiError.message}
+              onRetry={apiError.recoverable ? loadUsers : undefined}
+              size="md"
+            />
+            {apiError.suggestions && apiError.suggestions.length > 0 && (
+              <div className="mt-2 text-sm text-neutral-600">
+                <p className="font-medium mb-1">Suggestions:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {apiError.suggestions.map((suggestion, idx) => (
+                    <li key={idx}>{suggestion}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* User Table */}
         <div className="overflow-y-auto max-h-96">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="spinner" />
+              <LoadingSpinner size="lg" text="Loading users..." variant="primary" />
             </div>
           ) : (
             <table className="w-full">
@@ -388,6 +436,18 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
         onSubmit={(userData) => handleUpdateUser(selectedUser!.id, userData)}
         user={selectedUser}
         mode="edit"
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete User"
+        message={`Are you sure you want to delete this user? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        loading={isLoading}
       />
     </div>
   );

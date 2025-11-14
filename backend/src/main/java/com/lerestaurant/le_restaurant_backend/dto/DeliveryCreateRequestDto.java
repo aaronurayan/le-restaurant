@@ -1,5 +1,6 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 /**
@@ -14,10 +15,18 @@ import java.math.BigDecimal;
  */
 public class DeliveryCreateRequestDto {
     
+    @NotNull(message = "Order ID is required")
     private Long orderId;
+    
+    @NotNull(message = "Delivery address ID is required")
     private Long deliveryAddressId;
+    
+    @DecimalMin(value = "0.0", message = "Delivery fee cannot be negative")
     private BigDecimal deliveryFee;
+    
+    @Min(value = 1, message = "Estimated delivery time must be at least 1 minute")
     private Integer estimatedDeliveryTimeMinutes;
+    
     private String deliveryInstructions;
     
     // Constructors

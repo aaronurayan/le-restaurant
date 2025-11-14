@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Payment, PaymentMethod, PaymentStatus } from '../../types/payment';
 import { usePaymentApi } from '../../hooks/usePaymentApi';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
 
 interface PaymentManagementPanelProps {
   isOpen: boolean;
@@ -23,6 +24,8 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [methodFilter, setMethodFilter] = useState<PaymentMethod | 'all'>('all');
+  const [showRefundConfirm, setShowRefundConfirm] = useState(false);
+  const [paymentToRefund, setPaymentToRefund] = useState<number | null>(null);
   
   // API 훅 사용
   const {
@@ -33,6 +36,9 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
     loadPayments,
     updatePaymentStatus
   } = usePaymentApi();
+
+  // Error handling
+  const { error: apiError, handleError, clearError } = useErrorHandler();
 
 
   useEffect(() => {
@@ -70,22 +76,38 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
 
   const handleStatusChange = async (paymentId: number, newStatus: PaymentStatus) => {
     try {
+      clearError();
       await updatePaymentStatus(paymentId, newStatus);
-    } catch (error) {
-      console.error('Failed to update payment status:', error);
+    } catch (err) {
+      handleError(err, 'Failed to update payment status');
     }
   };
 
-  const handleRefund = async (paymentId: number) => {
-    if (!confirm('Are you sure you want to process a refund for this payment?')) return;
+  const handleRefund = (paymentId: number) => {
+    setPaymentToRefund(paymentId);
+    setShowRefundConfirm(true);
+  };
+
+  const handleConfirmRefund = async () => {
+    if (!paymentToRefund) return;
     
     try {
+      clearError();
       // TODO: Replace with actual API call
-      // await paymentApi.processRefund(paymentId);
-      await handleStatusChange(paymentId, PaymentStatus.REFUNDED);
-    } catch (error) {
-      console.error('Failed to process refund:', error);
+      // await paymentApi.processRefund(paymentToRefund);
+      await handleStatusChange(paymentToRefund, PaymentStatus.REFUNDED);
+      setShowRefundConfirm(false);
+      setPaymentToRefund(null);
+    } catch (err) {
+      handleError(err, 'Failed to process refund');
+      setShowRefundConfirm(false);
+      setPaymentToRefund(null);
     }
+  };
+
+  const handleCancelRefund = () => {
+    setShowRefundConfirm(false);
+    setPaymentToRefund(null);
   };
 
   const getStatusIcon = (status: PaymentStatus) => {
@@ -212,6 +234,27 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
           </div>
         )}
 
+        {/* Error Display (API Errors) */}
+        {apiError && (
+          <div className="p-4 mb-4">
+            <ErrorMessage
+              message={apiError.message}
+              onRetry={apiError.recoverable ? loadPayments : undefined}
+              size="md"
+            />
+            {apiError.suggestions && apiError.suggestions.length > 0 && (
+              <div className="mt-2 text-sm text-neutral-600">
+                <p className="font-medium mb-1">Suggestions:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {apiError.suggestions.map((suggestion, idx) => (
+                    <li key={idx}>{suggestion}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="p-6 border-b border-neutral-100">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -310,7 +353,7 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
         <div className="overflow-y-auto max-h-96">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="spinner" />
+              <LoadingSpinner size="lg" text="Loading payments..." variant="primary" />
             </div>
           ) : (
             <table className="w-full">
@@ -432,6 +475,23 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
           </div>
         </div>
       </div>
+
+      {/* Refund Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showRefundConfirm}
+        title="Process Refund"
+        message={
+          paymentToRefund
+            ? 'Are you sure you want to process a refund for this payment? This action cannot be undone.'
+            : ''
+        }
+        confirmText="Process Refund"
+        cancelText="Cancel"
+        confirmVariant="primary"
+        loading={isLoading}
+        onConfirm={handleConfirmRefund}
+        onCancel={handleCancelRefund}
+      />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import com.lerestaurant.le_restaurant_backend.dto.OrderUpdateRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Order;
 import com.lerestaurant.le_restaurant_backend.service.OrderService;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,24 +35,18 @@ public class OrderController {
 
     /** Create a new order */
     @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody OrderCreateRequestDto requestDto) {
-        try {
-            OrderDto order = orderService.createOrder(requestDto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(order);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<?> createOrder(@Valid @RequestBody OrderCreateRequestDto requestDto) {
+        // Exception handling is done by GlobalExceptionHandler
+        OrderDto order = orderService.createOrder(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
 
     /** Get order by ID */
     @GetMapping("/{id}")
     public ResponseEntity<?> getOrderById(@PathVariable Long id) {
-        try {
-            OrderDto order = orderService.getOrderById(id);
-            return ResponseEntity.ok(order);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        OrderDto order = orderService.getOrderById(id);
+        return ResponseEntity.ok(order);
     }
 
     /** Get all orders */
@@ -75,34 +70,23 @@ public class OrderController {
     /** Update order status */
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> statusUpdate) {
-        try {
-            Order.OrderStatus status = Order.OrderStatus.valueOf(statusUpdate.get("status"));
-            return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid status value"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        Order.OrderStatus status = Order.OrderStatus.valueOf(statusUpdate.get("status"));
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
     }
 
     /** Update order details */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody OrderUpdateRequestDto requestDto) {
-        try {
-            return ResponseEntity.ok(orderService.updateOrder(id, requestDto));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<?> updateOrder(@PathVariable Long id, @Valid @RequestBody OrderUpdateRequestDto requestDto) {
+        // Exception handling is done by GlobalExceptionHandler
+        return ResponseEntity.ok(orderService.updateOrder(id, requestDto));
     }
 
     /** Delete / cancel order */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
-        try {
-            orderService.deleteOrder(id);
-            return ResponseEntity.ok(Map.of("message", "Order cancelled successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        orderService.deleteOrder(id);
+        return ResponseEntity.ok(Map.of("message", "Order cancelled successfully"));
     }
 }

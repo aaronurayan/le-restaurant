@@ -5,6 +5,7 @@ import com.lerestaurant.le_restaurant_backend.dto.DeliveryDto;
 import com.lerestaurant.le_restaurant_backend.dto.DeliveryUpdateRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Delivery;
 import com.lerestaurant.le_restaurant_backend.service.DeliveryService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,17 +49,11 @@ public class DeliveryController {
      * @return Created delivery
      */
     @PostMapping
-    public ResponseEntity<?> createDelivery(@RequestBody DeliveryCreateRequestDto requestDto) {
-        try {
-            logger.info("Creating new delivery for order ID: {}", requestDto.getOrderId());
-            DeliveryDto deliveryDto = deliveryService.createDelivery(requestDto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(deliveryDto);
-        } catch (RuntimeException e) {
-            logger.error("Error creating delivery: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<?> createDelivery(@Valid @RequestBody DeliveryCreateRequestDto requestDto) {
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Creating new delivery for order ID: {}", requestDto.getOrderId());
+        DeliveryDto deliveryDto = deliveryService.createDelivery(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(deliveryDto);
     }
     
     /**
@@ -70,16 +65,10 @@ public class DeliveryController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getDeliveryById(@PathVariable Long id) {
-        try {
-            logger.info("Fetching delivery with ID: {}", id);
-            DeliveryDto deliveryDto = deliveryService.getDeliveryById(id);
-            return ResponseEntity.ok(deliveryDto);
-        } catch (RuntimeException e) {
-            logger.error("Error fetching delivery: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Fetching delivery with ID: {}", id);
+        DeliveryDto deliveryDto = deliveryService.getDeliveryById(id);
+        return ResponseEntity.ok(deliveryDto);
     }
     
     /**
@@ -90,16 +79,10 @@ public class DeliveryController {
      */
     @GetMapping
     public ResponseEntity<?> getAllDeliveries() {
-        try {
-            logger.info("Fetching all deliveries");
-            List<DeliveryDto> deliveries = deliveryService.getAllDeliveries();
-            return ResponseEntity.ok(deliveries);
-        } catch (RuntimeException e) {
-            logger.error("Error fetching deliveries: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Fetching all deliveries");
+        List<DeliveryDto> deliveries = deliveryService.getAllDeliveries();
+        return ResponseEntity.ok(deliveries);
     }
     
     /**
@@ -111,22 +94,11 @@ public class DeliveryController {
      */
     @GetMapping("/status/{status}")
     public ResponseEntity<?> getDeliveriesByStatus(@PathVariable String status) {
-        try {
-            logger.info("Fetching deliveries with status: {}", status);
-            Delivery.DeliveryStatus deliveryStatus = Delivery.DeliveryStatus.valueOf(status.toUpperCase());
-            List<DeliveryDto> deliveries = deliveryService.getDeliveriesByStatus(deliveryStatus);
-            return ResponseEntity.ok(deliveries);
-        } catch (IllegalArgumentException e) {
-            logger.error("Invalid delivery status: {}", status);
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Invalid delivery status: " + status);
-            return ResponseEntity.badRequest().body(error);
-        } catch (RuntimeException e) {
-            logger.error("Error fetching deliveries by status: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Fetching deliveries with status: {}", status);
+        Delivery.DeliveryStatus deliveryStatus = Delivery.DeliveryStatus.valueOf(status.toUpperCase());
+        List<DeliveryDto> deliveries = deliveryService.getDeliveriesByStatus(deliveryStatus);
+        return ResponseEntity.ok(deliveries);
     }
     
     /**
@@ -138,16 +110,10 @@ public class DeliveryController {
      */
     @GetMapping("/driver/{driverId}")
     public ResponseEntity<?> getDeliveriesByDriver(@PathVariable Long driverId) {
-        try {
-            logger.info("Fetching deliveries for driver ID: {}", driverId);
-            List<DeliveryDto> deliveries = deliveryService.getDeliveriesByDriver(driverId);
-            return ResponseEntity.ok(deliveries);
-        } catch (RuntimeException e) {
-            logger.error("Error fetching deliveries by driver: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Fetching deliveries for driver ID: {}", driverId);
+        List<DeliveryDto> deliveries = deliveryService.getDeliveriesByDriver(driverId);
+        return ResponseEntity.ok(deliveries);
     }
     
     /**
@@ -160,16 +126,10 @@ public class DeliveryController {
      */
     @PostMapping("/{id}/assign-driver/{driverId}")
     public ResponseEntity<?> assignDriver(@PathVariable Long id, @PathVariable Long driverId) {
-        try {
-            logger.info("Assigning driver {} to delivery {}", driverId, id);
-            DeliveryDto deliveryDto = deliveryService.assignDriver(id, driverId);
-            return ResponseEntity.ok(deliveryDto);
-        } catch (RuntimeException e) {
-            logger.error("Error assigning driver: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Assigning driver {} to delivery {}", driverId, id);
+        DeliveryDto deliveryDto = deliveryService.assignDriver(id, driverId);
+        return ResponseEntity.ok(deliveryDto);
     }
     
     /**
@@ -182,17 +142,11 @@ public class DeliveryController {
      */
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateDeliveryStatus(@PathVariable Long id,
-                                                  @RequestBody DeliveryUpdateRequestDto requestDto) {
-        try {
-            logger.info("Updating delivery {} status to: {}", id, requestDto.getStatus());
-            DeliveryDto deliveryDto = deliveryService.updateDeliveryStatus(id, requestDto);
-            return ResponseEntity.ok(deliveryDto);
-        } catch (RuntimeException e) {
-            logger.error("Error updating delivery status: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+                                                  @Valid @RequestBody DeliveryUpdateRequestDto requestDto) {
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Updating delivery {} status to: {}", id, requestDto.getStatus());
+        DeliveryDto deliveryDto = deliveryService.updateDeliveryStatus(id, requestDto);
+        return ResponseEntity.ok(deliveryDto);
     }
     
     /**
@@ -204,17 +158,11 @@ public class DeliveryController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteDelivery(@PathVariable Long id) {
-        try {
-            logger.info("Deleting delivery with ID: {}", id);
-            deliveryService.deleteDelivery(id);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Delivery deleted successfully");
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            logger.error("Error deleting delivery: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        logger.info("Deleting delivery with ID: {}", id);
+        deliveryService.deleteDelivery(id);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Delivery deleted successfully");
+        return ResponseEntity.ok(response);
     }
 }

@@ -134,6 +134,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = data.token || 'mock-token-' + Date.now();
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       
+      // API 클라이언트에 토큰 설정
+      const { apiClient } = await import('../services/apiClient.unified');
+      apiClient.setAuthToken(token);
+      
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: { user: authUser, token, expiresAt }
@@ -154,6 +158,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = (): void => {
+    // API 클라이언트에서 토큰 제거
+    import('../services/apiClient.unified').then(({ apiClient }) => {
+      apiClient.setAuthToken(null);
+    });
+    
     dispatch({ type: 'LOGOUT' });
     localStorage.removeItem('auth');
   };
@@ -202,6 +211,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const token = 'mock-token-' + Date.now();
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      
+      // API 클라이언트에 토큰 설정
+      const { apiClient } = await import('../services/apiClient.unified');
+      apiClient.setAuthToken(token);
       
       dispatch({
         type: 'REGISTER_SUCCESS',

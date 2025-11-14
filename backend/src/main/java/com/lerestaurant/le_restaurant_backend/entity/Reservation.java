@@ -87,8 +87,11 @@ public class Reservation {
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
     public User getConfirmedBy() { return confirmedBy; }
     public void setConfirmedBy(User confirmedBy) { this.confirmedBy = confirmedBy; }
+    
+    // Alias methods for backward compatibility
     public User getApprovedBy() { return confirmedBy; }
     public void setApprovedBy(User approvedBy) { this.confirmedBy = approvedBy; }
+    
     public Integer getNumberOfGuests() { return partySize; }
     public void setNumberOfGuests(Integer numberOfGuests) { this.partySize = numberOfGuests; }
     public OffsetDateTime getReservationDateTime() {

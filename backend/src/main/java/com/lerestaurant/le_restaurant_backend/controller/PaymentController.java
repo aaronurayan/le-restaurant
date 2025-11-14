@@ -23,6 +23,9 @@ import com.lerestaurant.le_restaurant_backend.dto.PaymentRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Payment;
 import com.lerestaurant.le_restaurant_backend.service.PaymentService;
 
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/api/payments")
 // CORS is handled globally in WebConfig
@@ -36,27 +39,17 @@ public class PaymentController {
     }
     
     @PostMapping
-    public ResponseEntity<?> createPayment(@RequestBody PaymentRequestDto requestDto) {
-        try {
-            PaymentDto payment = paymentService.createPayment(requestDto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(payment);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<?> createPayment(@Valid @RequestBody PaymentRequestDto requestDto) {
+        // Exception handling is done by GlobalExceptionHandler
+        PaymentDto payment = paymentService.createPayment(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(payment);
     }
     
     @GetMapping("/{id}")
     public ResponseEntity<?> getPaymentById(@PathVariable Long id) {
-        try {
-            PaymentDto payment = paymentService.getPaymentById(id);
-            return ResponseEntity.ok(payment);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        PaymentDto payment = paymentService.getPaymentById(id);
+        return ResponseEntity.ok(payment);
     }
     
     @GetMapping
@@ -79,38 +72,38 @@ public class PaymentController {
     
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updatePaymentStatus(@PathVariable Long id, @RequestParam Payment.PaymentStatus status) {
-        try {
-            PaymentDto payment = paymentService.updatePaymentStatus(id, status);
-            return ResponseEntity.ok(payment);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        PaymentDto payment = paymentService.updatePaymentStatus(id, status);
+        return ResponseEntity.ok(payment);
     }
     
     @PostMapping("/{id}/process")
     public ResponseEntity<?> processPayment(@PathVariable Long id) {
-        try {
-            PaymentDto payment = paymentService.processPayment(id);
-            return ResponseEntity.ok(payment);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        PaymentDto payment = paymentService.processPayment(id);
+        return ResponseEntity.ok(payment);
+    }
+    
+    @PostMapping("/{id}/refund")
+    public ResponseEntity<?> refundPayment(@PathVariable Long id) {
+        // Exception handling is done by GlobalExceptionHandler
+        PaymentDto payment = paymentService.refundPayment(id);
+        return ResponseEntity.ok(payment);
+    }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePayment(@PathVariable Long id, @RequestBody Map<String, String> update) {
+        // Exception handling is done by GlobalExceptionHandler
+        Payment.PaymentStatus status = Payment.PaymentStatus.valueOf(update.get("status"));
+        PaymentDto payment = paymentService.updatePaymentStatus(id, status);
+        return ResponseEntity.ok(payment);
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePayment(@PathVariable Long id) {
-        try {
-            paymentService.deletePayment(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+        // Exception handling is done by GlobalExceptionHandler
+        paymentService.deletePayment(id);
+        return ResponseEntity.noContent().build();
     }
     
     @GetMapping("/test")

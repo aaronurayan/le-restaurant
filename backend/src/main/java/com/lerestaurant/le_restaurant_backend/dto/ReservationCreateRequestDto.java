@@ -1,5 +1,6 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
+import jakarta.validation.constraints.*;
 import java.time.OffsetDateTime;
 
 /**
@@ -17,13 +18,22 @@ public class ReservationCreateRequestDto {
 
     private Long customerId; // Optional - null for guest reservations
     private Long tableId; // Optional - auto-assigned if null
+    
+    @NotNull(message = "Number of guests is required")
+    @Min(value = 1, message = "Number of guests must be at least 1")
     private Integer numberOfGuests;
+    
+    @NotNull(message = "Reservation date and time is required")
     private OffsetDateTime reservationDateTime;
+    
     private String specialRequests;
 
     // Guest customer info (for non-authenticated users)
     private String guestName;
+    
+    @Email(message = "Guest email must be valid")
     private String guestEmail;
+    
     private String guestPhone;
 
     // Constructors

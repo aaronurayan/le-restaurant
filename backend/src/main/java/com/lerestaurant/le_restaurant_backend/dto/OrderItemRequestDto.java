@@ -1,5 +1,7 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
+import jakarta.validation.constraints.*;
+
 /**
  * Order Item Request DTO (F105)
  * 
@@ -12,7 +14,11 @@ package com.lerestaurant.le_restaurant_backend.dto;
  */
 public class OrderItemRequestDto {
     
+    @NotNull(message = "Menu item ID is required")
     private Long menuItemId;
+    
+    @NotNull(message = "Quantity is required")
+    @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
     
     // Constructors

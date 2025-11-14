@@ -1,5 +1,7 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
+import jakarta.validation.constraints.*;
+
 /**
  * Reservation Approval Request DTO (F109)
  * 
@@ -12,8 +14,12 @@ package com.lerestaurant.le_restaurant_backend.dto;
  */
 public class ReservationApprovalRequestDto {
     
+    @NotNull(message = "Approval status is required")
     private Boolean approved;
-    private String rejectionReason; // Required if approved=false
+    
+    private String rejectionReason; // Required if approved=false (validated in service)
+    
+    @NotNull(message = "Approver ID is required")
     private Long approverId; // Manager ID
     
     // Constructors

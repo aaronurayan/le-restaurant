@@ -1,12 +1,19 @@
 package com.lerestaurant.le_restaurant_backend.dto;
 
 import com.lerestaurant.le_restaurant_backend.entity.User;
+import jakarta.validation.constraints.*;
 
 public class UserUpdateRequestDto {
     private String phoneNumber;
+    
+    @Size(min = 1, message = "First name must not be empty if provided")
     private String firstName;
+    
+    @Size(min = 1, message = "Last name must not be empty if provided")
     private String lastName;
+    
     private User.UserStatus status;
+    
     private String profileImageUrl;
 
     // Constructors

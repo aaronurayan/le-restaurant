@@ -12,6 +12,10 @@ import ReservationTable from '../organisms/ReservationTable';
 import ReservationApprovalModal from '../molecules/ReservationApprovalModal';
 import ReservationDenialModal from '../molecules/ReservationDenialModal';
 import ReservationDetailsModal from '../molecules/ReservationDetailsModal';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { ErrorMessage } from '../molecules/ErrorMessage';
+import { LoadingSpinner } from '../atoms/LoadingSpinner';
 
 /**
  * ReservationManagementPanel - Organism Component
@@ -53,14 +57,18 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
   const [showDenialModal, setShowDenialModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
+  // Error handling
+  const { error: apiError, handleError, clearError } = useErrorHandler();
+
   // Load reservations on mount
   const loadReservations = useCallback(async () => {
     try {
+      clearError();
       await fetchReservations();
-    } catch {
-      toast.error('Failed to load reservations');
+    } catch (err) {
+      handleError(err, 'Failed to load reservations');
     }
-  }, [fetchReservations]);
+  }, [fetchReservations, clearError, handleError]);
 
   useEffect(() => {
     loadReservations();
@@ -76,9 +84,10 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
     if (searchQuery) filters.customerName = searchQuery;
 
     try {
+      clearError();
       await fetchReservations(filters);
-    } catch {
-      toast.error('Failed to apply filters');
+    } catch (err) {
+      handleError(err, 'Failed to apply filters');
     }
   };
 
@@ -92,10 +101,11 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
 
   const handleShowPending = async () => {
     try {
+      clearError();
       await fetchPendingReservations();
       toast.success('Showing pending reservations');
-    } catch {
-      toast.error('Failed to load pending reservations');
+    } catch (err) {
+      handleError(err, 'Failed to load pending reservations');
     }
   };
 
@@ -119,6 +129,7 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
     if (!selectedReservation || !user) return;
 
     try {
+      clearError();
       await approveReservation(selectedReservation.id, {
         tableId,
         adminNotes,
@@ -129,8 +140,7 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
       setShowApprovalModal(false);
       setSelectedReservation(null);
     } catch (err) {
-      const error = err as Error;
-      toast.error(error.message || 'Failed to approve reservation');
+      handleError(err, 'Failed to approve reservation');
     }
   };
 
@@ -138,6 +148,7 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
     if (!selectedReservation) return;
 
     try {
+      clearError();
       await denyReservation(selectedReservation.id, {
         denialReason,
         deniedByUserId: user?.id,
@@ -147,8 +158,7 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
       setShowDenialModal(false);
       setSelectedReservation(null);
     } catch (err) {
-      const error = err as Error;
-      toast.error(error.message || 'Failed to deny reservation');
+      handleError(err, 'Failed to deny reservation');
     }
   };
 
@@ -167,18 +177,31 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
     setSelectedReservation(null);
   };
 
-  const handleDeleteClick = async (reservation: Reservation) => {
-    if (!window.confirm(`Are you sure you want to delete reservation #${reservation.id}?`)) {
-      return;
-    }
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [reservationToDelete, setReservationToDelete] = React.useState<Reservation | null>(null);
+
+  const handleDeleteClick = (reservation: Reservation) => {
+    setReservationToDelete(reservation);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!reservationToDelete) return;
 
     try {
-      await deleteReservation(reservation.id);
-      toast.success(`Reservation #${reservation.id} deleted successfully`);
+      await deleteReservation(reservationToDelete.id);
+      toast.success(`Reservation #${reservationToDelete.id} deleted successfully`);
+      setShowDeleteConfirm(false);
+      setReservationToDelete(null);
     } catch (err) {
       const error = err as Error;
       toast.error(error.message || 'Failed to delete reservation');
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setReservationToDelete(null);
   };
 
   // Don't render if not open
@@ -229,16 +252,30 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
             />
 
             {/* Error Display */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-                {error}
+            {(error || apiError) && (
+              <div className="mb-6">
+                <ErrorMessage
+                  message={apiError?.message || error || 'An error occurred'}
+                  onRetry={apiError?.recoverable ? loadReservations : undefined}
+                  size="md"
+                />
+                {apiError?.suggestions && apiError.suggestions.length > 0 && (
+                  <div className="mt-2 text-sm text-neutral-600">
+                    <p className="font-medium mb-1">Suggestions:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {apiError.suggestions.map((suggestion, idx) => (
+                        <li key={idx}>{suggestion}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Loading State */}
             {loading && (
               <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <LoadingSpinner size="lg" text="Loading reservations..." variant="primary" />
               </div>
             )}
 
@@ -283,6 +320,23 @@ const ReservationManagementPanel: React.FC<ReservationManagementPanelProps> = ({
           onClose={handleCloseDetailsModal}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Reservation"
+        message={
+          reservationToDelete
+            ? `Are you sure you want to delete reservation #${reservationToDelete.id}? This action cannot be undone.`
+            : ''
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="primary"
+        loading={loading}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </>
   );
 };
