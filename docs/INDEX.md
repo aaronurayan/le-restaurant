@@ -28,13 +28,14 @@
 
 ### Reports (English)
 - **[All English Reports](./en/reports/INDEX.md)** - Complete list of all reports
-- [Backend Final Improvements](./en/reports/backend-final-improvements.md)
-- [Frontend-Backend Connectivity Audit](./en/reports/frontend-backend-connectivity-audit.md)
-- [Entity Layer Analysis](./en/reports/entity-layer-analysis.md)
-- [Layer-by-Layer Improvements](./en/reports/layer-by-layer-improvements.md)
-- [Feature Verification](./en/reports/feature-verification.md)
-- [Frontend Architecture Review](./en/reports/frontend-architecture-review.md)
-- [Frontend Final Improvements Summary](./en/reports/frontend-final-improvements-summary.md)
+- [Backend Final Improvements](./en/reports/backend-final-improvements.md) ✅
+- [Backend Validation Complete](./en/reports/backend-validation-complete.md) ✅
+- [Entity Layer Analysis](./en/reports/entity-layer-analysis.md) ✅
+- [Frontend-Backend Connectivity Audit](./en/reports/frontend-backend-connectivity-audit.md) ✅
+- [Connectivity Fixes Summary](./en/reports/connectivity-fixes-summary.md) ✅
+- [Feature Verification](./en/reports/feature-verification.md) ✅
+- [Frontend Architecture Review](./en/reports/frontend-architecture-review.md) ✅
+- [Frontend Final Improvements Summary](./en/reports/frontend-final-improvements-summary.md) ✅
 
 ### Guides
 - [Azure Deployment Guide](./AZURE_DEPLOYMENT_GUIDE.md)
@@ -99,7 +100,7 @@ docs/
 
 ---
 
-**Note**: All reports are primarily in English. Language-specific versions are available in their respective directories.
+**Note**: All reports are primarily in English and organized in `en/reports/` directory. Language-specific indexes are available in their respective directories (ko, ja, ru), but they reference the English reports.
 
 ---
 

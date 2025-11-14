@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -171,6 +172,32 @@ public class PaymentService {
         }
         
         return convertToDto(updatedPayment);
+    }
+    
+    public PaymentDto refundPayment(Long id) {
+        logger.info("Processing refund for payment ID: {}", id);
+        
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("Refund failed: payment not found - {}", id);
+                    return new RuntimeException("Payment not found with id: " + id);
+                });
+        
+        // Validate payment can be refunded
+        if (payment.getStatus() != Payment.PaymentStatus.COMPLETED) {
+            logger.warn("Refund failed: payment is not completed - status: {}", payment.getStatus());
+            throw new IllegalStateException("Only completed payments can be refunded");
+        }
+        
+        // Update payment status to REFUNDED
+        payment.setStatus(Payment.PaymentStatus.REFUNDED);
+        payment.setProcessedAt(OffsetDateTime.now());
+        payment.setGatewayResponse("Payment refunded successfully");
+        
+        Payment refundedPayment = paymentRepository.save(payment);
+        logger.info("Payment {} refunded successfully", id);
+        
+        return convertToDto(refundedPayment);
     }
     
     public void deletePayment(Long id) {

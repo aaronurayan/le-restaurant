@@ -93,7 +93,10 @@ class PaymentControllerTest {
                 null,
                 OffsetDateTime.now(),
                 null,
-                null
+                null,
+                2L,  // customerId
+                "Jane Doe",  // customerName
+                "jane@example.com"  // customerEmail
             );
             List<PaymentDto> payments = Arrays.asList(testPaymentDto, testPaymentDto2);
             when(paymentService.getAllPayments()).thenReturn(payments);
@@ -188,7 +191,10 @@ class PaymentControllerTest {
                 testPaymentRequest.getPaymentDetails(),
                 OffsetDateTime.now(),
                 null,
-                null
+                null,
+                1L,  // customerId
+                "John Doe",  // customerName
+                "john@example.com"  // customerEmail
             );
             when(paymentService.createPayment(any(PaymentRequestDto.class))).thenReturn(createdPayment);
 
@@ -278,7 +284,10 @@ class PaymentControllerTest {
                 "Test payment details",
                 OffsetDateTime.now(),
                 OffsetDateTime.now(),
-                "Gateway success response"
+                "Gateway success response",
+                1L,  // customerId
+                "John Doe",  // customerName
+                "john@example.com"  // customerEmail
             );
             when(paymentService.updatePaymentStatus(1L, Payment.PaymentStatus.COMPLETED)).thenReturn(updatedPayment);
 
@@ -307,7 +316,10 @@ class PaymentControllerTest {
                 "Test payment details",
                 OffsetDateTime.now(),
                 null,
-                "Gateway error response"
+                "Gateway error response",
+                1L,  // customerId
+                "John Doe",  // customerName
+                "john@example.com"  // customerEmail
             );
             when(paymentService.updatePaymentStatus(1L, Payment.PaymentStatus.FAILED)).thenReturn(failedPayment);
 
@@ -357,7 +369,10 @@ class PaymentControllerTest {
                 "Test payment details",
                 OffsetDateTime.now(),
                 OffsetDateTime.now(),
-                "Payment processed successfully"
+                "Payment processed successfully",
+                1L,  // customerId
+                "John Doe",  // customerName
+                "john@example.com"  // customerEmail
             );
             when(paymentService.processPayment(1L)).thenReturn(processedPayment);
 

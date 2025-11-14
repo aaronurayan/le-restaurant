@@ -94,6 +94,10 @@ public class OrderService {
         
         // Order items validation is now handled by Bean Validation (@NotEmpty in DTO)
         // Additional business logic validation (menu item existence, availability) remains here
+        if (requestDto.getItems() == null || requestDto.getItems().isEmpty()) {
+            logger.error("Order creation failed: order must have at least one item");
+            throw new IllegalArgumentException("Order must have at least one item");
+        }
         
         // Create order entity
         Order order = new Order();

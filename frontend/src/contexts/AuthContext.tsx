@@ -135,7 +135,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       
       // API 클라이언트에 토큰 설정
-      const { apiClient } = await import('../services/apiClient.unified');
       apiClient.setAuthToken(token);
       
       dispatch({
@@ -213,7 +212,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       
       // API 클라이언트에 토큰 설정
-      const { apiClient } = await import('../services/apiClient.unified');
       apiClient.setAuthToken(token);
       
       dispatch({
@@ -275,6 +273,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // 토큰 만료 확인
         if (new Date(expiresAt) > new Date()) {
+          // API 클라이언트에 토큰 설정
+          import('../services/apiClient.unified').then(({ apiClient }) => {
+            apiClient.setAuthToken(token);
+          });
+          
           dispatch({
             type: 'LOGIN_SUCCESS',
             payload: { user, token, expiresAt }

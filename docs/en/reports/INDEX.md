@@ -41,11 +41,11 @@
 
 ### Layer-by-Layer Reports
 
-6. **[Layer-by-Layer Improvements](./layer-by-layer-improvements.md)** ✅
-   - Repository layer improvements
-   - Exception layer improvements
-   - Service layer improvements
-   - Controller layer cleanup
+6. **Layer-by-Layer Improvements** (Consolidated)
+   - Repository layer improvements → See [Backend Final Improvements](./backend-final-improvements.md)
+   - Exception layer improvements → See [Backend Validation Complete](./backend-validation-complete.md)
+   - Service layer improvements → See [Backend Final Improvements](./backend-final-improvements.md)
+   - Controller layer cleanup → See [Backend Final Improvements](./backend-final-improvements.md)
 
 ### Feature Verification
 
@@ -105,17 +105,24 @@ The following reports have been consolidated into the latest reports and removed
 - ❌ `ARCHITECTURE_ANALYSIS_SUMMARY.md` → Consolidated into latest reports
 - ❌ `LOGICAL_FLOW_ANALYSIS.md` → Consolidated into `frontend-backend-connectivity-audit.md`
 - ❌ `PAYMENT_FLOW_VERIFICATION.md` → Consolidated into `frontend-backend-connectivity-audit.md`
-- ❌ `LAYER_BY_LAYER_IMPROVEMENTS.md` (Korean) → Consolidated into `layer-by-layer-improvements.md` (English)
-- ❌ `ITERATIVE_IMPROVEMENTS_ROUND2.md` (Korean) → Consolidated into `layer-by-layer-improvements.md` (English)
+- ❌ `LAYER_BY_LAYER_IMPROVEMENTS.md` (Korean) → Consolidated into latest reports
+- ❌ `ITERATIVE_IMPROVEMENTS_ROUND2.md` (Korean) → Consolidated into latest reports
+- ❌ `FEATURE_VERIFICATION.md` (root) → Removed (duplicate of `en/reports/feature-verification.md`)
+- ❌ `ENTITY_LAYER_ANALYSIS.md` (root, Korean) → Moved to `en/reports/entity-layer-analysis.md`
+- ❌ `BACKEND_FINAL_IMPROVEMENTS.md` (root, Korean) → Moved to `en/reports/backend-final-improvements.md`
+- ❌ `FRONTEND_BACKEND_CONNECTIVITY_AUDIT.md` (root, Korean) → Moved to `en/reports/frontend-backend-connectivity-audit.md`
+- ❌ `CONNECTIVITY_FIXES_SUMMARY.md` (root, Korean) → Moved to `en/reports/connectivity-fixes-summary.md`
+- ❌ `BACKEND_VALIDATION_COMPLETE.md` (root, Korean) → Moved to `en/reports/backend-validation-complete.md`
 
 ---
 
-## 📚 Other Documentation
+## 📚 Other Documentation (Root Level)
 
 ### Guides
-- **AZURE_DEPLOYMENT_GUIDE.md**: Azure deployment guide
-- **DEPLOYMENT_CHECKLIST.md**: Deployment checklist
-- **FEATURE_VERIFICATION.md**: Feature verification document
+- **[Azure Deployment Guide](../AZURE_DEPLOYMENT_GUIDE.md)**: Complete Azure deployment guide
+- **[Deployment Checklist](../DEPLOYMENT_CHECKLIST.md)**: Pre-deployment checklist
+- **[Azure Pipeline Fix](../AZURE_PIPELINE_FIX.md)**: Azure pipeline fixes and improvements
+- **[Merge Review F100-F101](../MERGE_REVIEW_F100_F101.md)**: Merge review for authentication features
 
 ### Design Documentation
 - **design/**: System architecture and design documents
@@ -125,5 +132,8 @@ The following reports have been consolidated into the latest reports and removed
 
 ---
 
-**Note**: All legacy reports have been consolidated into the latest reports and removed.
+**Note**: All legacy reports have been consolidated into the latest reports and removed. All reports are now organized in `en/reports/` directory with English headers. Some reports may still contain Korean content in the body, but headers and structure are standardized in English.
+
+**Total Reports**: 13  
+**Last Reorganization**: 2025-11-15
 

@@ -48,11 +48,11 @@ class Scenario1_NewCustomerFullJourneyTest extends BaseE2ETest {
         // Step 4: Process Payment (F106)
         PaymentDto payment = processPayment(orderId, BigDecimal.valueOf(49.98));
         assertNotNull(payment);
-        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getStatus());
+        assertEquals(com.lerestaurant.le_restaurant_backend.entity.Payment.PaymentStatus.COMPLETED, payment.getStatus());
 
-        // Verify order status updated to PREPARING
+        // Verify order status updated to CONFIRMED (after payment)
         OrderDto paidOrder = orderService.getOrderById(orderId);
-        assertEquals(Order.OrderStatus.PREPARING, paidOrder.getStatus());
+        assertEquals(com.lerestaurant.le_restaurant_backend.entity.Order.OrderStatus.CONFIRMED, paidOrder.getStatus());
 
         // Step 5: Manage Delivery (F107)
         DeliveryDto delivery = createDelivery(orderId);
@@ -92,6 +92,6 @@ class Scenario1_NewCustomerFullJourneyTest extends BaseE2ETest {
         
         ReservationDto approvedReservation = reservationService.approveReservation(reservationId, manager.getId());
         assertNotNull(approvedReservation);
-        assertEquals(Reservation.ReservationStatus.CONFIRMED, approvedReservation.getStatus());
+        assertEquals(com.lerestaurant.le_restaurant_backend.entity.Reservation.ReservationStatus.CONFIRMED, approvedReservation.getStatus());
     }
 }

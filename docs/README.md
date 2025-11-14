@@ -100,5 +100,6 @@ All documentation should be:
 
 ---
 
-**Last Updated**: 2025-11-15
+**Last Updated**: 2025-11-15  
+**Last Reorganization**: 2025-11-15
 
