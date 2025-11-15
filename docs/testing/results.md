@@ -12,17 +12,19 @@ The project's CI/CD pipeline automatically executes unit tests for both the back
 
 **Backend**
 -   **Framework**: JUnit 5, Mockito
+-   **Build Tool**: Gradle
 -   **Execution Command**: `./gradlew clean test jacocoTestReport`  
--   **Coverage Tool**: JaCoCo
+-   **Coverage Tool**: JaCoCo 0.8.11
+-   **Database**: H2 Database (in-memory) for testing
 -   **Status**: ✅ **PASS**
--   **Summary**: All backend unit tests are passing successfully. The `jacocoTestCoverageVerification` task confirms that the code coverage meets or exceeds the required 80% threshold, ensuring high-quality, well-tested code in the business logic and service layers.
+-   **Summary**: All backend unit tests are passing successfully. The `jacocoTestCoverageVerification` task confirms that the code coverage meets or exceeds the required 80% threshold, ensuring high-quality, well-tested code in the business logic and service layers. Tests cover controllers, services, and integration scenarios (F100-F109).
 
 **Frontend**
--   **Framework**: Vitest, React Testing Library
+-   **Framework**: Vitest 3.x, React Testing Library
 -   **Execution Command**: `npm run test:coverage`
--   **Coverage Tool**: Vitest Coverage (using `istanbul`)
+-   **Coverage Tool**: Vitest Coverage (using `@vitest/coverage-istanbul` and `@vitest/coverage-v8`)
 -   **Status**: ✅ **PASS**
--   **Summary**: All frontend unit tests for components, hooks, and services are passing. The pipeline verifies that the code coverage, reported in Cobertura format, is above the 80% threshold. This ensures that the UI components are reliable and function as expected.
+-   **Summary**: All frontend unit tests for components, hooks, and services are passing. The pipeline verifies that the code coverage, reported in Cobertura format, is above the 80% threshold. This ensures that the UI components are reliable and function as expected. Tests cover component rendering, user interactions, API hooks, and error handling.
 
 #### **5.5.2 Integration Test Results (Main Branch)**
 
@@ -48,15 +50,18 @@ Several defects were identified and resolved during the pipeline setup and testi
 A detailed analysis of the Java backend codebase, including code structure, key components, and testing specifics, was conducted to ensure quality and maintainability.
 
 **Code Structure Overview**
--   **Framework**: Spring Boot 3.x (Java 17)
+-   **Framework**: Spring Boot 3.5.5 (Java 17)
+-   **Build Tool**: Gradle (not Maven)
+-   **Database**: PostgreSQL 14 (production), H2 Database (development/testing)
 -   **Architecture**: Layered architecture following separation of concerns
+-   **Deployment**: Azure App Service
 -   **Main Package**: `com.lerestaurant.le_restaurant_backend`
 -   **Key Directories**:
     -   `controller/`: REST endpoints with `@RestController` annotations, handling HTTP requests and responses
     -   `service/`: Business logic with `@Service` and `@Transactional` annotations, implementing core application logic
     -   `repository/`: Spring Data JPA interfaces extending `JpaRepository`, providing data access layer
-    -   `entity/`: JPA entities representing database tables (e.g., `User`, `Payment`, `MenuItem`, `Order`)
-    -   `dto/`: Data Transfer Objects for API communication (e.g., `UserDto`, `UserCreateRequestDto`, `PaymentDto`)
+    -   `entity/`: JPA entities representing database tables (e.g., `User`, `Payment`, `MenuItem`, `Order`, `Reservation`)
+    -   `dto/`: Data Transfer Objects for API communication (e.g., `UserDto`, `UserCreateRequestDto`, `PaymentDto`, `ReservationDto`)
     -   `config/`: Configuration classes for security, CORS, and database settings
 
 **Key Java Classes and Responsibilities**
@@ -114,16 +119,19 @@ No Java-specific defects were found in the current release. All backend code com
 A detailed analysis of the React frontend codebase, including code structure, key components, and testing specifics, was conducted to ensure quality and maintainability.
 
 **Code Structure Overview**
--   **Framework**: React 18 with TypeScript, Vite build tool
+-   **Framework**: React 18 with TypeScript, Vite 7.x build tool
 -   **Architecture**: Atomic Design Pattern for component organization
+-   **Deployment**: Azure Static Web Apps (SPA deployment)
 -   **Main Directory**: `src/`
 -   **Key Directories**:
     -   `components/`: UI components organized by atomic design (atoms, molecules, organisms, templates, routes)
-    -   `hooks/`: Custom React hooks for API interactions (e.g., `useUserApi`, `usePaymentApi`)
-    -   `services/`: API client layer (`api.ts` with fetch wrapper)
+    -   `hooks/`: Custom React hooks for API interactions (e.g., `useUserApi`, `usePaymentApi`, `useReservationApi`)
+    -   `services/`: Unified API client layer (`apiClient.unified.ts` with advanced features: retry, circuit breaker, rate limiting, offline queue)
+    -   `config/`: Configuration files (`api.config.ts` for API endpoints and environment settings)
     -   `contexts/`: React Context providers (e.g., `AuthContext.tsx`)
     -   `types/`: TypeScript type definitions (e.g., `user.ts`, `payment.ts`)
     -   `pages/`: Page-level components for routing
+    -   `utils/`: Utility modules (logger, circuit breaker, performance monitor, request interceptors)
 
 **Key Frontend Components and Responsibilities**
 -   **Atoms**: Basic UI elements (Button, Input, etc.) - exported as named exports
@@ -138,7 +146,7 @@ A detailed analysis of the React frontend codebase, including code structure, ke
     -   `useMenuApi()`: Fetches and manages menu items
     -   `useOrderApi()`: Processes customer orders
     -   `useReservationApi()`: Manages table reservations
--   **Services**: `api.ts` provides centralized API communication with base URL `http://localhost:8080/api`
+-   **Services**: `apiClient.unified.ts` provides centralized API communication with unified client architecture, including retry logic, circuit breaker, rate limiting, and offline queue support. Base URL configured via `api.config.ts` (development: `http://localhost:8080`, production: Azure App Service URL)
 -   **Contexts**: `AuthContext.tsx` manages authentication state across the application
 
 **Testing Details for Frontend Codebase**
@@ -155,15 +163,18 @@ A detailed analysis of the React frontend codebase, including code structure, ke
         3. `03-menu-display.test.js`: Menu fetching, filtering, and search functionality
         4. `04-order-payment-flow.test.js`: Complete order creation and payment processing
         5. `05-reservation-flow.test.js`: Reservation creation, approval, and rejection workflow
-    -   **Execution**: Tests run against live backend API endpoints
+    -   **Execution**: Tests run against live backend API endpoints (local or Azure deployment)
     -   **Feature Coverage**: Validates F100-F109 features from end-to-end perspective
+    -   **API Client**: Tests use the unified API client (`apiClient.unified.ts`) to verify real-world API interactions
 
 **Frontend-Specific Quality Metrics**
 -   **Code Coverage**: Vitest reports show 82%+ coverage across components and hooks
 -   **TypeScript Compliance**: Strict typing enforced with no `any` types; all components use proper TypeScript interfaces
--   **Performance**: Optimized with Vite for fast development and production builds
+-   **Performance**: Optimized with Vite 7.x for fast development and production builds
+-   **API Client Features**: Unified API client includes retry logic, circuit breaker pattern, rate limiting, offline queue, request cancellation, and performance monitoring
+-   **Deployment**: Frontend deployed as SPA on Azure Static Web Apps with proper routing configuration
 -   **Accessibility**: Components follow semantic HTML and ARIA guidelines where applicable
--   **Security**: No sensitive data stored in frontend; all API calls use HTTPS in production
+-   **Security**: No sensitive data stored in frontend; all API calls use HTTPS in production; CORS properly configured for Azure Static Web Apps origin
 
 **Frontend-Related Defects Identified**
 No frontend-specific defects were found in the current release. All components render correctly and pass interaction tests. Integration tests confirm proper communication with backend APIs.

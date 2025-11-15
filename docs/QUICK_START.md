@@ -1,5 +1,10 @@
 # 05. 🚀 QUICK START GUIDE
 
+![Documentation Status](https://img.shields.io/badge/documentation-complete-brightgreen)
+![Document Number](https://img.shields.io/badge/document-05-blue)
+![Multilingual](https://img.shields.io/badge/multilingual-4%20languages-orange)
+![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
+
 **Last Updated**: 2025-01-XX  
 **Document Number**: 05
 

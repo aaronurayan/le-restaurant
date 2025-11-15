@@ -1,5 +1,11 @@
 # 📚 Le Restaurant - 마스터 문서 인덱스 (한국어)
 
+![Documentation Status](https://img.shields.io/badge/documentation-complete-brightgreen)
+![Language](https://img.shields.io/badge/language-Korean-red)
+![Version](https://img.shields.io/badge/version-2.0-blue)
+![Total Documents](https://img.shields.io/badge/documents-50%2B-blue)
+![Multilingual](https://img.shields.io/badge/multilingual-4%20languages-orange)
+
 **최종 업데이트**: 2025-01-XX  
 **버전**: 2.0  
 **총 문서 수**: 50+

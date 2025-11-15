@@ -1,5 +1,10 @@
 # 📊 보고서 인덱스 (한국어)
 
+![Documentation Status](https://img.shields.io/badge/documentation-complete-brightgreen)
+![Language](https://img.shields.io/badge/language-Korean-red)
+![Document Number](https://img.shields.io/badge/document-51--KO-blue)
+![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
+
 **최종 업데이트**: 2025-01-XX  
 **문서 번호**: 51-KO
 

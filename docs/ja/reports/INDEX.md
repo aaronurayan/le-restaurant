@@ -1,5 +1,10 @@
 # 📊 レポートインデックス (日本語)
 
+![Documentation Status](https://img.shields.io/badge/documentation-complete-brightgreen)
+![Language](https://img.shields.io/badge/language-Japanese-yellow)
+![Document Number](https://img.shields.io/badge/document-51--JA-blue)
+![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
+
 **最終更新**: 2025-01-XX  
 **ドキュメント番号**: 51-JA
 

@@ -1,5 +1,11 @@
 # 📊 Reports Index (English)
 
+![Documentation Status](https://img.shields.io/badge/documentation-complete-brightgreen)
+![Language](https://img.shields.io/badge/language-English-blue)
+![Document Number](https://img.shields.io/badge/document-51--EN-blue)
+![Total Reports](https://img.shields.io/badge/reports-13-blue)
+![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
+
 **Last Updated**: 2025-01-XX  
 **Document Number**: 51-EN  
 **Total Reports**: 13

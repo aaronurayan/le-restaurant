@@ -1,5 +1,11 @@
 # 📚 Le Restaurant - マスタードキュメントインデックス (日本語)
 
+![Documentation Status](https://img.shields.io/badge/documentation-complete-brightgreen)
+![Language](https://img.shields.io/badge/language-Japanese-yellow)
+![Version](https://img.shields.io/badge/version-2.0-blue)
+![Total Documents](https://img.shields.io/badge/documents-50%2B-blue)
+![Multilingual](https://img.shields.io/badge/multilingual-4%20languages-orange)
+
 **最終更新**: 2025-01-XX  
 **バージョン**: 2.0  
 **総ドキュメント数**: 50+

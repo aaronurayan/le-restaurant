@@ -1,5 +1,10 @@
 # 📊 Индекс отчетов (Русский)
 
+![Documentation Status](https://img.shields.io/badge/documentation-complete-brightgreen)
+![Language](https://img.shields.io/badge/language-Russian-purple)
+![Document Number](https://img.shields.io/badge/document-51--RU-blue)
+![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
+
 **Последнее обновление**: 2025-01-XX  
 **Номер документа**: 51-RU
 

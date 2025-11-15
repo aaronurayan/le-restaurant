@@ -1,5 +1,11 @@
 # 📚 Le Restaurant - Мастер-индекс документации (Русский)
 
+![Documentation Status](https://img.shields.io/badge/documentation-complete-brightgreen)
+![Language](https://img.shields.io/badge/language-Russian-purple)
+![Version](https://img.shields.io/badge/version-2.0-blue)
+![Total Documents](https://img.shields.io/badge/documents-50%2B-blue)
+![Multilingual](https://img.shields.io/badge/multilingual-4%20languages-orange)
+
 **Последнее обновление**: 2025-01-XX  
 **Версия**: 2.0  
 **Всего документов**: 50+

@@ -1,5 +1,11 @@
 # 📖 Guides Index (English)
 
+![Documentation Status](https://img.shields.io/badge/documentation-complete-brightgreen)
+![Language](https://img.shields.io/badge/language-English-blue)
+![Document Number](https://img.shields.io/badge/document-60--EN-blue)
+![Total Guides](https://img.shields.io/badge/guides-5-blue)
+![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
+
 **Last Updated**: 2025-01-XX  
 **Document Number**: 60-EN
 
