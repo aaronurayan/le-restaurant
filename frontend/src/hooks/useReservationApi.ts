@@ -1,5 +1,13 @@
+/**
+ * Reservation API Hook
+ * 
+ * This hook has been updated to use the unified API client and centralized endpoints.
+ */
+
 import { useState } from 'react';
 import { Reservation, CreateReservationRequest, UpdateReservationRequest, Table, TimeSlot, ReservationStatus } from '../types/reservation';
+import { apiClient } from '../services/apiClient.unified';
+import { API_ENDPOINTS } from '../config/api.config';
 
 // Helper function to get timezone offset in ISO format
 const getTimezoneOffset = (): string => {
@@ -10,91 +18,61 @@ const getTimezoneOffset = (): string => {
   return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
-// Reservation API 함수들 (백엔드 API 연동)
+// Reservation API 함수들 (백엔드 API 연동) - Now using unified client
 const reservationApi = {
   getAllReservations: async (): Promise<Reservation[]> => {
-    const response = await fetch('http://localhost:8080/api/reservations');
-    if (!response.ok) throw new Error('Failed to fetch reservations');
-    return response.json();
+    return apiClient.get<Reservation[]>(API_ENDPOINTS.reservations.base);
   },
 
   getReservationById: async (id: string): Promise<Reservation> => {
-    const response = await fetch(`http://localhost:8080/api/reservations/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch reservation');
-    return response.json();
+    return apiClient.get<Reservation>(API_ENDPOINTS.reservations.byId(Number(id)));
   },
 
   getReservationsByCustomer: async (customerId: string): Promise<Reservation[]> => {
-    const response = await fetch(`http://localhost:8080/api/reservations/customer/${customerId}`);
-    if (!response.ok) throw new Error('Failed to fetch customer reservations');
-    return response.json();
+    return apiClient.get<Reservation[]>(API_ENDPOINTS.reservations.byCustomer(Number(customerId)));
   },
 
   getReservationsByDate: async (date: string): Promise<Reservation[]> => {
-    const response = await fetch(`http://localhost:8080/api/reservations/date/${date}`);
-    if (!response.ok) throw new Error('Failed to fetch reservations by date');
-    return response.json();
+    return apiClient.get<Reservation[]>(API_ENDPOINTS.reservations.byDate(date));
   },
 
   getAvailableTables: async (date: string, time: string, partySize: number): Promise<Table[]> => {
-    const response = await fetch(`http://localhost:8080/api/reservations/availability?date=${date}&time=${time}&partySize=${partySize}`);
-    if (!response.ok) throw new Error('Failed to fetch available tables');
-    return response.json();
+    return apiClient.get<Table[]>(API_ENDPOINTS.reservations.availability(date, time, partySize));
   },
 
   getTimeSlots: async (date: string, partySize: number): Promise<TimeSlot[]> => {
-    const response = await fetch(`http://localhost:8080/api/reservations/timeslots?date=${date}&partySize=${partySize}`);
-    if (!response.ok) throw new Error('Failed to fetch time slots');
-    return response.json();
+    return apiClient.get<TimeSlot[]>(API_ENDPOINTS.reservations.timeslots(date, partySize));
   },
 
   createReservation: async (reservation: CreateReservationRequest): Promise<Reservation> => {
-    const response = await fetch('http://localhost:8080/api/reservations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customerId: reservation.customerId || null,
-        tableId: reservation.tableId || null,
-        numberOfGuests: reservation.partySize,
-        reservationDateTime: `${reservation.reservationDate}T${reservation.reservationTime}:00${getTimezoneOffset()}`,
-        specialRequests: reservation.specialRequests,
-        guestName: reservation.customerInfo?.name,
-        guestEmail: reservation.customerInfo?.email,
-        guestPhone: reservation.customerInfo?.phone,
-      }),
+    return apiClient.post<Reservation>(API_ENDPOINTS.reservations.base, {
+      customerId: reservation.customerId || null,
+      tableId: reservation.tableId || null,
+      numberOfGuests: reservation.partySize,
+      reservationDateTime: `${reservation.reservationDate}T${reservation.reservationTime}:00${getTimezoneOffset()}`,
+      specialRequests: reservation.specialRequests,
+      guestName: reservation.customerInfo?.name,
+      guestEmail: reservation.customerInfo?.email,
+      guestPhone: reservation.customerInfo?.phone,
     });
-    if (!response.ok) throw new Error('Failed to create reservation');
-    return response.json();
   },
 
   updateReservation: async (id: string, reservation: UpdateReservationRequest): Promise<Reservation> => {
-    const response = await fetch(`http://localhost:8080/api/reservations/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(reservation),
-    });
-    if (!response.ok) throw new Error('Failed to update reservation');
-    return response.json();
+    return apiClient.put<Reservation>(API_ENDPOINTS.reservations.byId(Number(id)), reservation);
   },
 
   cancelReservation: async (id: string): Promise<void> => {
-    const response = await fetch(`http://localhost:8080/api/reservations/${id}/cancel`, {
-      method: 'PUT',
-    });
-    if (!response.ok) throw new Error('Failed to cancel reservation');
+    await apiClient.put(API_ENDPOINTS.reservations.cancel(Number(id)), {});
   },
 
   deleteReservation: async (id: string): Promise<void> => {
-    const response = await fetch(`http://localhost:8080/api/reservations/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete reservation');
+    await apiClient.delete(API_ENDPOINTS.reservations.byId(Number(id)));
   },
 };
 
 // Transform backend DTO to frontend Reservation type
 const transformReservationDto = (dto: any): Reservation => {
-  console.log('Transforming DTO:', dto);
+  // Transforming DTO
 
   const dateTime = new Date(dto.reservationDateTime);
   const date = dateTime.toISOString().split('T')[0];
@@ -126,7 +104,7 @@ const transformReservationDto = (dto: any): Reservation => {
     } : undefined,
   };
 
-  console.log('Transformed reservation:', transformed);
+  // Transformed reservation
   return transformed;
 };
 
@@ -139,16 +117,15 @@ export const useReservationApi = () => {
   // 백엔드 연결 상태 확인
   const checkBackendConnection = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/reservations/test');
-      if (response.ok) {
-        setIsBackendConnected(true);
-        return true;
-      }
+      // Health check fails silently if backend is not available
+      const isHealthy = await apiClient.checkHealth();
+      setIsBackendConnected(isHealthy);
+      return isHealthy;
     } catch (error) {
-      console.warn('Backend not connected, using mock data');
+      // Silently handle - backend may not be running, will use mock data
+      setIsBackendConnected(false);
+      return false;
     }
-    setIsBackendConnected(false);
-    return false;
   };
 
   // Mock reservations data (백엔드 연결 실패 시 사용)
@@ -213,7 +190,7 @@ export const useReservationApi = () => {
 
   // 고객별 예약 조회
   const loadReservationsByCustomer = async (customerId: number) => {
-    console.log('Loading reservations for customer:', customerId);
+    // Loading reservations for customer
     setLoading(true);
     setError(null);
 
@@ -222,17 +199,17 @@ export const useReservationApi = () => {
       const data = await reservationApi.getReservationsByCustomer(customerId.toString());
       console.log('Raw API response:', data);
       const transformed = data.map(transformReservationDto);
-      console.log('Setting reservations:', transformed);
+      // Setting reservations
       setReservations(transformed);
       setIsBackendConnected(true);
     } catch (err) {
-      console.error('Error loading customer reservations:', err);
+      // Error loading customer reservations - silently handle
       setError('Failed to load customer reservations');
       setIsBackendConnected(false);
 
       // Fallback to mock data
       const filteredReservations = mockReservations.filter(r => r.customerId === customerId);
-      console.log('Using mock reservations:', filteredReservations);
+      // Using mock reservations
       setReservations(filteredReservations);
     } finally {
       setLoading(false);
@@ -257,7 +234,7 @@ export const useReservationApi = () => {
       }
     } catch (err) {
       setError('Failed to load reservations by date');
-      console.error('Error loading reservations by date:', err);
+      // Error loading reservations by date - silently handle
       const filteredReservations = mockReservations.filter(r => r.reservationDate === date);
       setReservations(filteredReservations);
     } finally {
@@ -362,7 +339,7 @@ export const useReservationApi = () => {
       }
     } catch (err) {
       setError('Failed to create reservation');
-      console.error('Error creating reservation:', err);
+      // Error creating reservation - silently handle
       throw err;
     }
   };
@@ -389,7 +366,7 @@ export const useReservationApi = () => {
       }
     } catch (err) {
       setError('Failed to update reservation');
-      console.error('Error updating reservation:', err);
+      // Error updating reservation - silently handle
       throw err;
     }
   };
@@ -416,7 +393,7 @@ export const useReservationApi = () => {
       }
     } catch (err) {
       setError('Failed to cancel reservation');
-      console.error('Error cancelling reservation:', err);
+      // Error cancelling reservation - silently handle
       throw err;
     }
   };
@@ -435,7 +412,7 @@ export const useReservationApi = () => {
       }
     } catch (err) {
       setError('Failed to delete reservation');
-      console.error('Error deleting reservation:', err);
+      // Error deleting reservation - silently handle
       throw err;
     }
   };

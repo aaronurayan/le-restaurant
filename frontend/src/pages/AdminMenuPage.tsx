@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import { useAdminMenuApi } from '../hooks/useAdminMenuApi';
 import MenuItemForm from '../components/organisms/MenuItemForm';
 import ConfirmDelete from '../components/organisms/ConfirmDelete';
 import { MenuItem } from '../types/menu';
+import { LoadingSpinner } from '../components/atoms/LoadingSpinner';
+import { ErrorMessage } from '../components/molecules/ErrorMessage';
 
 const AdminMenuPage = () => {
     const {
@@ -45,73 +49,148 @@ const AdminMenuPage = () => {
         available?: boolean;
         imageFile?: File | null;
     }) => {
-        if (selectedItem && selectedItem.id) {
-            await updateItem(selectedItem.id, {
-                ...selectedItem,
-                ...payload,
-                available: payload.available ?? true,
-            });
-        } else {
-            await addItem({
-                ...payload,
-                available: payload.available ?? true,
-            });
+        try {
+            if (selectedItem && selectedItem.id) {
+                await updateItem(selectedItem.id, {
+                    ...selectedItem,
+                    ...payload,
+                    available: payload.available ?? true,
+                });
+            } else {
+                await addItem({
+                    ...payload,
+                    available: payload.available ?? true,
+                });
+            }
+            setIsFormOpen(false);
+            setSelectedItem(null);
+        } catch (err) {
+            console.error('Failed to save menu item:', err);
+            // Error is handled by useAdminMenuApi hook - state will be updated automatically
+            // Keep form open so user can retry
         }
-        setIsFormOpen(false);
     };
 
     // Confirm deletion
     const confirmDelete = async () => {
         if (selectedItem) {
-            await deleteItem(selectedItem.id);
-            setIsDeleteConfirmOpen(false);
-            setSelectedItem(null);
+            try {
+                await deleteItem(selectedItem.id);
+                setIsDeleteConfirmOpen(false);
+                setSelectedItem(null);
+            } catch (err) {
+                console.error('Failed to delete menu item:', err);
+                // Error is handled by useAdminMenuApi hook
+            }
         }
     };
 
-    console.log('AdminMenuPage rendered');
+    if (isLoading) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <LoadingSpinner size="lg" text="Loading menu items..." variant="primary" />
+                </div>
+            </div>
+        );
+    }
 
-    if (isLoading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (error) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <ErrorMessage 
+                        message={error} 
+                        onRetry={() => window.location.reload()} 
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="container mx-auto p-4">
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">Menu Management</h1>
-                <button
-                    onClick={handleAddNew}
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
+        <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="mb-6">
+                <Link 
+                    to="/admin/dashboard" 
+                    className="flex items-center text-primary-600 hover:text-primary-700 mb-3"
                 >
-                    Add New Item
-                </button>
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    <span>Back to Dashboard</span>
+                </Link>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-neutral-gray-800">Menu Management</h1>
+                        <p className="text-neutral-gray-600 mt-1">Create, update, and manage menu items</p>
+                    </div>
+                    <button
+                        onClick={handleAddNew}
+                        className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium inline-flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add New Item
+                    </button>
+                </div>
             </div>
 
             {/* List of Menu Items */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {menuItems.map((item) => (
-                    <div key={item.id} className="border p-4 rounded shadow">
-                        <h2 className="font-bold">{item.name}</h2>
-                        <p>{item.description}</p>
-                        <p className="text-green-700 font-semibold">${item.price}</p>
-                        <p className="text-sm text-gray-500">Category: {item.category}</p>
-                        <p className="text-sm">{item.available ? 'Available' : 'Unavailable'}</p>
-                        <div className="flex gap-2 mt-2">
-                            <button
-                                onClick={() => handleEdit(item)}
-                                className="bg-yellow-500 text-white px-2 py-1 rounded"
-                            >
-                                Edit
-                            </button>
-                            <button
-                                onClick={() => handleDelete(item)}
-                                className="bg-red-500 text-white px-2 py-1 rounded"
-                            >
-                                Delete
-                            </button>
+            {menuItems.length === 0 ? (
+                <div className="text-center py-12">
+                    <p className="text-neutral-500 text-lg mb-4">No menu items found</p>
+                    <button
+                        onClick={handleAddNew}
+                        className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium inline-flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add Your First Item
+                    </button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {menuItems.map((item) => (
+                        <div key={item.id} className="bg-white border-2 border-neutral-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                            {item.imageUrl && (
+                                <img 
+                                    src={item.imageUrl} 
+                                    alt={item.name}
+                                    className="w-full h-48 object-cover rounded-lg mb-4"
+                                />
+                            )}
+                            <div className="mb-4">
+                                <h2 className="text-xl font-bold text-neutral-900 mb-2">{item.name}</h2>
+                                <p className="text-neutral-600 text-sm mb-3">{item.description || 'No description'}</p>
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-2xl font-bold text-primary-600">${item.price.toFixed(2)}</span>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                        item.available 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : 'bg-red-100 text-red-800'
+                                    }`}>
+                                        {item.available ? 'Available' : 'Unavailable'}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-neutral-500">Category: <span className="font-medium">{item.category}</span></p>
+                            </div>
+                            <div className="flex gap-2 pt-4 border-t border-neutral-200">
+                                <button
+                                    onClick={() => handleEdit(item)}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors font-medium"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    Edit
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(item)}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
 
             {/* Add/Edit Modal */}
             {isFormOpen && (

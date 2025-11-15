@@ -1,6 +1,14 @@
+/**
+ * @deprecated This hook uses the legacy api.ts service.
+ * Consider migrating to useMenuApiNew.ts which uses the unified API client.
+ * 
+ * This file will be updated to use the unified client in a future version.
+ */
+
 import { useState, useEffect } from 'react';
 import { MenuItem } from '../types';
-import { menuApi } from '../services/api';
+import { apiClient } from '../services/apiClient.unified';
+import { API_ENDPOINTS } from '../config/api.config';
 
 export const useMenuApi = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -12,11 +20,12 @@ export const useMenuApi = () => {
   // 백엔드 연결 상태 확인
   const checkBackendConnection = async () => {
     try {
-      const isConnected = await menuApi.testConnection();
-      setIsBackendConnected(true);
-      return true;
+      // Health check fails silently if backend is not available
+      const isConnected = await apiClient.checkHealth();
+      setIsBackendConnected(isConnected);
+      return isConnected;
     } catch (error) {
-      console.warn('Backend not connected, using mock data');
+      // Silently handle - backend may not be running, will use mock data
       setIsBackendConnected(false);
       return false;
     }
@@ -47,7 +56,7 @@ export const useMenuApi = () => {
       const isConnected = await checkBackendConnection();
       
       if (isConnected) {
-        const items = await menuApi.getAllItems();
+        const items = await apiClient.get<MenuItem[]>(API_ENDPOINTS.menu.base);
         // Backend 데이터를 Frontend 형식으로 변환
         const adaptedItems = items.map(adaptBackendMenuItem);
         setMenuItems(adaptedItems);
@@ -78,7 +87,7 @@ export const useMenuApi = () => {
       const isConnected = await checkBackendConnection();
       
       if (isConnected) {
-        const cats = await menuApi.getAllCategories();
+        const cats = await apiClient.get<string[]>(API_ENDPOINTS.menu.categories);
         setCategories(cats);
       } else {
         // 백엔드가 연결되지 않으면 mock data에서 카테고리 추출
@@ -109,8 +118,9 @@ export const useMenuApi = () => {
       const isConnected = await checkBackendConnection();
       
       if (isConnected) {
-        const items = await menuApi.getItemsByCategory(category);
-        setMenuItems(items);
+        const items = await apiClient.get<MenuItem[]>(API_ENDPOINTS.menu.byCategory(category));
+        const adaptedItems = items.map(adaptBackendMenuItem);
+        setMenuItems(adaptedItems);
       } else {
         // 백엔드가 연결되지 않으면 mock data에서 필터링
         const { mockMenuItems } = await import('../data/mockData');
@@ -143,8 +153,9 @@ export const useMenuApi = () => {
       const isConnected = await checkBackendConnection();
       
       if (isConnected) {
-        const items = await menuApi.searchItems(keyword);
-        setMenuItems(items);
+        const items = await apiClient.get<MenuItem[]>(API_ENDPOINTS.menu.search(keyword));
+        const adaptedItems = items.map(adaptBackendMenuItem);
+        setMenuItems(adaptedItems);
       } else {
         // 백엔드가 연결되지 않으면 mock data에서 검색
         const { mockMenuItems } = await import('../data/mockData');

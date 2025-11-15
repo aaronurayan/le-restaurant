@@ -1,97 +1,194 @@
-# IDE and Editor
+# =============================================================================
+# IDE and Editor Files
+# =============================================================================
 .idea/
 .vscode/
 *.iml
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
 
+# IDE workspace and local configs (should not be committed)
+.idea/workspace.xml
+.idea/inspectionProfiles/
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/shelf/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+*.userprefs
+
+# =============================================================================
 # OS Files
+# =============================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 desktop.ini
+$RECYCLE.BIN/
 
-# Node modules
+# =============================================================================
+# Node.js and Frontend
+# =============================================================================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
 
-# Build outputs
-build/
-dist/
-target/
-*.jar
-*.war
-*.class
+# Frontend Build Outputs
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.next/
+frontend/out/
+frontend/.nuxt/
+frontend/.output/
 
+# Frontend Test Coverage
+frontend/coverage/
+frontend/test-results/
+frontend/.nyc_output/
+frontend/junit/
+frontend/*.lcov
+
+# Frontend Environment
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# =============================================================================
+# Backend (Java/Spring Boot/Gradle)
+# =============================================================================
 # Gradle
 .gradle/
+backend/.gradle/
 !gradle/wrapper/gradle-wrapper.jar
+!backend/gradle/wrapper/gradle-wrapper.jar
 
 # Maven
+.mvn/
+backend/.mvn/
 !.mvn/wrapper/maven-wrapper.jar
+!backend/.mvn/wrapper/maven-wrapper.jar
 
-# Environment files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Build outputs
+backend/build/
+backend/target/
+backend/out/
+backend/bin/
+backend/classes/
+backend/generated/
+backend/build/reports/
+backend/build/test-results/
+backend/build/jacoco/
 
-# Logs
-logs/
-*.log
-
-# Test coverage
-coverage/
-*.lcov
-.nyc_output/
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-*.bak
-*.cache
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
+# Java compiled files
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+backend-final.zip
+*.tar.gz
 
 # Spring Boot
 HELP.md
 .springBeans
 spring-boot-starter-parent/
 
-# React/Vite
-.vite/
-*.local
+# =============================================================================
+# Environment Files
+# =============================================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+*.env
 
-# Test results
+# =============================================================================
+# Logs
+# =============================================================================
+logs/
+*.log
+log/
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# =============================================================================
+# Test Coverage and Reports
+# =============================================================================
+coverage/
+.nyc_output/
+*.lcov
 test-results/
 junit/
+test-results.xml
+coverage.xml
+*.coverage
+*.coverage.*
+.hypothesis/
+.pytest_cache/
 
-.fake
+# =============================================================================
+# Temporary Files
+# =============================================================================
+tmp/
+temp/
+*.tmp
+*.bak
+*.cache
+*.swp
+*.swo
+*~
+.cache/
+.parcel-cache/
 
-# Build and Package artifacts
-node_modules/
-backend/build/
-backend/out/
-frontend/dist/
-frontend/build/
-*.class
-*.jar
+# =============================================================================
+# Database Files
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+*.db-journal
 
-# Test coverage and reports (generated files, not tracked)
-frontend/coverage/
-frontend/test-results/
-backend/build/reports/
-*.xml
-!.github/
+# =============================================================================
+# Package and Archive Files
+# =============================================================================
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.gz
+*.bz2
+backend-final.zip
 
-# Temporary documentation (merge reviews, status reports)
+# =============================================================================
+# Documentation (Temporary/Generated)
+# =============================================================================
+# Temporary documentation files (merge reviews, status reports)
 *_MERGE_REVIEW*.md
 *_TEST_QUICK_START.md
 *_TEST_SUITE_SUMMARY.md
@@ -99,9 +196,25 @@ backend/build/reports/
 *_INTEGRATION_TEST_STATUS.md
 *STRATEGY*.md
 *_COMPLETE.md
+*_TEMP*.md
+*_DRAFT*.md
 
-# IDE workspace and local configs (should not be committed)
-.idea/workspace.xml
-.idea/inspectionProfiles/
-.vscode/settings.json
-*.userprefs
+# =============================================================================
+# CI/CD and Pipeline
+# =============================================================================
+# Azure Pipeline artifacts (keep pipeline definitions)
+*.xml
+!.github/
+!azure-pipelines*.yml
+
+# =============================================================================
+# Miscellaneous
+# =============================================================================
+.fake
+*.pid
+*.seed
+*.pid.lock
+.npm
+.eslintcache
+.stylelintcache
+*.tsbuildinfo

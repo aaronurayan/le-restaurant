@@ -180,20 +180,21 @@ export const useDeliveryApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check backend connection
+  // Check backend connection using unified client
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        // Try to fetch from the actual backend port
-        const response = await fetch('http://localhost:8080/api/deliveries', {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        });
-        setIsBackendConnected(response.ok);
-        console.log('Backend connection status:', response.ok ? '✅ Connected' : '❌ Not connected');
+        const { apiClient } = await import('../services/apiClient.unified');
+        // Health check fails silently if backend is not available
+        const isConnected = await apiClient.checkHealth();
+        setIsBackendConnected(isConnected);
+        // Only log if connected to avoid console spam
+        if (isConnected) {
+          console.log('Backend connection status: ✅ Connected');
+        }
       } catch (error) {
+        // Silently handle - backend may not be running
         setIsBackendConnected(false);
-        console.log('Backend connection status: ❌ Not connected (Error:', error instanceof Error ? error.message : 'Unknown error', ')');
       }
     };
     checkConnection();
@@ -206,9 +207,10 @@ export const useDeliveryApi = () => {
 
     try {
       if (isBackendConnected) {
-        const response = await fetch('/api/delivery/persons');
-        if (!response.ok) throw new Error('Failed to fetch delivery persons');
-        return await response.json();
+        const { apiClient } = await import('../services/apiClient.unified');
+        const { API_ENDPOINTS } = await import('../config/api.config');
+        // Note: Delivery persons endpoint may need to be added to API_ENDPOINTS
+        return await apiClient.get<DeliveryPerson[]>('/api/delivery/persons');
       } else {
         // Return mock data when backend is not connected
         return mockDeliveryPersons;
@@ -309,7 +311,7 @@ export const useDeliveryApi = () => {
 
     try {
       if (isBackendConnected) {
-        console.log('🔵 Attempting to create via backend API...');
+        // Attempting to create via backend API
         try {
           const response = await fetch('/api/delivery/assignments', {
             method: 'POST',
@@ -323,14 +325,14 @@ export const useDeliveryApi = () => {
           return await response.json();
         } catch (fetchErr) {
           // If backend call fails, fall back to mock mode
-          console.warn('⚠️ Backend call failed, falling back to mock mode:', fetchErr);
+          // Backend call failed, falling back to mock mode
           setIsBackendConnected(false);
           // Fall through to mock mode below
         }
       }
 
       // Mock creation - simulating successful creation
-      console.log('🔵 Creating via mock data (backend not connected)...');
+      // Creating via mock data (backend not connected)
       const newAssignment: DeliveryAssignment = {
         id: `delivery-${Date.now()}`,
         ...request,

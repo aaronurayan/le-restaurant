@@ -1,0 +1,25 @@
+/**
+ * @deprecated This file is deprecated. Use apiClient.unified.ts instead.
+ * 
+ * This file uses process.env.NODE_ENV which doesn't work with Vite.
+ * The unified client uses import.meta.env and provides better features:
+ * - Automatic retry with exponential backoff
+ * - Request/response interceptors
+ * - Error handling and fallback
+ * - JWT token management
+ * - Request ID tracking
+ * - Response caching
+ * 
+ * Migration guide:
+ * - Replace `import { apiClient } from '../utils/apiClient'`
+ *   with `import { apiClient } from '../services/apiClient.unified'`
+ * - Replace `import { ApiError } from '../utils/apiClient'`
+ *   with `import { ApiError } from '../services/apiClient.unified'`
+ * 
+ * This file will be removed in a future version.
+ */
+
+// Re-export from unified client for backward compatibility
+export { apiClient, ApiError, checkBackendHealth, getApiBaseUrl } from '../services/apiClient.unified';
+export type { ApiResponse, ApiRequestConfig, HealthStatus } from '../services/apiClient.unified';
+

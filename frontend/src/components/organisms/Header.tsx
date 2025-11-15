@@ -20,6 +20,7 @@ import AuthModal from './AuthModal';
 import UserManagementPanel from './UserManagementPanel';
 import ReservationModal from './ReservationModal';
 import ReservationManagementPanel from './ReservationManagementPanel';
+import { MobileMenu } from './MobileMenu';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
@@ -38,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [showReservationManagement, setShowReservationManagement] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -86,12 +88,12 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="bg-white shadow-md border-b border-neutral-100 sticky top-0 z-50">
+      <header className="bg-white shadow-lg border-b border-neutral-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
             {/* Mobile Menu Button */}
             <button
-              onClick={onMenuToggle}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 rounded-lg hover:bg-neutral-100 transition-colors"
               aria-label="Toggle mobile menu"
             >
@@ -99,26 +101,38 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* Logo */}
-            <div className="flex items-center">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">L</span>
+            <Link to="/" className="flex items-center group">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
+                  <span className="text-white font-bold text-xl">L</span>
                 </div>
-                <span className="font-serif text-xl font-bold text-neutral-900 hidden sm:block">
-                  Le Restaurant
-                </span>
+                <div className="hidden sm:block">
+                  <span className="font-serif text-2xl font-bold text-neutral-900 tracking-tight">
+                    Le Restaurant
+                  </span>
+                  <p className="text-xs text-neutral-500 font-medium -mt-1">Fine Dining Experience</p>
+                </div>
               </div>
-            </div>
+            </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
+            <nav className="hidden md:flex items-center space-x-1">
+              <Link 
+                to="/" 
+                className="px-4 py-2 text-neutral-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 font-medium text-sm"
+              >
                 Menu
               </Link>
-              <a href="#about" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
+              <a 
+                href="#about" 
+                className="px-4 py-2 text-neutral-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 font-medium text-sm"
+              >
                 About
               </a>
-              <a href="#contact" className="text-neutral-600 hover:text-primary-600 transition-colors font-medium">
+              <a 
+                href="#contact" 
+                className="px-4 py-2 text-neutral-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 font-medium text-sm"
+              >
                 Contact
               </a>
 
@@ -126,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
               {(user?.role === 'admin' || user?.role === 'manager') && (
                 <Link
                   to="/admin/dashboard"
-                  className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
+                  className="flex items-center gap-2 px-4 py-2 text-neutral-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 font-medium text-sm"
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard
@@ -137,7 +151,7 @@ export const Header: React.FC<HeaderProps> = ({
               {user?.role === 'customer' && (
                 <Link
                   to="/customer/dashboard"
-                  className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 transition-colors font-medium"
+                  className="flex items-center gap-2 px-4 py-2 text-neutral-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 font-medium text-sm"
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   My Dashboard
@@ -145,21 +159,22 @@ export const Header: React.FC<HeaderProps> = ({
               )}
 
               {/* API Status Indicator */}
-              <div className="border-l border-neutral-200 pl-6">
+              <div className="border-l border-neutral-200 pl-6 ml-2">
                 <ApiStatusIndicator showDetails={false} />
               </div>
             </nav>
 
             {/* Right Actions */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               {/* Cart Button */}
               <button
                 onClick={onCartClick}
-                className="relative p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+                className="relative p-2.5 rounded-lg hover:bg-neutral-100 transition-all duration-200 hover:shadow-md"
+                aria-label={`Shopping cart with ${cartItemCount} items`}
               >
-                <ShoppingCart className="w-6 h-6 text-neutral-600" />
+                <ShoppingCart className="w-6 h-6 text-neutral-700" />
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse-gentle">
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg animate-pulse-gentle border-2 border-white">
                     {cartItemCount > 99 ? '99+' : cartItemCount}
                   </span>
                 )}
@@ -169,15 +184,18 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={handleUserClick}
-                  className={`p-2 rounded-lg hover:bg-neutral-100 transition-colors flex items-center space-x-2 ${showUserDropdown ? 'bg-neutral-100' : ''
-                    }`}
+                  className={`p-2.5 rounded-lg hover:bg-neutral-100 transition-all duration-200 flex items-center space-x-2 ${
+                    showUserDropdown ? 'bg-neutral-100 shadow-md' : ''
+                  }`}
                   aria-expanded={showUserDropdown ? 'true' : 'false'}
                   aria-haspopup="true"
                   aria-label={isAuthenticated ? 'User menu' : 'Sign in'}
                 >
-                  <User className="w-6 h-6 text-neutral-600" />
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-sm">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
                   {isAuthenticated && (
-                    <span className="hidden sm:block text-sm text-neutral-700">
+                    <span className="hidden sm:block text-sm font-medium text-neutral-700">
                       {user?.firstName} {user?.lastName}
                     </span>
                   )}
@@ -185,16 +203,23 @@ export const Header: React.FC<HeaderProps> = ({
 
                 {/* User Dropdown Menu - Controlled visibility */}
                 {isAuthenticated && showUserDropdown && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-neutral-200 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl border border-neutral-200 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* User Info Header */}
-                    <div className="px-4 py-3 border-b border-neutral-100">
-                      <p className="text-sm font-semibold text-neutral-900">
-                        {user?.firstName} {user?.lastName}
-                      </p>
-                      <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
-                      <p className="text-xs text-primary-orange mt-1 font-medium capitalize">
-                        {user?.role}
-                      </p>
+                    <div className="px-4 py-4 border-b border-neutral-100 bg-gradient-to-r from-primary-50 to-transparent">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-md">
+                          <User className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-neutral-900 truncate">
+                            {user?.firstName} {user?.lastName}
+                          </p>
+                          <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
+                          <p className="text-xs text-primary-600 mt-1 font-semibold capitalize bg-primary-100 px-2 py-0.5 rounded-full inline-block">
+                            {user?.role}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
                     {/* CUSTOMER MENU */}
@@ -283,27 +308,23 @@ export const Header: React.FC<HeaderProps> = ({
                           </p>
                         </div>
 
-                        <button
-                          onClick={() => {
-                            setShowUserManagement(true);
-                            closeDropdown();
-                          }}
+                        <Link
+                          to="/admin/users"
+                          onClick={closeDropdown}
                           className="w-full text-left px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-3 group"
                         >
                           <Users className="w-4 h-4 text-neutral-500 group-hover:text-neutral-700" />
                           <span>User Management</span>
-                        </button>
+                        </Link>
 
-                        <button
-                          onClick={() => {
-                            setShowReservationManagement(true);
-                            closeDropdown();
-                          }}
+                        <Link
+                          to="/admin/reservations"
+                          onClick={closeDropdown}
                           className="w-full text-left px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-3 group"
                         >
                           <Calendar className="w-4 h-4 text-neutral-500 group-hover:text-neutral-700" />
                           <span>Reservation Management</span>
-                        </button>
+                        </Link>
 
                         <Link
                           to="/delivery"
@@ -339,21 +360,25 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* Action Buttons - Desktop */}
-              <div className="hidden sm:flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 ml-2">
                 {/* Reservation Button - Only for customers and guests (not admins) */}
                 {(user?.role === 'customer' || !isAuthenticated) && (
                   <Button
                     variant="outline"
                     size="md"
                     onClick={() => setShowReservationModal(true)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-neutral-300 hover:border-primary-500 hover:bg-primary-50"
                   >
                     <Calendar className="w-4 h-4" />
                     Book Table
                   </Button>
                 )}
 
-                <Button variant="primary" size="md">
+                <Button 
+                  variant="primary" 
+                  size="md"
+                  className="shadow-md hover:shadow-lg transition-shadow duration-200"
+                >
                   Order Now
                 </Button>
               </div>
@@ -384,6 +409,14 @@ export const Header: React.FC<HeaderProps> = ({
       <ReservationModal
         isOpen={showReservationModal}
         onClose={() => setShowReservationModal(false)}
+      />
+
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        cartItemCount={cartItemCount}
+        onCartClick={onCartClick}
       />
 
     </>

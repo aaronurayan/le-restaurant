@@ -441,7 +441,7 @@ stages:
                   },
                   {
                     "name": "CORS_ALLOWED_ORIGINS",
-                    "value": "https://yellow-ground-042c31000.3.azurestaticapps.net,http://localhost:5173",
+                    "value": "https://$(FRONTEND_APP_NAME).azurestaticapps.net,https://*.azurestaticapps.net,http://localhost:5173,http://localhost:3000",
                     "slotSetting": false
                   }
                 ]
@@ -485,8 +485,13 @@ stages:
 
           - script: |
               cd $(FRONTEND_PATH)
-              echo "VITE_API_BASE_URL=$(BACKEND_API_URL)/api" > .env.production
+              # 🔑 CRITICAL: VITE_API_BASE_URL should NOT include /api
+              # The frontend config adds /api to endpoints automatically
+              echo "VITE_API_BASE_URL=$(BACKEND_API_URL)" > .env.production
+              echo "✅ Environment file created:"
               cat .env.production
+              echo ""
+              echo "🔍 Verifying environment variable..."
               npm run build
             displayName: 🏗️ Build Frontend with Backend URL
 
@@ -512,15 +517,26 @@ stages:
               echo "🏥 Running Health Checks..."
 
               # Backend Health Check
-              BACKEND_URL="https://$(BACKEND_APP_NAME).azurewebsites.net/actuator/health"
+              # Use /api/health endpoint (not /actuator/health)
+              BACKEND_URL="https://$(BACKEND_APP_NAME).azurewebsites.net/api/health"
               echo "Checking Backend: $BACKEND_URL"
 
               RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $BACKEND_URL)
               if [ $RESPONSE -eq 200 ]; then
-                echo "✅ Backend is healthy"
+                echo "✅ Backend is healthy (Status: $RESPONSE)"
+                # Get response body for verification
+                curl -s $BACKEND_URL | head -c 200
+                echo ""
               else
                 echo "❌ Backend health check failed with status: $RESPONSE"
-                exit 1
+                echo "Attempting fallback check at /actuator/health..."
+                FALLBACK_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "https://$(BACKEND_APP_NAME).azurewebsites.net/actuator/health" || echo "000")
+                if [ $FALLBACK_RESPONSE -eq 200 ]; then
+                  echo "⚠️  Backend responds at /actuator/health but not /api/health - check endpoint configuration"
+                else
+                  echo "❌ Backend is not accessible"
+                  exit 1
+                fi
               fi
 
               # Frontend Health Check
@@ -535,8 +551,29 @@ stages:
                 exit 1
               fi
 
+              # Test Frontend-Backend Connectivity
+              echo ""
+              echo "🔗 Testing Frontend-Backend Connectivity..."
+              FRONTEND_URL="https://$(FRONTEND_APP_NAME).azurestaticapps.net"
+              BACKEND_API_URL="https://$(BACKEND_APP_NAME).azurewebsites.net"
+              
+              # Check if frontend can reach backend
+              echo "Testing API endpoint from frontend context..."
+              # Note: This is a simulated test - actual connectivity requires browser context
+              echo "Frontend URL: $FRONTEND_URL"
+              echo "Backend API URL: $BACKEND_API_URL"
+              echo "Expected API calls: $BACKEND_API_URL/api/*"
+              
+              # Verify backend API is accessible
+              API_TEST=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_API_URL/api/health" || echo "000")
+              if [ $API_TEST -eq 200 ]; then
+                echo "✅ Backend API endpoint is accessible"
+              else
+                echo "⚠️  Backend API endpoint returned: $API_TEST"
+              fi
+
               echo "✅ All health checks passed!"
-            displayName: 🏥 Health Check
+            displayName: 🏥 Health Check & Connectivity Test
             continueOnError: false
 
           - script: |

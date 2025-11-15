@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/atoms/Button';
 import { Input } from '../components/atoms/Input';
 import { useApi } from '../hooks/useApi';
@@ -34,6 +36,17 @@ const DeliveryManagement: React.FC = () => {
   return (
     <div className="min-h-screen bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <Link 
+            to="/admin/dashboard" 
+            className="flex items-center text-primary-600 hover:text-primary-700 mb-3"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            <span>Back to Dashboard</span>
+          </Link>
+          <h1 className="text-3xl font-bold text-neutral-gray-800">Delivery Management</h1>
+          <p className="text-neutral-gray-600 mt-1">Manage and track all delivery orders</p>
+        </div>
         <ul>
           {deliveries.map((delivery) => (
             <li key={delivery.id}>

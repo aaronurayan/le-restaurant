@@ -1,4 +1,4 @@
-# Azure Deployment Configuration Guide
+# 10. AZURE DEPLOYMENT CONFIGURATION GUIDE
 
 This guide explains how to configure Azure resources and pipeline variables for deploying the Le Restaurant application.
 

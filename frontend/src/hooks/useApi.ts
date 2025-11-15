@@ -1,6 +1,14 @@
+/**
+ * @deprecated This file uses legacy api.ts service.
+ * Consider migrating to specific hooks like useMenuApiNew, useOrderApi, etc.
+ * 
+ * This file will be updated to use the unified client in a future version.
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { MenuItem, Order, CartItem } from '../types';
-import { menuApi, orderApi, cartApi, apiHealth } from '../services/api';
+import { apiClient } from '../services/apiClient.unified';
+import { API_ENDPOINTS } from '../config/api.config';
 
 // API 상태 타입
 interface ApiState<T> {
@@ -41,7 +49,7 @@ export const useMenuApi = () => {
   const fetchAllItems = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await menuApi.getAllItems();
+      const data = await apiClient.get<MenuItem[]>(API_ENDPOINTS.menu.base);
       setData(data);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to fetch menu items');
@@ -52,7 +60,7 @@ export const useMenuApi = () => {
   const fetchItemsByCategory = useCallback(async (category: string) => {
     try {
       setLoading(true);
-      const data = await menuApi.getItemsByCategory(category);
+      const data = await apiClient.get<MenuItem[]>(API_ENDPOINTS.menu.byCategory(category));
       setData(data);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to fetch items by category');
@@ -63,7 +71,7 @@ export const useMenuApi = () => {
   const searchItems = useCallback(async (keyword: string) => {
     try {
       setLoading(true);
-      const data = await menuApi.searchItems(keyword);
+      const data = await apiClient.get<MenuItem[]>(API_ENDPOINTS.menu.search(keyword));
       setData(data);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to search items');
@@ -73,7 +81,7 @@ export const useMenuApi = () => {
   // 모든 카테고리 조회
   const fetchCategories = useCallback(async () => {
     try {
-      const data = await menuApi.getAllCategories();
+      const data = await apiClient.get<string[]>(API_ENDPOINTS.menu.categories);
       setCategories(data);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
@@ -103,7 +111,7 @@ export const useOrderApi = () => {
   const createOrder = useCallback(async (order: Omit<Order, 'id' | 'orderNumber' | 'orderDate'>) => {
     try {
       setLoading(true);
-      const data = await orderApi.createOrder(order);
+      const data = await apiClient.post<Order>(API_ENDPOINTS.orders.base, order);
       setData(data);
       return data;
     } catch (error) {
@@ -115,7 +123,7 @@ export const useOrderApi = () => {
   const getOrderStatus = useCallback(async (orderId: string) => {
     try {
       setLoading(true);
-      const data = await orderApi.getOrderStatus(orderId);
+      const data = await apiClient.get<Order>(API_ENDPOINTS.orders.byId(Number(orderId)));
       setData(data);
       return data;
     } catch (error) {
@@ -138,7 +146,9 @@ export const useCartApi = () => {
   const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await cartApi.getCart();
+      // Note: Cart API endpoints may need to be added to API_ENDPOINTS
+      // For now, using a placeholder - this may need backend implementation
+      const data = await apiClient.get<CartItem[]>('/api/cart');
       setData(data);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to fetch cart');
@@ -205,10 +215,12 @@ export const useApiHealth = () => {
   const checkBackendStatus = useCallback(async () => {
     try {
       setChecking(true);
-      const status = await apiHealth.checkBackendStatus();
+      // Health check fails silently if backend is not available
+      const status = await apiClient.checkHealth();
       setIsBackendHealthy(status);
       return status;
-    } catch {
+    } catch (error) {
+      // Silently handle - backend may not be running
       setIsBackendHealthy(false);
       return false;
     } finally {
@@ -225,7 +237,7 @@ export const useApiHealth = () => {
     isBackendHealthy,
     checking,
     checkBackendStatus,
-    baseUrl: apiHealth.getBaseUrl(),
+    baseUrl: apiClient.getBaseUrl(),
   };
 };
 

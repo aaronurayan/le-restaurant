@@ -13,6 +13,9 @@ import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CustomerOrderDetailPage from './pages/CustomerOrderDetailPage';
 import { Checkout } from './pages/Checkout';
 import Payment from './pages/Payment';
+import ReservationManagement from './pages/ReservationManagement';
+import AdminMenuPage from './pages/AdminMenuPage';
+import UserManagementPanel from './components/organisms/UserManagementPanel';
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/organisms/ProtectedRoute';
 import { UserRole } from './types/user';
@@ -161,7 +164,30 @@ const AppContent: React.FC = () => {
                 path="/admin/menu"
                 element={
                   <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
-                    <MenuManagementPanel isOpen={true} onClose={() => window.history.back()} />
+                    <AdminMenuPage />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Reservation Management (Admin/Manager) */}
+              <Route
+                path="/admin/reservations"
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <ReservationManagement />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* User Management (Admin/Manager) - F102 */}
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute roles={[UserRole.ADMIN, UserRole.MANAGER]}>
+                    <UserManagementPanel
+                      isOpen={true}
+                      onClose={() => window.history.back()}
+                    />
                   </ProtectedRoute>
                 }
               />
@@ -219,6 +245,22 @@ const AppContent: React.FC = () => {
                 <Payment />
               </ProtectedRoute>
             }
+          />
+          
+          {/* Customer Profile Route */}
+          <Route
+            path="/customer/profile"
+            element={
+              <ProtectedRoute roles={[UserRole.CUSTOMER]}>
+                <CustomerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Catch-all route - redirect to home */}
+          <Route
+            path="*"
+            element={<Navigate to="/" replace />}
           />
         </Routes>
       </MainLayout>

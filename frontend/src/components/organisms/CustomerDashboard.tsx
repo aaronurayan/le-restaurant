@@ -85,14 +85,19 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           />
         </Link>
 
-        <StatCard
-          title="Active Reservations"
-          value={stats.activeReservations}
-          icon={<Calendar className="w-6 h-6" />}
-          trend={stats.activeReservations > 0 ? 'up' : 'neutral'}
-          change={stats.activeReservations > 0 ? 'Upcoming' : 'None'}
-          description="View details"
-        />
+        <Link
+          to="/customer/reservations"
+          className="transform transition-transform hover:scale-105 hover:shadow-lg block"
+        >
+          <StatCard
+            title="Active Reservations"
+            value={stats.activeReservations}
+            icon={<Calendar className="w-6 h-6" />}
+            trend={stats.activeReservations > 0 ? 'up' : 'neutral'}
+            change={stats.activeReservations > 0 ? 'Upcoming' : 'None'}
+            description="View details"
+          />
+        </Link>
 
         <StatCard
           title="Loyalty Points"
@@ -161,14 +166,14 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         <h2 className="text-xl font-bold text-neutral-gray-800 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
-            to="/menu"
+            to="/"
             className="flex items-center justify-center p-4 bg-primary-orange-light text-primary-orange-dark rounded-lg hover:bg-primary-orange-100 transition-colors"
           >
             <Utensils className="w-5 h-5 mr-2" />
             <span>View Menu</span>
           </Link>
           <Link
-            to="/profile"
+            to="/customer/profile"
             className="flex items-center justify-center p-4 bg-secondary-green-light text-secondary-green-dark rounded-lg hover:bg-secondary-green-100 transition-colors"
           >
             <User className="w-5 h-5 mr-2" />

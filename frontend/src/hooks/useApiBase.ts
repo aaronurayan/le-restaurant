@@ -13,7 +13,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { apiClient, ApiError } from '../utils/apiClient';
+import { apiClient, ApiError } from '../services/apiClient.unified';
 
 // =============================================================================
 // Type Definitions
@@ -69,11 +69,12 @@ export function useApiBase<T>() {
    */
   const checkBackendConnection = useCallback(async (): Promise<boolean> => {
     try {
+      // Health check fails silently if backend is not available
       const isHealthy = await apiClient.checkHealth();
       setState(prev => ({ ...prev, isBackendConnected: isHealthy }));
       return isHealthy;
     } catch (error) {
-      console.warn('Backend connection check failed:', error);
+      // Silently handle - backend may not be running (development mode)
       setState(prev => ({ ...prev, isBackendConnected: false }));
       return false;
     }
@@ -146,7 +147,7 @@ export function useApiBase<T>() {
         return result;
       } else if (useMockData && mockDataProvider) {
         // Use mock data as fallback
-        console.warn('Backend unavailable, using mock data');
+        // Silently use mock data - no console warning
         const mockData = await mockDataProvider();
         setData(mockData);
         return mockData;
@@ -170,7 +171,7 @@ export function useApiBase<T>() {
           setData(mockData);
           return mockData;
         } catch (mockError) {
-          console.error('Mock data also failed:', mockError);
+          // Mock data failed - silently handle
         }
       }
       

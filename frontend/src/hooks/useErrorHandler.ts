@@ -79,10 +79,26 @@ export const useErrorHandler = () => {
   const handleError = useCallback((err: unknown, context?: string) => {
     const normalizedError = normalizeError(err);
     
-    // Log error with context
-    if (import.meta.env.DEV) {
-      console.error(`[Error Handler] ${context || 'Error'}:`, err);
-      console.error('Normalized error:', normalizedError);
+    // Completely suppress network errors in console
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const errorStack = err instanceof Error ? err.stack : '';
+    const fullErrorText = `${errorMessage} ${errorStack}`;
+    
+    const isNetworkError = 
+      errorMessage.includes('Network Error') || 
+      errorMessage.includes('ERR_CONNECTION_REFUSED') ||
+      errorMessage.includes('ERR_NETWORK') ||
+      errorMessage.includes('fetch') ||
+      errorMessage.includes('Failed to fetch') ||
+      fullErrorText.includes('net::ERR_') ||
+      (err instanceof Error && err.name === 'TypeError' && errorMessage.includes('fetch'));
+    
+    // Only log non-network errors or critical errors
+    if (import.meta.env.DEV && (!isNetworkError || context?.includes('critical'))) {
+      if (!isNetworkError) {
+        console.error(`[Error Handler] ${context || 'Error'}:`, err);
+        console.error('Normalized error:', normalizedError);
+      }
     }
 
     // In production, log to error tracking service

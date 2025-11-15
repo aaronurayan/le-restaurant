@@ -1,6 +1,18 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AuthContextType, AuthState } from '../types/auth';
-import { User, LoginRequest, CreateUserRequest, UpdateUserRequest } from '../types/user';
+import { User, LoginRequest, CreateUserRequest, UpdateUserRequest, UserRole } from '../types/user';
+
+// 백엔드에서 오는 role을 소문자로 정규화하는 헬퍼 함수
+// 백엔드는 "ADMIN", "MANAGER", "CUSTOMER" (대문자)로 반환하지만
+// 프론트엔드는 'admin', 'manager', 'customer' (소문자)를 사용
+const normalizeRole = (role: string | undefined): UserRole => {
+  if (!role) return UserRole.CUSTOMER;
+  const roleLower = role.toLowerCase();
+  if (roleLower === 'admin') return UserRole.ADMIN;
+  if (roleLower === 'manager') return UserRole.MANAGER;
+  if (roleLower === 'customer') return UserRole.CUSTOMER;
+  return UserRole.CUSTOMER; // 기본값
+};
 
 const initialState: AuthState = {
   user: null,
@@ -125,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phoneNumber: user.phoneNumber || '',
         firstName: user.firstName || '',
         lastName: user.lastName || '',
-        role: user.role || 'customer',
+        role: normalizeRole(user.role),
         status: user.status || 'active',
         createdAt: user.createdAt || new Date().toISOString(),
         updatedAt: user.updatedAt || new Date().toISOString()
@@ -202,7 +214,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phoneNumber: user.phoneNumber || '',
         firstName: user.firstName || '',
         lastName: user.lastName || '',
-        role: user.role || 'customer',
+        role: normalizeRole(user.role),
         status: user.status || 'active',
         createdAt: user.createdAt || new Date().toISOString(),
         updatedAt: user.updatedAt || new Date().toISOString()
@@ -273,6 +285,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // 토큰 만료 확인
         if (new Date(expiresAt) > new Date()) {
+          // role 정규화 (localStorage에 저장된 값이 대문자일 수 있음)
+          const normalizedUser: User = {
+            ...user,
+            role: normalizeRole(user.role)
+          };
+          
           // API 클라이언트에 토큰 설정
           import('../services/apiClient.unified').then(({ apiClient }) => {
             apiClient.setAuthToken(token);
@@ -280,7 +298,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           dispatch({
             type: 'LOGIN_SUCCESS',
-            payload: { user, token, expiresAt }
+            payload: { user: normalizedUser, token, expiresAt }
           });
         } else {
           // 만료된 토큰 제거

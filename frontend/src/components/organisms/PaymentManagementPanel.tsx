@@ -13,7 +13,10 @@ import {
 } from 'lucide-react';
 import { Payment, PaymentMethod, PaymentStatus } from '../../types/payment';
 import { usePaymentApi } from '../../hooks/usePaymentApi';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import { ErrorMessage } from '../molecules/ErrorMessage';
+import { LoadingSpinner } from '../atoms/LoadingSpinner';
 
 interface PaymentManagementPanelProps {
   isOpen: boolean;

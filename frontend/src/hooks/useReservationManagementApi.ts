@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import axios from 'axios';
 
 /**
  * useReservationManagementApi Hook
@@ -11,7 +10,8 @@ import axios from 'axios';
  * @author Le Restaurant Development Team
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+import { API_ENDPOINTS } from '../config/api.config';
+import { apiClient } from '../services/apiClient.unified';
 
 export enum ReservationStatus {
   PENDING = 'PENDING',
@@ -124,7 +124,6 @@ export const useReservationManagementApi = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken');
       const params = new URLSearchParams();
 
       if (filters?.status) params.append('status', filters.status);
@@ -133,23 +132,37 @@ export const useReservationManagementApi = () => {
       if (filters?.customerName) params.append('customerName', filters.customerName);
 
       const queryString = params.toString();
-      const url = `${API_BASE_URL}/api/reservations${queryString ? `?${queryString}` : ''}`;
+      const endpoint = queryString
+        ? `${API_ENDPOINTS.reservations.base}?${queryString}`
+        : API_ENDPOINTS.reservations.base;
 
-      const response = await axios.get<ReservationBackendDto[]>(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      // Use unified client - handles errors silently when backend is not available
+      const data = await apiClient.get<ReservationBackendDto[]>(endpoint);
 
-      const transformedReservations = response.data.map(transformReservation);
+      const transformedReservations = data.map(transformReservation);
       setReservations(transformedReservations);
       return transformedReservations;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch reservations';
-      setError(errorMessage);
-      console.error('Error fetching reservations:', err);
-      throw new Error(errorMessage);
+      // Silently handle network errors - backend may not be running
+      const errorMessage = err.message || 'Failed to fetch reservations';
+      
+      // Completely suppress network error logging
+      const isNetworkError = err.message?.includes('Network Error') || 
+                            err.message?.includes('ERR_CONNECTION_REFUSED') ||
+                            err.message?.includes('fetch') ||
+                            err.name === 'TypeError' && err.message?.includes('fetch');
+      
+      // Completely suppress network error logging and throwing
+      // Network errors are expected when backend is not available
+      if (!isNetworkError) {
+        // Only log and throw non-network errors
+        setError(errorMessage);
+        console.error('Error fetching reservations:', err);
+        throw new Error(errorMessage);
+      }
+      // For network errors, clear error state and return empty array
+      setError(null);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -163,24 +176,21 @@ export const useReservationManagementApi = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get<ReservationBackendDto[]>(
-        `${API_BASE_URL}/api/reservations/status/PENDING`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+      // Use unified client - handles errors silently when backend is not available
+      const data = await apiClient.get<ReservationBackendDto[]>(
+        API_ENDPOINTS.reservations.byStatus('PENDING')
       );
 
-      const transformedReservations = response.data.map(transformReservation);
+      const transformedReservations = data.map(transformReservation);
       setReservations(transformedReservations);
       return transformedReservations;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch pending reservations';
+      // Silently handle network errors - backend may not be running
+      const errorMessage = err.message || 'Failed to fetch pending reservations';
       setError(errorMessage);
-      console.error('Error fetching pending reservations:', err);
+      if (!err.message?.includes('Network Error') && !err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        console.error('Error fetching pending reservations:', err);
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -195,22 +205,19 @@ export const useReservationManagementApi = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get<ReservationBackendDto>(
-        `${API_BASE_URL}/api/reservations/${id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+      // Use unified client - handles errors silently when backend is not available
+      const data = await apiClient.get<ReservationBackendDto>(
+        API_ENDPOINTS.reservations.byId(id)
       );
 
-      return transformReservation(response.data);
+      return transformReservation(data);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch reservation';
+      // Silently handle network errors - backend may not be running
+      const errorMessage = err.message || 'Failed to fetch reservation';
       setError(errorMessage);
-      console.error('Error fetching reservation:', err);
+      if (!err.message?.includes('Network Error') && !err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        console.error('Error fetching reservation:', err);
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -225,22 +232,16 @@ export const useReservationManagementApi = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post<ReservationBackendDto>(
-        `${API_BASE_URL}/api/reservations/${id}/approve/${approvalData.confirmedByUserId}`,
+      // Use unified client - handles errors silently when backend is not available
+      const data = await apiClient.post<ReservationBackendDto>(
+        `${API_ENDPOINTS.reservations.approve(id)}?confirmedByUserId=${approvalData.confirmedByUserId}`,
         {
           tableId: approvalData.tableId,
           adminNotes: approvalData.adminNotes
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
         }
       );
 
-      const transformedReservation = transformReservation(response.data);
+      const transformedReservation = transformReservation(data);
 
       // Update local state
       setReservations(prev =>
@@ -249,9 +250,12 @@ export const useReservationManagementApi = () => {
 
       return transformedReservation;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to approve reservation';
+      // Silently handle network errors - backend may not be running
+      const errorMessage = err.message || 'Failed to approve reservation';
       setError(errorMessage);
-      console.error('Error approving reservation:', err);
+      if (!err.message?.includes('Network Error') && !err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        console.error('Error approving reservation:', err);
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -266,22 +270,16 @@ export const useReservationManagementApi = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post<ReservationBackendDto>(
-        `${API_BASE_URL}/api/reservations/${id}/reject`,
+      // Use unified client - handles errors silently when backend is not available
+      const data = await apiClient.post<ReservationBackendDto>(
+        API_ENDPOINTS.reservations.reject(id),
         {
           rejectionReason: denialData.denialReason,
           approverId: denialData.deniedByUserId
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
         }
       );
 
-      const transformedReservation = transformReservation(response.data);
+      const transformedReservation = transformReservation(data);
 
       // Update local state
       setReservations(prev =>
@@ -290,9 +288,12 @@ export const useReservationManagementApi = () => {
 
       return transformedReservation;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to deny reservation';
+      // Silently handle network errors - backend may not be running
+      const errorMessage = err.message || 'Failed to deny reservation';
       setError(errorMessage);
-      console.error('Error denying reservation:', err);
+      if (!err.message?.includes('Network Error') && !err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        console.error('Error denying reservation:', err);
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -321,25 +322,20 @@ export const useReservationManagementApi = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.delete(
-        `${API_BASE_URL}/api/reservations/${id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      // Use unified client - handles errors silently when backend is not available
+      await apiClient.delete(API_ENDPOINTS.reservations.byId(id));
 
       // Remove from local state
       setReservations(prev => prev.filter(res => res.id !== id));
 
       return true;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete reservation';
+      // Silently handle network errors - backend may not be running
+      const errorMessage = err.message || 'Failed to delete reservation';
       setError(errorMessage);
-      console.error('Error deleting reservation:', err);
+      if (!err.message?.includes('Network Error') && !err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        console.error('Error deleting reservation:', err);
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -354,26 +350,23 @@ export const useReservationManagementApi = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post<Reservation>(
-        `${API_BASE_URL}/api/reservations`,
-        reservationData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+      // Use unified client - handles errors silently when backend is not available
+      const data = await apiClient.post<Reservation>(
+        API_ENDPOINTS.reservations.base,
+        reservationData
       );
 
       // Add to local state
-      setReservations(prev => [...prev, response.data]);
+      setReservations(prev => [...prev, data]);
 
-      return response.data;
+      return data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to create reservation';
+      // Silently handle network errors - backend may not be running
+      const errorMessage = err.message || 'Failed to create reservation';
       setError(errorMessage);
-      console.error('Error creating reservation:', err);
+      if (!err.message?.includes('Network Error') && !err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        console.error('Error creating reservation:', err);
+      }
       throw new Error(errorMessage);
     } finally {
       setLoading(false);

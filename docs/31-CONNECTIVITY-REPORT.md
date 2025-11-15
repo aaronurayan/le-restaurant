@@ -1,4 +1,4 @@
-# Backend-Frontend Connectivity Report
+# 31. BACKEND-FRONTEND CONNECTIVITY REPORT
 
 **Date**: 2025-11-15  
 **Status**: ✅ Connected

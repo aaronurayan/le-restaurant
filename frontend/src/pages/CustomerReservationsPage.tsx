@@ -7,6 +7,8 @@
  */
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { CustomerReservationList } from '../components/organisms/CustomerReservationList';
 import ReservationModal from '../components/organisms/ReservationModal';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,6 +49,15 @@ export const CustomerReservationsPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-neutral-50 py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="mb-6">
+                    <Link 
+                        to="/customer/dashboard" 
+                        className="flex items-center text-primary-600 hover:text-primary-700 mb-3"
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-1" />
+                        <span>Back to Dashboard</span>
+                    </Link>
+                </div>
                 <CustomerReservationList
                     key={refreshKey}
                     customerId={customerId}

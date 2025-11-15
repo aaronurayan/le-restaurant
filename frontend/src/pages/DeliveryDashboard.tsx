@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Truck, 
   Users, 
@@ -8,7 +9,8 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from 'lucide-react';
 import { useDeliveryApi } from '../hooks/useDeliveryApi';
 import { DeliveryAssignment, DeliveryPerson, DeliveryMetrics } from '../types/delivery';
@@ -93,6 +95,15 @@ const DeliveryDashboard: React.FC = () => {
     <div className="min-h-screen bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
+        <div className="mb-6">
+          <Link 
+            to="/delivery" 
+            className="flex items-center text-primary-600 hover:text-primary-700 mb-3"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            <span>Back to Delivery Management</span>
+          </Link>
+        </div>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-neutral-900">Delivery Dashboard</h1>

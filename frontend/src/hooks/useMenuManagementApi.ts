@@ -1,6 +1,14 @@
-import { useState, useCallback } from 'react';
+/**
+ * Menu Management API Hook
+ * 
+ * This hook has been updated to use the unified API client and centralized endpoints.
+ */
 
-const API_BASE_URL = 'http://localhost:8080/api';
+import { useState, useCallback } from 'react';
+import { apiClient } from '../services/apiClient.unified';
+import { API_ENDPOINTS, API_CONFIG } from '../config/api.config';
+
+// API_BASE_URL is no longer needed - using API_ENDPOINTS and apiClient directly
 
 export interface MenuItem {
   id: number;
@@ -60,12 +68,11 @@ export const useMenuManagementApi = () => {
       if (filters?.search) params.append('search', filters.search);
       if (filters?.available !== undefined) params.append('available', String(filters.available));
       
-      const response = await fetch(`${API_BASE_URL}/menu-items?${params}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const queryString = params.toString();
+      const endpoint = queryString 
+        ? `${API_ENDPOINTS.menu.base}?${queryString}`
+        : API_ENDPOINTS.menu.base;
+      const data = await apiClient.get<MenuItem[]>(endpoint);
       setMenuItems(data);
       return data;
     } catch (err) {
@@ -86,18 +93,7 @@ export const useMenuManagementApi = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/menu-items`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-      
-      const createdItem = await response.json();
+      const createdItem = await apiClient.post<MenuItem>(API_ENDPOINTS.menu.base, item);
       setMenuItems(prev => [...prev, createdItem]);
       return createdItem;
     } catch (err) {
@@ -118,18 +114,7 @@ export const useMenuManagementApi = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/menu-items/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-      
-      const updatedItem = await response.json();
+      const updatedItem = await apiClient.put<MenuItem>(API_ENDPOINTS.menu.byId(id), updates);
       setMenuItems(prev => prev.map(item => item.id === id ? updatedItem : item));
       return updatedItem;
     } catch (err) {
@@ -150,15 +135,7 @@ export const useMenuManagementApi = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/menu-items/${id}`, {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-      
+      await apiClient.delete(API_ENDPOINTS.menu.byId(id));
       setMenuItems(prev => prev.filter(item => item.id !== id));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete menu item';
@@ -176,11 +153,7 @@ export const useMenuManagementApi = () => {
    */
   const fetchCategories = useCallback(async (): Promise<string[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/menu-items/categories`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return await response.json();
+      return await apiClient.get<string[]>(API_ENDPOINTS.menu.categories);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch categories';
       setError(errorMessage);

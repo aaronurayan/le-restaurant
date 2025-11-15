@@ -135,10 +135,32 @@ export const API_ENDPOINTS = {
     byId: (id: number) => `/api/reservations/${id}`,
     byCustomer: (customerId: number) => `/api/reservations/customer/${customerId}`,
     byStatus: (status: string) => `/api/reservations/status/${status}`,
+    byDate: (date: string) => `/api/reservations/date/${date}`,
     approve: (id: number) => `/api/reservations/${id}/approve`,
     reject: (id: number) => `/api/reservations/${id}/reject`,
     cancel: (id: number) => `/api/reservations/${id}/cancel`,
     timeSlots: '/api/reservations/time-slots',
+    timeslots: (date: string, partySize: number) => `/api/reservations/timeslots?date=${encodeURIComponent(date)}&partySize=${partySize}`,
+    availability: (date: string, time: string, partySize: number) => `/api/reservations/availability?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}&partySize=${partySize}`,
+    test: '/api/reservations/test',
+  },
+  
+  // Cart
+  cart: {
+    base: '/api/cart',
+    items: '/api/cart/items',
+    addItem: '/api/cart/items',
+    updateItem: (itemId: string) => `/api/cart/items/${itemId}`,
+    removeItem: (itemId: string) => `/api/cart/items/${itemId}`,
+    clear: '/api/cart/clear',
+  },
+  
+  // Delivery Persons
+  deliveryPersons: {
+    base: '/api/delivery/persons',
+    byId: (id: string) => `/api/delivery/persons/${id}`,
+    updateStatus: (id: string) => `/api/delivery/persons/${id}/status`,
+    assignments: '/api/delivery/assignments',
   },
   
   // Delivery

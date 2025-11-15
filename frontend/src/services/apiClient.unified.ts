@@ -19,6 +19,23 @@
  */
 
 import { API_CONFIG, API_ENDPOINTS, ENV, FEATURE_FLAGS } from '../config/api.config';
+import { logger } from '../utils/logger';
+import { apiCircuitBreaker } from '../utils/circuitBreaker';
+import { performanceMonitor } from '../utils/performanceMonitor';
+import { 
+  interceptorManager, 
+  type RequestContext, 
+  type ResponseContext,
+  timestampInterceptor,
+  clientInfoInterceptor,
+  responseDataInterceptor,
+  errorNormalizationInterceptor,
+} from '../utils/requestInterceptors';
+import { apiRateLimiter, getEndpointRateLimiter } from '../utils/rateLimiter';
+import { offlineQueue } from '../utils/offlineQueue';
+import { validateRequest, ValidationError, type ValidationRule } from '../utils/requestValidator';
+import { requestQueue, RequestPriority } from '../utils/requestQueue';
+import { requestCancellationManager } from '../utils/requestCancellation';
 
 // =============================================================================
 // Type Definitions
@@ -47,6 +64,12 @@ export interface ApiRequestConfig extends RequestInit {
   skipAuth?: boolean;
   cache?: boolean;
   cacheTTL?: number; // Time to live in milliseconds
+  validate?: Record<string, ValidationRule[]>; // Request validation rules
+  skipRateLimit?: boolean; // Skip rate limiting for this request
+  skipOfflineQueue?: boolean; // Skip offline queue for this request
+  priority?: RequestPriority; // Request priority for queuing
+  cancellable?: boolean; // Whether request can be cancelled
+  batchable?: boolean; // Whether request can be batched
 }
 
 /**
@@ -92,6 +115,37 @@ class UnifiedApiClient {
   private constructor() {
     this.baseUrl = API_CONFIG.baseURL;
     this.loadAuthToken();
+    this.setupOfflineQueue();
+    this.setupBuiltInInterceptors();
+  }
+
+  /**
+   * Setup offline queue replay handler
+   */
+  private setupOfflineQueue(): void {
+    offlineQueue.setReplayHandler(async (queuedRequest) => {
+      const method = queuedRequest.method.toLowerCase() as 'get' | 'post' | 'put' | 'delete' | 'patch';
+      const endpoint = queuedRequest.endpoint.replace(this.baseUrl, '');
+      
+      // Replay the request
+      return this.request(endpoint, {
+        method: queuedRequest.method,
+        body: queuedRequest.body,
+        headers: queuedRequest.headers,
+        skipOfflineQueue: true, // Don't queue the replay
+      });
+    });
+  }
+
+  /**
+   * Setup built-in interceptors
+   */
+  private setupBuiltInInterceptors(): void {
+    // Add built-in interceptors
+    interceptorManager.addRequestInterceptor(timestampInterceptor);
+    interceptorManager.addRequestInterceptor(clientInfoInterceptor);
+    interceptorManager.addResponseInterceptor(responseDataInterceptor);
+    interceptorManager.addErrorInterceptor(errorNormalizationInterceptor);
   }
 
   /**
@@ -115,7 +169,7 @@ class UnifiedApiClient {
         this.authToken = parsed.token || null;
       }
     } catch (error) {
-      console.warn('Failed to load auth token:', error);
+      logger.warn('Failed to load auth token', {}, error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -149,15 +203,46 @@ class UnifiedApiClient {
 
   /**
    * Check backend health
+   * Fails silently if backend is not available (no console errors)
    */
   public async checkHealth(): Promise<boolean> {
     const startTime = Date.now();
     
     try {
+      // Use AbortController instead of AbortSignal.timeout for better error handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      // Suppress browser console errors for this fetch
       const response = await fetch(`${this.baseUrl}${API_ENDPOINTS.health}`, {
         method: 'GET',
-        signal: AbortSignal.timeout(5000),
+        signal: controller.signal,
+        cache: 'no-cache',
+        // Add headers to help with CORS
+        headers: {
+          'Accept': 'application/json',
+        },
+      }).catch((fetchError) => {
+        // Silently catch network errors (connection refused, etc.)
+        // Don't log to console - this is expected when backend is not running
+        // Browser will still show network errors, but we won't add to them
+        clearTimeout(timeoutId);
+        return null;
       });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response) {
+        // Connection failed - backend not available
+        const responseTime = Date.now() - startTime;
+        this.healthStatus = {
+          isHealthy: false,
+          baseUrl: this.baseUrl,
+          lastChecked: new Date().toISOString(),
+          responseTime,
+        };
+        return false;
+      }
       
       const responseTime = Date.now() - startTime;
       const isHealthy = response.ok;
@@ -169,13 +254,33 @@ class UnifiedApiClient {
         responseTime,
       };
       
+      // Only log successful health checks in debug mode
+      if (isHealthy) {
+        logger.debug('Health check completed', {
+          isHealthy,
+          responseTime: `${responseTime}ms`,
+        });
+      }
+      
       return isHealthy;
     } catch (error) {
-      console.warn('Backend health check failed:', error);
+      // Silently handle errors - don't log network connection errors
+      // Only log unexpected errors (not fetch/network errors)
+      if (error instanceof Error && 
+          error.name !== 'AbortError' && 
+          !error.message.includes('fetch') &&
+          !error.message.includes('network')) {
+        logger.warn('Health check failed with unexpected error', {
+          baseUrl: this.baseUrl,
+        }, error);
+      }
+      
+      const responseTime = Date.now() - startTime;
       this.healthStatus = {
         isHealthy: false,
         baseUrl: this.baseUrl,
         lastChecked: new Date().toISOString(),
+        responseTime,
       };
       return false;
     }
@@ -234,51 +339,163 @@ class UnifiedApiClient {
   }
 
   /**
-   * Execute request with retry logic
+   * Execute request with retry logic, circuit breaker, and performance monitoring
    */
   private async executeWithRetry<T>(
     url: string,
     config: RequestInit,
     retries: number,
-    requestId: string
+    requestId: string,
+    originalContext?: RequestContext
   ): Promise<T> {
+    const startTime = Date.now();
     let lastError: Error | null = null;
+    let responseSize = 0;
 
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        const response = await fetch(url, config);
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new ApiError(
-            response.status,
-            errorData.message || `HTTP error! status: ${response.status}`,
-            requestId,
+    // Execute with circuit breaker protection
+    return apiCircuitBreaker.execute(async () => {
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          logger.debug('API request attempt', {
             url,
-            errorData.errors
-          );
-        }
+            attempt: attempt + 1,
+            requestId,
+          });
 
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        lastError = error as Error;
-        
-        // Don't retry on 4xx errors (client errors)
-        if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
-          throw error;
-        }
-        
-        // Retry on network errors or 5xx errors
-        if (attempt < retries) {
-          const delay = Math.pow(2, attempt) * API_CONFIG.retryDelay;
-          console.warn(`Request failed, retrying in ${delay}ms... (attempt ${attempt + 1}/${retries + 1})`);
-          await this.delay(delay);
+          // Apply request interceptors
+          let finalConfig = config;
+          if (originalContext) {
+            const transformedContext = await interceptorManager.executeRequestInterceptors({
+              ...originalContext,
+              url,
+              headers: config.headers as HeadersInit,
+            });
+            finalConfig = {
+              ...config,
+              headers: transformedContext.headers,
+              body: transformedContext.body !== undefined ? transformedContext.body : config.body,
+            };
+          }
+
+          const response = await fetch(url, finalConfig);
+          responseSize = parseInt(response.headers.get('content-length') || '0', 10);
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const apiError = new ApiError(
+              response.status,
+              errorData.message || `HTTP error! status: ${response.status}`,
+              requestId,
+              url,
+              errorData.errors
+            );
+
+            // Record performance metric
+            const duration = Date.now() - startTime;
+            performanceMonitor.record({
+              endpoint: url,
+              method: (config.method || 'GET').toUpperCase(),
+              duration,
+              statusCode: response.status,
+              success: false,
+              timestamp: Date.now(),
+              requestId,
+              responseSize,
+            });
+
+            logger.error('API request failed', {
+              url,
+              status: response.status,
+              requestId,
+              attempt: attempt + 1,
+            }, apiError);
+            
+            // Don't retry on 4xx errors (client errors)
+            if (response.status >= 400 && response.status < 500) {
+              throw apiError;
+            }
+            
+            throw apiError;
+          }
+
+          let data = await response.json();
+          const duration = Date.now() - startTime;
+
+          // Apply response interceptors
+          if (originalContext) {
+            const responseContext: ResponseContext = {
+              url,
+              status: response.status,
+              headers: response.headers,
+              data,
+              requestId,
+              timestamp: Date.now(),
+              duration,
+            };
+            const transformedContext = await interceptorManager.executeResponseInterceptors(responseContext);
+            data = transformedContext.data;
+          }
+
+          // Record performance metric
+          performanceMonitor.record({
+            endpoint: url,
+            method: (config.method || 'GET').toUpperCase(),
+            duration,
+            statusCode: response.status,
+            success: true,
+            timestamp: Date.now(),
+            requestId,
+            responseSize,
+          });
+
+          logger.debug('API request successful', {
+            url,
+            duration: `${duration}ms`,
+            requestId,
+          });
+
+          return data;
+        } catch (error) {
+          lastError = error as Error;
+          
+          // Apply error interceptors
+          if (originalContext) {
+            lastError = await interceptorManager.executeErrorInterceptors(lastError, originalContext);
+          }
+          
+          // Don't retry on 4xx errors (client errors)
+          if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+            throw lastError;
+          }
+          
+          // Retry on network errors or 5xx errors
+          if (attempt < retries) {
+            const delay = Math.pow(2, attempt) * API_CONFIG.retryDelay;
+            logger.warn('Request failed, retrying', {
+              url,
+              delay: `${delay}ms`,
+              attempt: attempt + 1,
+              requestId,
+            });
+            await this.delay(delay);
+          }
         }
       }
-    }
 
-    throw lastError || new ApiError(0, 'Request failed after all retries', requestId);
+      // Record final failure
+      const duration = Date.now() - startTime;
+      performanceMonitor.record({
+        endpoint: url,
+        method: (config.method || 'GET').toUpperCase(),
+        duration,
+        success: false,
+        timestamp: Date.now(),
+        requestId,
+        responseSize,
+      });
+
+      throw lastError || new ApiError(0, 'Request failed after all retries', requestId);
+    });
   }
 
   /**
@@ -297,6 +514,9 @@ class UnifiedApiClient {
       cache = false,
       cacheTTL = 60000, // 1 minute default
       cancelPrevious = false, // Cancel previous identical requests
+      validate,
+      skipRateLimit = false,
+      skipOfflineQueue = false,
       ...requestConfig
     } = config;
 
@@ -305,29 +525,83 @@ class UnifiedApiClient {
     const cacheKey = cache ? this.getCacheKey(endpoint, config) : null;
     const dedupeKey = `${requestConfig.method || 'GET'}:${endpoint}`;
 
-    // Check cache first
-    if (cache && cacheKey && this.isCacheValid(cacheKey, cacheTTL)) {
-      const cached = this.getCachedResponse<T>(cacheKey);
-      if (cached) {
-        console.log('📦 Using cached response for:', endpoint);
-        return cached;
+    // Validate request if validation rules provided
+    if (validate && requestConfig.body) {
+      try {
+        const body = typeof requestConfig.body === 'string' 
+          ? JSON.parse(requestConfig.body) 
+          : requestConfig.body;
+        const validationResult = validateRequest(body, validate);
+        if (!validationResult.valid) {
+          throw new ValidationError(validationResult.errors);
+        }
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          logger.error('Request validation failed', {
+            endpoint,
+            requestId,
+            errors: error.errors,
+          });
+          throw error;
+        }
       }
     }
 
-    // Cancel previous identical request if requested
-    if (cancelPrevious && this.pendingRequests.has(dedupeKey)) {
-      const previousController = this.abortControllers.get(dedupeKey);
-      if (previousController) {
-        previousController.abort();
-        console.log('🚫 Cancelled previous request for:', endpoint);
+    // Check rate limiting
+    if (!skipRateLimit) {
+      const rateLimitResult = getEndpointRateLimiter(endpoint).check();
+      if (!rateLimitResult.allowed) {
+        const error = new ApiError(
+          429,
+          `Rate limit exceeded. Retry after ${rateLimitResult.retryAfter}s`,
+          requestId,
+          url
+        );
+        logger.warn('Rate limit exceeded', {
+          endpoint,
+          requestId,
+          retryAfter: rateLimitResult.retryAfter,
+        });
+        throw error;
       }
     }
 
-    // Check for duplicate pending request (deduplication)
-    if (this.pendingRequests.has(dedupeKey) && !cancelPrevious) {
-      console.log('🔄 Reusing pending request for:', endpoint);
-      return this.pendingRequests.get(dedupeKey)!;
+    // Check if offline and queue request
+    if (!skipOfflineQueue && typeof navigator !== 'undefined' && !navigator.onLine) {
+      logger.warn('Offline - queuing request', { endpoint, requestId });
+      const queueId = offlineQueue.enqueue({
+        endpoint,
+        method: (requestConfig.method || 'GET').toUpperCase(),
+        body: requestConfig.body,
+        headers: requestConfig.headers || {},
+        maxRetries: retries,
+      });
+      throw new ApiError(0, 'Request queued for offline processing', requestId, url);
     }
+
+        // Check cache first
+        if (cache && cacheKey && this.isCacheValid(cacheKey, cacheTTL)) {
+          const cached = this.getCachedResponse<T>(cacheKey);
+          if (cached) {
+            logger.debug('Using cached response', { endpoint, requestId });
+            return cached;
+          }
+        }
+
+        // Cancel previous identical request if requested
+        if (cancelPrevious && this.pendingRequests.has(dedupeKey)) {
+          const previousController = this.abortControllers.get(dedupeKey);
+          if (previousController) {
+            previousController.abort();
+            logger.debug('Cancelled previous request', { endpoint, requestId });
+          }
+        }
+
+        // Check for duplicate pending request (deduplication)
+        if (this.pendingRequests.has(dedupeKey) && !cancelPrevious) {
+          logger.debug('Reusing pending request', { endpoint, requestId });
+          return this.pendingRequests.get(dedupeKey)!;
+        }
 
     // Create abort controller for this request
     const abortController = new AbortController();
@@ -360,8 +634,26 @@ class UnifiedApiClient {
           signal: abortController.signal,
         };
 
+        // Unregister from cancellation manager after request completes
+        const cleanup = () => {
+          if (cancellable) {
+            requestCancellationManager.unregister(requestId);
+          }
+        };
+
+        // Create request context for interceptors
+        const requestContext: RequestContext = {
+          url,
+          method: (requestConfig.method || 'GET').toUpperCase(),
+          headers: finalConfig.headers as HeadersInit,
+          body: finalConfig.body,
+          endpoint,
+          requestId,
+          timestamp: Date.now(),
+        };
+
         try {
-          const data = await this.executeWithRetry<T>(url, finalConfig, retries, requestId);
+          const data = await this.executeWithRetry<T>(url, finalConfig, retries, requestId, requestContext);
           
           // Cache response if enabled
           if (cache && cacheKey) {
@@ -373,16 +665,16 @@ class UnifiedApiClient {
           clearTimeout(timeoutId);
         }
       } catch (error) {
-        // Log error
-        console.error('API request failed:', {
+        // Log error with structured logging
+        logger.error('API request failed', {
           endpoint,
           requestId,
-          error,
-        });
+          method: requestConfig.method || 'GET',
+        }, error instanceof Error ? error : new Error(String(error)));
 
         // Try mock data fallback if enabled
         if (useMockData && error instanceof ApiError && error.status >= 500) {
-          console.warn('Attempting mock data fallback for:', endpoint);
+          logger.warn('Attempting mock data fallback', { endpoint, requestId });
           // Mock data fallback would be handled by the calling service
         }
 
@@ -452,6 +744,90 @@ class UnifiedApiClient {
    */
   public getBaseUrl(): string {
     return this.baseUrl;
+  }
+
+  /**
+   * Get performance statistics
+   */
+  public getPerformanceStats() {
+    return performanceMonitor.getSummary();
+  }
+
+  /**
+   * Get performance stats for specific endpoint
+   */
+  public getEndpointStats(endpoint: string, method: string = 'GET') {
+    return performanceMonitor.getStats(endpoint, method);
+  }
+
+  /**
+   * Get circuit breaker statistics
+   */
+  public getCircuitBreakerStats() {
+    return apiCircuitBreaker.getStats();
+  }
+
+  /**
+   * Reset circuit breaker
+   */
+  public resetCircuitBreaker(): void {
+    apiCircuitBreaker.reset();
+  }
+
+  /**
+   * Get interceptor manager (for adding custom interceptors)
+   */
+  public getInterceptorManager() {
+    return interceptorManager;
+  }
+
+  /**
+   * Get offline queue stats
+   */
+  public getOfflineQueueStats() {
+    return offlineQueue.getStats();
+  }
+
+  /**
+   * Process offline queue
+   */
+  public async processOfflineQueue(): Promise<void> {
+    return offlineQueue.processQueue();
+  }
+
+  /**
+   * Cancel a specific request
+   */
+  public cancelRequest(requestId: string): boolean {
+    return requestCancellationManager.cancel(requestId);
+  }
+
+  /**
+   * Cancel all active requests
+   */
+  public cancelAllRequests(): number {
+    return requestCancellationManager.cancelAll();
+  }
+
+  /**
+   * Cancel requests by endpoint pattern
+   */
+  public cancelByEndpoint(pattern: string | RegExp): number {
+    return requestCancellationManager.cancelByEndpoint(pattern);
+  }
+
+  /**
+   * Get request cancellation stats
+   */
+  public getCancellationStats() {
+    return requestCancellationManager.getStats();
+  }
+
+  /**
+   * Get request queue stats
+   */
+  public getQueueStats() {
+    return requestQueue.getStats();
   }
 }
 

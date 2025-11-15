@@ -1,4 +1,4 @@
-# 🚀 Azure Deployment Checklist
+# 11. 🚀 AZURE DEPLOYMENT CHECKLIST
 
 Use this checklist to ensure all steps are completed before and after deployment.
 

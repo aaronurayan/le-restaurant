@@ -1,49 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { useReservationApi, Reservation } from '../hooks/useReservationApi';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { useReservationManagementApi } from '../hooks/useReservationManagementApi';
 import { ConfirmDialog } from '../components/molecules/ConfirmDialog';
+import { useAuth } from '../contexts/AuthContext';
+import type { Reservation } from '../hooks/useReservationManagementApi';
 
 const ReservationManagement: React.FC = () => {
-    const { fetchReservations, createReservation, updateReservation, deleteReservation } = useReservationApi();
-    const [reservations, setReservations] = useState<Reservation[]>([]); // Manage reservations locally
-    const [form, setForm] = useState<{ id: number | null; guestCount: number; dateTime: string }>({
-        id: null,
-        guestCount: 0,
-        dateTime: '',
-    });
+    const { user } = useAuth();
+    const { 
+        reservations, 
+        loading, 
+        error, 
+        fetchReservations, 
+        approveReservation, 
+        denyReservation, 
+        deleteReservation 
+    } = useReservationManagementApi();
+    
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [reservationToDelete, setReservationToDelete] = useState<number | null>(null);
 
     useEffect(() => {
         // Fetch reservations when the component mounts
-        const loadReservations = async () => {
-            const data = await fetchReservations();
-            setReservations(data);
-        };
-        loadReservations();
+        fetchReservations();
     }, [fetchReservations]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setForm({ ...form, [name]: name === 'guestCount' ? parseInt(value, 10) : value });
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (form.id) {
-            await updateReservation(form.id, { guestCount: form.guestCount, dateTime: form.dateTime });
-        } else {
-            await createReservation({ guestCount: form.guestCount, dateTime: form.dateTime });
+    const handleApprove = async (id: number) => {
+        if (!user?.id) {
+            console.error('User not authenticated');
+            return;
         }
-        const data = await fetchReservations(); // Refresh reservations after submit
-        setReservations(data);
-        setForm({ id: null, guestCount: 0, dateTime: '' });
+        
+        try {
+            await approveReservation(id, {
+                confirmedByUserId: user.id,
+                tableId: undefined,
+                adminNotes: undefined,
+            });
+            fetchReservations();
+        } catch (err) {
+            console.error('Failed to approve reservation:', err);
+            // Error is handled by useReservationManagementApi hook
+        }
     };
 
-    const handleEdit = (reservation: Reservation) => {
-        setForm({ id: reservation.id, guestCount: reservation.guestCount, dateTime: reservation.dateTime });
+    const handleReject = async (id: number) => {
+        if (!user?.id) {
+            console.error('User not authenticated');
+            return;
+        }
+        
+        try {
+            await denyReservation(id, {
+                denialReason: 'Reservation rejected by administrator',
+                deniedByUserId: user.id,
+            });
+            fetchReservations();
+        } catch (err) {
+            console.error('Failed to reject reservation:', err);
+            // Error is handled by useReservationManagementApi hook
+        }
     };
 
-    const handleDelete = (id: number) => {
+    const handleCancel = async (id: number) => {
         setReservationToDelete(id);
         setShowDeleteConfirm(true);
     };
@@ -51,11 +71,16 @@ const ReservationManagement: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (!reservationToDelete) return;
         
-        await deleteReservation(reservationToDelete);
-        const data = await fetchReservations(); // Refresh reservations after delete
-        setReservations(data);
-        setShowDeleteConfirm(false);
-        setReservationToDelete(null);
+        try {
+            await deleteReservation(reservationToDelete);
+            fetchReservations();
+            setShowDeleteConfirm(false);
+            setReservationToDelete(null);
+        } catch (err) {
+            console.error('Failed to delete reservation:', err);
+            // Error is handled by useReservationManagementApi hook
+            // Keep dialog open so user can retry
+        }
     };
 
     const handleCancelDelete = () => {
@@ -63,55 +88,94 @@ const ReservationManagement: React.FC = () => {
         setReservationToDelete(null);
     };
 
+    if (loading) {
+        return (
+            <div className="p-4">
+                <p>Loading reservations...</p>
+            </div>
+        );
+    }
+
+    // Don't show error if it's a network error (backend not available)
+    const isNetworkError = error?.includes('Network Error') || 
+                          error?.includes('ERR_CONNECTION_REFUSED') ||
+                          error?.includes('fetch') ||
+                          error?.includes('Failed to fetch');
+    
+    if (error && !isNetworkError) {
+        return (
+            <div className="p-4">
+                <p className="text-red-500">Error: {error}</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Reservation Management</h1>
-            <form onSubmit={handleSubmit} className="mb-4">
-                <div className="mb-2">
-                    <label>Number of Guests:</label>
-                    <input
-                        type="number"
-                        name="guestCount"
-                        value={form.guestCount}
-                        onChange={handleInputChange}
-                        className="border p-2 w-full"
-                        required
-                    />
-                </div>
-                <div className="mb-2">
-                    <label>Date and Time:</label>
-                    <input
-                        type="datetime-local"
-                        name="dateTime"
-                        value={form.dateTime}
-                        onChange={handleInputChange}
-                        className="border p-2 w-full"
-                        required
-                    />
-                </div>
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2">
-                    {form.id ? 'Update Reservation' : 'Create Reservation'}
-                </button>
-            </form>
-            <h2 className="text-xl font-bold mb-2">Upcoming Reservations</h2>
-            <ul>
-                {reservations.map((reservation) => (
-                    <li key={reservation.id} className="border p-2 mb-2">
-                        <div>
-                            <strong>Guests:</strong> {reservation.guestCount}
-                        </div>
-                        <div>
-                            <strong>Date & Time:</strong> {new Date(reservation.dateTime).toLocaleString()}
-                        </div>
-                        <button onClick={() => handleEdit(reservation)} className="bg-yellow-500 text-white px-2 py-1 mr-2">
-                            Edit
-                        </button>
-                        <button onClick={() => handleDelete(reservation.id)} className="bg-red-500 text-white px-2 py-1">
-                            Delete
-                        </button>
-                    </li>
-                ))}
-            </ul>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="mb-6">
+                <Link 
+                    to="/admin/dashboard" 
+                    className="flex items-center text-primary-600 hover:text-primary-700 mb-3"
+                >
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    <span>Back to Dashboard</span>
+                </Link>
+                <h1 className="text-3xl font-bold text-neutral-gray-800">Reservation Management</h1>
+                <p className="text-neutral-gray-600 mt-1">View, approve, and manage all customer reservations</p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-bold mb-4">All Reservations</h2>
+                {reservations.length === 0 ? (
+                    <p className="text-neutral-500">No reservations found.</p>
+                ) : (
+                    <div className="space-y-4">
+                        {reservations.map((reservation) => (
+                            <div key={reservation.id} className="border border-neutral-200 rounded-lg p-4">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <div className="font-semibold text-lg">
+                                            {reservation.customerName || 'Guest'}
+                                        </div>
+                                        <div className="text-sm text-neutral-600 mt-1">
+                                            <strong>Guests:</strong> {reservation.partySize || reservation.guestCount || 'N/A'}
+                                        </div>
+                                        <div className="text-sm text-neutral-600">
+                                            <strong>Date & Time:</strong> {new Date(reservation.dateTime || reservation.reservationDate).toLocaleString()}
+                                        </div>
+                                        <div className="text-sm text-neutral-600">
+                                            <strong>Status:</strong> {reservation.status}
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {reservation.status === 'PENDING' && (
+                                            <>
+                                                <button 
+                                                    onClick={() => handleApprove(reservation.id)} 
+                                                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleReject(reservation.id)} 
+                                                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                                >
+                                                    Reject
+                                                </button>
+                                            </>
+                                        )}
+                                        <button 
+                                            onClick={() => handleCancel(reservation.id)} 
+                                            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
 
         {/* Delete Confirmation Dialog */}
         <ConfirmDialog

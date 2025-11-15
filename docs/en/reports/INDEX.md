@@ -1,6 +1,23 @@
 # 📊 Reports Index (English)
 
-**Last Updated**: 2025-11-15
+**Last Updated**: 2025-01-XX  
+**Document Number**: 51-EN  
+**Total Reports**: 13
+
+> **📖 Related**: [00. Master Index](../00-MASTER-INDEX.md) | [50. Documentation Status](../50-DOCUMENTATION-STATUS.md)
+
+---
+
+## 🌐 Multilingual Reports
+
+### Language Selection
+
+| Language | Reports Index | Status |
+|----------|-------------|--------|
+| **🇬🇧 English** | [📊 Reports Index](./INDEX.md) | ✅ This file (13 reports) |
+| **🇰🇷 한국어** | [📊 보고서 인덱스](../ko/reports/INDEX.md) | ✅ Available |
+| **🇯🇵 日本語** | [📊 レポートインデックス](../ja/reports/INDEX.md) | ✅ Available |
+| **🇷🇺 Русский** | [📊 Индекс отчетов](../ru/reports/INDEX.md) | ✅ Available |
 
 ---
 
@@ -119,10 +136,10 @@ The following reports have been consolidated into the latest reports and removed
 ## 📚 Other Documentation (Root Level)
 
 ### Guides
-- **[Azure Deployment Guide](../AZURE_DEPLOYMENT_GUIDE.md)**: Complete Azure deployment guide
-- **[Deployment Checklist](../DEPLOYMENT_CHECKLIST.md)**: Pre-deployment checklist
-- **[Azure Pipeline Fix](../AZURE_PIPELINE_FIX.md)**: Azure pipeline fixes and improvements
-- **[Merge Review F100-F101](../MERGE_REVIEW_F100_F101.md)**: Merge review for authentication features
+- **[10. Azure Deployment Guide](../10-AZURE-DEPLOYMENT-GUIDE.md)**: Complete Azure deployment guide
+- **[11. Deployment Checklist](../11-DEPLOYMENT-CHECKLIST.md)**: Pre-deployment checklist
+- **[13. Azure Pipeline Fix](../13-AZURE-PIPELINE-FIX.md)**: Azure pipeline fixes and improvements
+- **[30. Merge Review F100-F101](../30-MERGE-REVIEW-F100-F101.md)**: Merge review for authentication features
 
 ### Design Documentation
 - **design/**: System architecture and design documents
@@ -135,5 +152,15 @@ The following reports have been consolidated into the latest reports and removed
 **Note**: All legacy reports have been consolidated into the latest reports and removed. All reports are now organized in `en/reports/` directory with English headers. Some reports may still contain Korean content in the body, but headers and structure are standardized in English.
 
 **Total Reports**: 13  
-**Last Reorganization**: 2025-11-15
+**Last Reorganization**: 2025-01-XX  
+**Numbering**: Reports are referenced in Master Index as 51-59+
+
+---
+
+## 🔗 Related Documentation
+
+- **[00. Master Index](../00-MASTER-INDEX.md)** - Complete documentation index
+- **[50. Documentation Status](../50-DOCUMENTATION-STATUS.md)** - Documentation completeness
+- **[31. Connectivity Report](../31-CONNECTIVITY-REPORT.md)** - Frontend-backend connectivity
+- **[Testing Documentation](../testing/README.md)** - Testing guides and results
 

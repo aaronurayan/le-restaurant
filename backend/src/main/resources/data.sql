@@ -1,12 +1,16 @@
 -- Initial data for Le Restaurant (F108)
 -- This file is automatically executed by Spring Boot on startup
 
--- Insert test users (password for all users is "password123")
--- BCrypt hash: $2a$10$N9qo8uLOickgx2ZMRZoMye/0cQs4z0b4LT.pZ2VZZQPy0sFpMAF5C
-INSERT INTO users (email, password_hash, first_name, last_name, phone_number, user_role, status, created_at) VALUES
-('customer@lerestaurant.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye/0cQs4z0b4LT.pZ2VZZQPy0sFpMAF5C', 'John', 'Customer', '0412345678', 'CUSTOMER', 'ACTIVE', CURRENT_TIMESTAMP),
-('manager@lerestaurant.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye/0cQs4z0b4LT.pZ2VZZQPy0sFpMAF5C', 'Jane', 'Manager', '0423456789', 'MANAGER', 'ACTIVE', CURRENT_TIMESTAMP),
-('admin@lerestaurant.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye/0cQs4z0b4LT.pZ2VZZQPy0sFpMAF5C', 'Admin', 'User', '0434567890', 'ADMIN', 'ACTIVE', CURRENT_TIMESTAMP);
+-- NOTE: Test users are now created by DataLoader.java with proper BCrypt hashing
+-- Users are created programmatically to ensure correct password encoding
+-- Test users: customer@lerestaurant.com, manager@lerestaurant.com, admin@lerestaurant.com
+-- Password for all: password123
+
+-- Old INSERT statements removed - now handled by DataLoader
+-- INSERT INTO users (email, password_hash, first_name, last_name, phone_number, user_role, status, created_at) VALUES
+-- ('customer@lerestaurant.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye/0cQs4z0b4LT.pZ2VZZQPy0sFpMAF5C', 'John', 'Customer', '0412345678', 'CUSTOMER', 'ACTIVE', CURRENT_TIMESTAMP),
+-- ('manager@lerestaurant.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye/0cQs4z0b4LT.pZ2VZZQPy0sFpMAF5C', 'Jane', 'Manager', '0423456789', 'MANAGER', 'ACTIVE', CURRENT_TIMESTAMP),
+-- ('admin@lerestaurant.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye/0cQs4z0b4LT.pZ2VZZQPy0sFpMAF5C', 'Admin', 'User', '0434567890', 'ADMIN', 'ACTIVE', CURRENT_TIMESTAMP);
 
 -- Insert restaurant tables (created_at is required for all records)
 INSERT INTO restaurant_tables (table_number, capacity, table_type, status, location_description, created_at) VALUES

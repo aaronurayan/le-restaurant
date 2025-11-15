@@ -1,0 +1,18 @@
+/**
+ * @deprecated This file is deprecated. Use api.config.ts instead.
+ * 
+ * This file has been replaced by src/config/api.config.ts which provides
+ * a more comprehensive and centralized API configuration.
+ * 
+ * Migration guide:
+ * - Replace `import { getApiBaseUrl } from '../config/environment'` 
+ *   with `import { getApiBaseUrl } from '../config/api.config'`
+ * - Replace `import { API_CONFIG } from '../config/environment'`
+ *   with `import { API_CONFIG } from '../config/api.config'`
+ * 
+ * This file will be removed in a future version.
+ */
+
+// Re-export from api.config.ts for backward compatibility
+export { getApiBaseUrl, API_CONFIG, ENV, FEATURE_FLAGS } from './api.config';
+

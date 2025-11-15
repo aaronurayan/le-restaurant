@@ -134,14 +134,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <button
-            onClick={() => setShowReservationModal(true)}
-            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group text-left"
+          <Link
+            to="/admin/reservations"
+            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"
+            onClick={() => setShowReservationModal(false)}
           >
             <Calendar className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
-            <div className="font-semibold text-neutral-gray-800">Reservations</div>
-            <div className="text-sm text-neutral-gray-600">Book a table</div>
-          </button>
+            <div className="font-semibold text-neutral-gray-800">Reservation Management</div>
+            <div className="text-sm text-neutral-gray-600">Manage all reservations</div>
+          </Link>
           
           <Link
             to="/"
@@ -161,14 +162,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="text-sm text-neutral-gray-600">Manage menu items</div>
           </Link>
           
-          <button
-            onClick={() => setShowUsers(true)}
-            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group text-left"
+          <Link
+            to="/admin/users"
+            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"
+            onClick={() => setShowUsers(false)}
           >
             <Users className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
             <div className="font-semibold text-neutral-gray-800">Users</div>
             <div className="text-sm text-neutral-gray-600">Manage user accounts</div>
-          </button>
+          </Link>
+          
+          <Link
+            to="/admin/reservations"
+            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"
+            onClick={() => setShowReservationModal(false)}
+          >
+            <Calendar className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
+            <div className="font-semibold text-neutral-gray-800">Reservation Management</div>
+            <div className="text-sm text-neutral-gray-600">Manage all reservations</div>
+          </Link>
           
           <Link
             to="/payments"
@@ -177,6 +189,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <DollarSign className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
             <div className="font-semibold text-neutral-gray-800">Payments</div>
             <div className="text-sm text-neutral-gray-600">View transactions</div>
+          </Link>
+          
+          <Link
+            to="/delivery"
+            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"
+          >
+            <Package className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
+            <div className="font-semibold text-neutral-gray-800">Delivery Management</div>
+            <div className="text-sm text-neutral-gray-600">Track deliveries</div>
           </Link>
         </div>
       </div>

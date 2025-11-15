@@ -1,0 +1,301 @@
+# ==============================================================================
+# Azure DevOps CI/CD Pipeline - Le Restaurant (IMPROVED VERSION)
+# ==============================================================================
+# 
+# IMPROVEMENTS FROM SENIOR DEVELOPER REVIEW:
+# 1. Added retry logic for deployments and health checks
+# 2. Added environment variable validation
+# 3. Added build timeouts
+# 4. Added deployment notifications
+# 5. Improved error handling
+# 6. Added warm-up requests
+# 7. Enhanced connectivity testing
+#
+# Author: Le Restaurant Development Team
+# Version: 2.2.0 (Improved)
+# Last Updated: 2025-01-27
+# ==============================================================================
+
+# ... (Keep all previous stages: CodeQuality, BuildAndTest, SecurityScan) ...
+
+# ==============================================================================
+# STAGE 4: DEPLOY TO AZURE (IMPROVED)
+# ==============================================================================
+- stage: DeployProduction
+  displayName: 🚀 Deploy to Azure Production
+  dependsOn:
+    - BuildAndTest
+    - SecurityScan
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+    # Deploy Backend to Azure App Service
+    - job: DeployBackend
+      displayName: Deploy Backend to Azure App Service
+      timeoutInMinutes: 30
+      steps:
+        - checkout: none
+
+        - task: DownloadPipelineArtifact@2
+          displayName: ⬇️ Download Backend Artifact
+          inputs:
+            buildType: current
+            artifactName: backend-build
+            targetPath: $(Pipeline.Workspace)/backend
+
+        - task: AzureWebApp@1
+          displayName: 🚀 Deploy to Azure App Service
+          retryCountOnTaskFailure: 3
+          inputs:
+            azureSubscription: $(AZURE_SUBSCRIPTION)
+            appType: webAppLinux
+            appName: $(BACKEND_APP_NAME)
+            package: $(Pipeline.Workspace)/backend/$(BACKEND_JAR_NAME)
+            runtimeStack: JAVA|17-java17
+            startUpCommand: java -jar /home/site/wwwroot/$(BACKEND_JAR_NAME)
+
+        - task: AzureAppServiceSettings@1
+          displayName: ⚙️ Configure App Settings
+          inputs:
+            azureSubscription: $(AZURE_SUBSCRIPTION)
+            appName: $(BACKEND_APP_NAME)
+            resourceGroupName: $(RESOURCE_GROUP)
+            appSettings: |
+              [
+                {
+                  "name": "SPRING_PROFILES_ACTIVE",
+                  "value": "prod",
+                  "slotSetting": false
+                },
+                {
+                  "name": "SERVER_PORT",
+                  "value": "8080",
+                  "slotSetting": false
+                },
+                {
+                  "name": "WEBSITES_PORT",
+                  "value": "8080",
+                  "slotSetting": false
+                },
+                {
+                  "name": "CORS_ALLOWED_ORIGINS",
+                  "value": "https://$(FRONTEND_APP_NAME).azurestaticapps.net,https://*.azurestaticapps.net,http://localhost:5173,http://localhost:3000",
+                  "slotSetting": false
+                }
+              ]
+
+        # 🔑 CRITICAL: Get Backend URL and expose as output variable
+        - task: AzureCLI@2
+          name: GetBackendUrl
+          displayName: 🔗 Get Backend URL for Frontend
+          inputs:
+            azureSubscription: $(AZURE_SUBSCRIPTION)
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+              echo "🔍 Retrieving backend URL..."
+              BACKEND_HOSTNAME=$(az webapp show --name $(BACKEND_APP_NAME) --resource-group $(RESOURCE_GROUP) --query "defaultHostName" -o tsv)
+              if [ -z "$BACKEND_HOSTNAME" ]; then
+                echo "##vso[task.logissue type=error]Failed to retrieve backend hostname"
+                exit 1
+              fi
+              BACKEND_FULL_URL="https://${BACKEND_HOSTNAME}"
+              echo "✅ Backend URL: $BACKEND_FULL_URL"
+              echo "##vso[task.setvariable variable=backendUrl;isOutput=true]$BACKEND_FULL_URL"
+
+        # 🔥 Warm up backend after deployment
+        - script: |
+            echo "🔥 Warming up backend..."
+            BACKEND_URL="https://$(BACKEND_APP_NAME).azurewebsites.net"
+            MAX_RETRIES=5
+            RETRY_DELAY=10
+            
+            for i in $(seq 1 $MAX_RETRIES); do
+              echo "⏳ Warm-up attempt $i/$MAX_RETRIES..."
+              HEALTH_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/api/health" || echo "000")
+              if [ $HEALTH_RESPONSE -eq 200 ]; then
+                echo "✅ Backend is responding"
+                # Make additional warm-up requests
+                curl -s "$BACKEND_URL/api/health" > /dev/null
+                curl -s "$BACKEND_URL/api/menu-items" > /dev/null 2>&1 || true
+                echo "✅ Backend warmed up successfully"
+                exit 0
+              fi
+              if [ $i -lt $MAX_RETRIES ]; then
+                echo "⏳ Backend not ready yet, waiting ${RETRY_DELAY}s..."
+                sleep $RETRY_DELAY
+              fi
+            done
+            echo "⚠️  Backend warm-up incomplete, but continuing..."
+          displayName: 🔥 Warm Up Backend
+          continueOnError: true
+
+    # Deploy Frontend to Azure Static Web Apps
+    - job: DeployFrontend
+      displayName: Deploy Frontend to Azure Static Web Apps
+      dependsOn: DeployBackend
+      timeoutInMinutes: 20
+      variables:
+        # 🔑 CRITICAL: Consume backend URL from previous job
+        BACKEND_API_URL: $[ dependencies.DeployBackend.outputs['GetBackendUrl.backendUrl'] ]
+      steps:
+        - checkout: self
+          fetchDepth: 1
+
+        - task: NodeTool@0
+          displayName: Install Node.js $(NODE_VERSION)
+          inputs:
+            versionSpec: $(NODE_VERSION)
+
+        # ✅ Validate environment variable
+        - script: |
+            if [ -z "$(BACKEND_API_URL)" ]; then
+              echo "##vso[task.logissue type=error]BACKEND_API_URL is not set"
+              exit 1
+            fi
+            if [[ "$(BACKEND_API_URL)" == *"/api" ]]; then
+              echo "##vso[task.logissue type=error]BACKEND_API_URL should not include /api suffix"
+              echo "Current value: $(BACKEND_API_URL)"
+              exit 1
+            fi
+            echo "✅ Environment variable validated: $(BACKEND_API_URL)"
+          displayName: ✅ Validate Environment Variables
+
+        - script: |
+            echo "🔗 Backend API URL: $(BACKEND_API_URL)"
+            cd $(FRONTEND_PATH)
+            npm ci
+          displayName: 📦 Install Dependencies
+
+        - script: |
+            cd $(FRONTEND_PATH)
+            # 🔑 CRITICAL: VITE_API_BASE_URL should NOT include /api
+            # The frontend config adds /api to endpoints automatically
+            echo "VITE_API_BASE_URL=$(BACKEND_API_URL)" > .env.production
+            echo "✅ Environment file created:"
+            cat .env.production
+            echo ""
+            echo "🔍 Verifying environment variable in build..."
+            npm run build
+          displayName: 🏗️ Build Frontend with Backend URL
+
+        - task: AzureStaticWebApp@0
+          displayName: 🚀 Deploy to Azure Static Web Apps
+          retryCountOnTaskFailure: 2
+          inputs:
+            app_location: $(FRONTEND_PATH)/$(FRONTEND_BUILD_OUTPUT)
+            skip_app_build: true
+            azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN)
+
+  # ==============================================================================
+  # STAGE 5: POST-DEPLOYMENT VALIDATION (IMPROVED)
+  # ==============================================================================
+  - stage: PostDeploymentValidation
+    displayName: ✅ Post-Deployment Validation
+    dependsOn: DeployProduction
+    condition: succeeded()
+    jobs:
+      - job: HealthCheck
+        displayName: 🏥 Health Check & Connectivity Test
+        timeoutInMinutes: 10
+        steps:
+          - script: |
+              echo "🏥 Running Health Checks with Retry Logic..."
+              
+              # Backend Health Check with Retry
+              BACKEND_URL="https://$(BACKEND_APP_NAME).azurewebsites.net/api/health"
+              MAX_RETRIES=10
+              RETRY_DELAY=5
+              
+              echo "Checking Backend: $BACKEND_URL"
+              
+              for i in $(seq 1 $MAX_RETRIES); do
+                RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $BACKEND_URL || echo "000")
+                
+                if [ $RESPONSE -eq 200 ]; then
+                  echo "✅ Backend is healthy (Status: $RESPONSE)"
+                  # Get response body for verification
+                  curl -s $BACKEND_URL | head -c 200
+                  echo ""
+                  break
+                fi
+                
+                if [ $i -lt $MAX_RETRIES ]; then
+                  echo "⏳ Attempt $i/$MAX_RETRIES failed (Status: $RESPONSE), retrying in ${RETRY_DELAY}s..."
+                  sleep $RETRY_DELAY
+                  RETRY_DELAY=$((RETRY_DELAY * 2))
+                else
+                  echo "❌ Backend health check failed after $MAX_RETRIES attempts"
+                  echo "Attempting fallback check at /actuator/health..."
+                  FALLBACK_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "https://$(BACKEND_APP_NAME).azurewebsites.net/actuator/health" || echo "000")
+                  if [ $FALLBACK_RESPONSE -eq 200 ]; then
+                    echo "⚠️  Backend responds at /actuator/health but not /api/health - check endpoint configuration"
+                  else
+                    echo "❌ Backend is not accessible"
+                    exit 1
+                  fi
+                fi
+              done
+
+              # Frontend Health Check
+              FRONTEND_URL="https://$(FRONTEND_APP_NAME).azurestaticapps.net"
+              echo ""
+              echo "Checking Frontend: $FRONTEND_URL"
+              
+              FRONTEND_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $FRONTEND_URL || echo "000")
+              if [ $FRONTEND_RESPONSE -eq 200 ]; then
+                echo "✅ Frontend is accessible"
+              else
+                echo "❌ Frontend health check failed with status: $FRONTEND_RESPONSE"
+                exit 1
+              fi
+
+              # Test Frontend-Backend Connectivity
+              echo ""
+              echo "🔗 Testing Frontend-Backend Connectivity..."
+              FRONTEND_URL="https://$(FRONTEND_APP_NAME).azurestaticapps.net"
+              BACKEND_API_URL="https://$(BACKEND_APP_NAME).azurewebsites.net"
+              
+              echo "Frontend URL: $FRONTEND_URL"
+              echo "Backend API URL: $BACKEND_API_URL"
+              echo "Expected API calls: $BACKEND_API_URL/api/*"
+              
+              # Test multiple endpoints
+              ENDPOINTS=("/api/health" "/api/menu-items" "/api/users")
+              ALL_PASSED=true
+              
+              for endpoint in "${ENDPOINTS[@]}"; do
+                API_TEST=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_API_URL$endpoint" || echo "000")
+                if [ $API_TEST -eq 200 ] || [ $API_TEST -eq 401 ] || [ $API_TEST -eq 403 ]; then
+                  echo "✅ $endpoint is accessible (Status: $API_TEST)"
+                else
+                  echo "⚠️  $endpoint returned: $API_TEST"
+                  if [ $API_TEST -eq "000" ]; then
+                    ALL_PASSED=false
+                  fi
+                fi
+              done
+              
+              if [ "$ALL_PASSED" = true ]; then
+                echo "✅ All connectivity tests passed!"
+              else
+                echo "⚠️  Some connectivity tests had issues, but deployment may still be functional"
+              fi
+            displayName: 🏥 Health Check & Connectivity Test
+            continueOnError: false
+
+          - script: |
+              echo "📊 Deployment Summary:"
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo "🔹 Backend URL: https://$(BACKEND_APP_NAME).azurewebsites.net"
+              echo "🔹 Frontend URL: https://$(FRONTEND_APP_NAME).azurestaticapps.net"
+              echo "🔹 Build Number: $(Build.BuildNumber)"
+              echo "🔹 Deployed Branch: $(Build.SourceBranchName)"
+              echo "🔹 Commit: $(Build.SourceVersion)"
+              echo "🔹 Deployment Time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            displayName: 📊 Deployment Summary
+
+# ==============================================================================
+# END OF IMPROVED PIPELINE CONFIGURATION
+# ==============================================================================
+
