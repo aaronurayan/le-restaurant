@@ -136,7 +136,7 @@ export const API_ENDPOINTS = {
     byCustomer: (customerId: number) => `/api/reservations/customer/${customerId}`,
     byStatus: (status: string) => `/api/reservations/status/${status}`,
     byDate: (date: string) => `/api/reservations/date/${date}`,
-    approve: (id: number) => `/api/reservations/${id}/approve`,
+    approve: (id: number, approverId: number) => `/api/reservations/${id}/approve/${approverId}`,
     reject: (id: number) => `/api/reservations/${id}/reject`,
     cancel: (id: number) => `/api/reservations/${id}/cancel`,
     timeSlots: '/api/reservations/time-slots',

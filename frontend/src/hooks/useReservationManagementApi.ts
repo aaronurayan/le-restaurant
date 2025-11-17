@@ -233,13 +233,8 @@ export const useReservationManagementApi = () => {
 
     try {
       // Use unified client - handles errors silently when backend is not available
-      const data = await apiClient.post<ReservationBackendDto>(
-        `${API_ENDPOINTS.reservations.approve(id)}?confirmedByUserId=${approvalData.confirmedByUserId}`,
-        {
-          tableId: approvalData.tableId,
-          adminNotes: approvalData.adminNotes
-        }
-      );
+      const endpoint = API_ENDPOINTS.reservations.approve(id, approvalData.confirmedByUserId);
+      const data = await apiClient.post<ReservationBackendDto>(endpoint);
 
       const transformedReservation = transformReservation(data);
 
