@@ -120,8 +120,11 @@ const AdminMenuPage = () => {
                 </Link>
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-neutral-gray-800">Menu Management</h1>
-                        <p className="text-neutral-gray-600 mt-1">Create, update, and manage menu items</p>
+                        <p className="text-xs uppercase tracking-[0.4em] text-primary-600 mb-2">Immersive Gallery</p>
+                        <h1 className="text-3xl font-serif font-bold text-neutral-gray-900">Menu Management</h1>
+                        <p className="text-neutral-gray-600 mt-1 max-w-2xl">
+                            Curate dishes like works of art. High-resolution assets, chef notes, and availability tags keep the dining room aligned with your vision.
+                        </p>
                     </div>
                     <button
                         onClick={handleAddNew}
@@ -131,6 +134,13 @@ const AdminMenuPage = () => {
                         Add New Item
                     </button>
                 </div>
+            </div>
+
+            <div className="bg-white rounded-3xl border border-neutral-200 shadow-sm p-6 mb-8">
+                <h2 className="text-xl font-bold text-neutral-900 mb-2">Media Library</h2>
+                <p className="text-sm text-neutral-600">
+                    Upload 4K stills or plating clips when editing an item. Our concierge surfaces these assets on the public gallery instantly.
+                </p>
             </div>
 
             {/* List of Menu Items */}
@@ -146,49 +156,58 @@ const AdminMenuPage = () => {
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {menuItems.map((item) => (
-                        <div key={item.id} className="bg-white border-2 border-neutral-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                            {item.imageUrl && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {menuItems.map((item) => {
+                        const isAvailable = (item as any).available ?? (item as any).isAvailable ?? true;
+                        return (
+                        <div key={item.id} className="bg-white border border-neutral-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow">
+                            <div className="relative h-64">
                                 <img 
-                                    src={item.imageUrl} 
+                                    src={item.imageUrl || 'https://images.pexels.com/photos/704569/pexels-photo-704569.jpeg?auto=compress&cs=tinysrgb&w=1200'} 
                                     alt={item.name}
-                                    className="w-full h-48 object-cover rounded-lg mb-4"
+                                    className="w-full h-full object-cover"
                                 />
-                            )}
-                            <div className="mb-4">
-                                <h2 className="text-xl font-bold text-neutral-900 mb-2">{item.name}</h2>
-                                <p className="text-neutral-600 text-sm mb-3">{item.description || 'No description'}</p>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-2xl font-bold text-primary-600">${item.price.toFixed(2)}</span>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                        item.available 
-                                            ? 'bg-green-100 text-green-800' 
-                                            : 'bg-red-100 text-red-800'
-                                    }`}>
-                                        {item.available ? 'Available' : 'Unavailable'}
+                                <span className={`absolute top-4 left-4 px-4 py-1 rounded-full text-xs font-semibold ${
+                                    isAvailable ? 'bg-white/90 text-green-700' : 'bg-accent-red text-white'
+                                }`}>
+                                    {isAvailable ? 'Live on menu' : 'Hidden'}
+                                </span>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h2 className="text-2xl font-serif text-neutral-900">{item.name}</h2>
+                                        <p className="text-sm text-neutral-600 mt-1">
+                                            {item.description || 'Describe plating, sourcing, or tasting notes to assist concierge and marketing teams.'}
+                                        </p>
+                                    </div>
+                                    <span className="text-xl font-semibold text-primary-600 whitespace-nowrap">
+                                        ${Number(item.price).toFixed(2)}
                                     </span>
                                 </div>
-                                <p className="text-sm text-neutral-500">Category: <span className="font-medium">{item.category}</span></p>
-                            </div>
-                            <div className="flex gap-2 pt-4 border-t border-neutral-200">
-                                <button
-                                    onClick={() => handleEdit(item)}
-                                    className="flex-1 flex items-center justify-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors font-medium"
-                                >
-                                    <Edit className="w-4 h-4" />
-                                    Edit
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(item)}
-                                    className="flex-1 flex items-center justify-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete
-                                </button>
+                                <div className="flex flex-wrap gap-2 text-xs font-medium text-neutral-600">
+                                    <span className="px-3 py-1 rounded-full bg-neutral-100">Category: {item.category || '—'}</span>
+                                    <span className="px-3 py-1 rounded-full bg-neutral-100">Asset: {item.imageUrl ? '4K Photo' : 'Placeholder'}</span>
+                                </div>
+                                <div className="flex gap-3 pt-4 border-t border-neutral-100">
+                                    <button
+                                        onClick={() => handleEdit(item)}
+                                        className="flex-1 flex items-center justify-center gap-2 bg-white border border-neutral-300 text-neutral-800 px-4 py-2 rounded-full hover:border-neutral-500 transition-colors"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                        Edit Story
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(item)}
+                                        className="flex-1 flex items-center justify-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition-colors"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
             )}
 

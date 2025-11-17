@@ -8,11 +8,13 @@ import { useAuth } from '../../contexts/AuthContext';
 interface ReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialSpecialRequest?: string;
 }
 
 const ReservationModal: React.FC<ReservationModalProps> = ({
   isOpen,
   onClose,
+  initialSpecialRequest,
 }) => {
   const { user } = useAuth();
   const { createReservation, isBackendConnected } = useReservationApi();
@@ -138,6 +140,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
                   }
                   : undefined
               }
+              initialSpecialRequest={initialSpecialRequest}
             />
           )}
         </div>

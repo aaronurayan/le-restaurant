@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Truck, 
@@ -90,6 +90,24 @@ const DeliveryDashboard: React.FC = () => {
   const recentDeliveries = getRecentDeliveries();
   const overdueDeliveries = getOverdueDeliveries();
   const activePersons = getActiveDeliveryPersons();
+  const aiAlerts = useMemo(() => {
+    const alerts = [];
+    if (overdueDeliveries.length > 0) {
+      alerts.push({
+        severity: 'warning',
+        title: `${overdueDeliveries.length} overdue route${overdueDeliveries.length > 1 ? 's' : ''}`,
+        description: 'AI suggests rerouting courier to avoid traffic and offering a warm dessert voucher.',
+      });
+    }
+    if (statusCounts.preparing > 5) {
+      alerts.push({
+        severity: 'info',
+        title: 'Kitchen load rising',
+        description: 'Recommend paging chef to pace handoffs and notify dining room of slight delay.',
+      });
+    }
+    return alerts;
+  }, [overdueDeliveries.length, statusCounts.preparing]);
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -111,6 +129,22 @@ const DeliveryDashboard: React.FC = () => {
               Real-time overview of delivery operations
             </p>
           </div>
+        {aiAlerts.length > 0 && (
+          <div className="grid gap-4 mb-8">
+            {aiAlerts.map((alert) => (
+              <div
+                key={alert.title}
+                className={`rounded-2xl border p-4 ${
+                  alert.severity === 'warning' ? 'border-amber-200 bg-amber-50' : 'border-primary-100 bg-primary-50'
+                }`}
+              >
+                <p className="text-xs uppercase tracking-[0.35em] text-neutral-500 mb-2">AI Bottleneck Alert</p>
+                <h2 className="text-lg font-semibold text-neutral-900">{alert.title}</h2>
+                <p className="text-sm text-neutral-700">{alert.description}</p>
+              </div>
+            ))}
+          </div>
+        )}
           
           <div className="flex items-center gap-3">
             {isBackendConnected && (

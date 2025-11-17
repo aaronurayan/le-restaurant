@@ -274,6 +274,12 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
           </div>
         )}
 
+        <div className="px-6 py-4 border-b border-neutral-100 bg-neutral-50">
+          <p className="text-sm text-neutral-600">
+            Surface celebration tags, allergies, and VIP tiers so concierge teams can anticipate hospitality touches before the guest arrives.
+          </p>
+        </div>
+
         {/* Error Display (API Errors) */}
         {apiError && (
           <div className="p-4 mb-4">

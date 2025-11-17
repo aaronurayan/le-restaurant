@@ -25,6 +25,15 @@ export interface CustomerDashboardProps {
   };
   /** Recent orders to display */
   recentOrders?: OrderDto[];
+  /** Friendly name for personalization */
+  customerName?: string;
+  /** Celebration / upcoming reservation context */
+  upcomingReservation?: {
+    date: string;
+    time: string;
+    partySize: number;
+    note?: string;
+  };
 }
 
 /**
@@ -45,6 +54,8 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
     rewardsTier: 'Bronze',
   },
   recentOrders = [],
+  customerName = 'Guest',
+  upcomingReservation,
 }) => {
   if (loading) {
     return (
@@ -66,8 +77,72 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Dashboard Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-gray-800 mb-2">My Dashboard</h1>
-        <p className="text-neutral-gray-600">Welcome back! Here's your account overview</p>
+        <p className="text-xs uppercase tracking-[0.4em] text-primary-600 mb-3">VIP Hospitality</p>
+        <h1 className="text-3xl lg:text-4xl font-serif font-bold text-neutral-gray-900 mb-2">
+          Welcome back, {customerName}!
+        </h1>
+        <p className="text-neutral-gray-600 max-w-2xl">
+          Your personal maître d’ keeps celebrations, pairings, and loyalty rewards at the ready. Update requests below or
+          jump back into tonight’s plans.
+        </p>
+      </div>
+
+      {/* Personalization + AI Recommendation */}
+      <div className="grid gap-6 lg:grid-cols-2 mb-10">
+        <section className="bg-white rounded-3xl border border-neutral-gray-200 shadow-sm p-6 lg:p-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.35em] text-neutral-400">Maître d’ Notes</p>
+              <h2 className="text-2xl font-serif text-neutral-gray-900 mt-2">Preparing for your next visit</h2>
+            </div>
+            <Badge variant="success" size="lg">
+              {stats.rewardsTier} Tier
+            </Badge>
+          </div>
+          <div className="mt-6 space-y-4 text-neutral-600">
+            <p>
+              {upcomingReservation
+                ? `We reserved Friday ${upcomingReservation.time} for ${upcomingReservation.partySize} guests. ${
+                    upcomingReservation.note || 'Let us know if you’d like florals or champagne on arrival.'
+                  }`
+                : 'Tap “Book Celebration” to let us know about anniversaries, proposals, or any special touch you desire.'}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/customer/reservations"
+                className="inline-flex items-center justify-center rounded-full bg-primary-600 text-white px-5 py-2 text-sm font-semibold hover:bg-primary-700 transition-colors"
+              >
+                Book Celebration
+              </Link>
+              <Link
+                to="/customer/reservations"
+                className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-5 py-2 text-sm font-medium text-neutral-800 hover:border-neutral-500 transition-colors"
+              >
+                Update Special Requests
+              </Link>
+            </div>
+          </div>
+        </section>
+        <section className="rounded-3xl overflow-hidden bg-neutral-gray-900 text-white relative">
+          <div className="h-56 sm:h-72 bg-cover bg-center opacity-60"
+            style={{ backgroundImage: 'url(https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg?auto=compress&cs=tinysrgb&w=1200)' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="absolute inset-0 p-6 flex flex-col justify-end">
+            <p className="text-xs uppercase tracking-[0.3em] text-primary-200 mb-2">AI Chef Recommendation</p>
+            <h3 className="text-2xl font-serif mb-2">Truffle-Roasted Sea Bass</h3>
+            <p className="text-sm text-neutral-100 mb-4">
+              Chef Amélie recommends pairing Friday’s anniversary dinner with a glass of vintage Blanc de Blancs. Tap to add
+              a sommelier tasting flight.
+            </p>
+            <Link
+              to="/customer/orders"
+              className="inline-flex items-center self-start rounded-full bg-white/90 text-neutral-900 px-5 py-2 text-sm font-semibold hover:bg-white"
+            >
+              Preview Pairing
+            </Link>
+          </div>
+        </section>
       </div>
 
       {/* Statistics Grid */}
@@ -164,7 +239,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
       {/* Quick Actions */}
       <div className="bg-white rounded-lg border-2 border-neutral-gray-200 p-6">
         <h2 className="text-xl font-bold text-neutral-gray-800 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Link
             to="/"
             className="flex items-center justify-center p-4 bg-primary-orange-light text-primary-orange-dark rounded-lg hover:bg-primary-orange-100 transition-colors"
@@ -173,15 +248,22 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             <span>View Menu</span>
           </Link>
           <Link
-            to="/customer/profile"
+            to="/customer/reservations"
             className="flex items-center justify-center p-4 bg-secondary-green-light text-secondary-green-dark rounded-lg hover:bg-secondary-green-100 transition-colors"
+          >
+            <Calendar className="w-5 h-5 mr-2" />
+            <span>Manage Reservations</span>
+          </Link>
+          <Link
+            to="/customer/profile"
+            className="flex items-center justify-center p-4 bg-neutral-gray-100 text-neutral-gray-800 rounded-lg hover:bg-neutral-gray-200 transition-colors"
           >
             <User className="w-5 h-5 mr-2" />
             <span>My Profile</span>
           </Link>
           <Link
             to="/customer/orders"
-            className="flex items-center justify-center p-4 bg-neutral-gray-100 text-neutral-gray-800 rounded-lg hover:bg-neutral-gray-200 transition-colors"
+            className="flex items-center justify-center p-4 bg-white border border-neutral-gray-200 text-neutral-gray-800 rounded-lg hover:border-neutral-gray-400 transition-colors"
           >
             <ShoppingBag className="w-5 h-5 mr-2" />
             <span>Order History</span>

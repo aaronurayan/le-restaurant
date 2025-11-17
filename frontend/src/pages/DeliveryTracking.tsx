@@ -8,6 +8,13 @@ const DeliveryTracking: React.FC = () => {
   const { deliveryId } = useParams<{ deliveryId: string }>();
   const navigate = useNavigate();
   const [isValidDelivery, setIsValidDelivery] = useState<boolean | null>(null);
+  const timelineSteps = [
+    '주문 접수',
+    '셰프 확인 중',
+    '주방에서 조리 중',
+    '포장 완료',
+    '배달 출발',
+  ];
 
   useEffect(() => {
     // In a real app, you would validate the delivery ID here
@@ -54,6 +61,20 @@ const DeliveryTracking: React.FC = () => {
   return (
     <div className="min-h-screen bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-3xl border border-neutral-200 shadow-sm p-6 mb-6">
+          <p className="text-xs uppercase tracking-[0.4em] text-primary-600 mb-2">Courier Guide</p>
+          <h1 className="text-3xl font-serif font-bold text-neutral-900">Delivery Tracking</h1>
+          <p className="text-neutral-600">
+            Follow every stage from kitchen to doorstep. Share real-time updates with guests when delays appear.
+          </p>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {timelineSteps.map((step, index) => (
+              <span key={step} className="px-3 py-1 rounded-full bg-neutral-100 text-sm font-medium">
+                {index + 1}. {step}
+              </span>
+            ))}
+          </div>
+        </div>
         <DeliveryTrackingComponent
           deliveryId={deliveryId!}
           onBack={handleBack}

@@ -57,6 +57,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const [showUsers, setShowUsers] = React.useState(false);
   const [showReservationModal, setShowReservationModal] = React.useState(false);
+  const aiAlerts = [
+    {
+      severity: 'warning' as const,
+      title: 'Table 12 delayed 15 min',
+      description: 'Chef Camille needs an extra garnish run — suggest amuse-bouche.',
+      action: 'Ping kitchen',
+    },
+    {
+      severity: 'info' as const,
+      title: 'Courier route congestion',
+      description: 'Delivery zone 2 running 8 minutes slow. Offer dessert voucher at checkout.',
+      action: 'Review delivery board',
+    },
+  ];
 
   if (loading) {
     return (
@@ -78,11 +92,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Dashboard Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-gray-800 mb-2">
-          Admin Dashboard
+        <p className="text-xs uppercase tracking-[0.4em] text-primary-600 mb-2">Ops Control • Hospitality Pulse</p>
+        <h1 className="text-3xl lg:text-4xl font-serif font-bold text-neutral-gray-900 mb-2">
+          Welcome back to the Chef’s Table Ops Hub
         </h1>
-        <p className="text-neutral-gray-600">
-          Overview of restaurant operations and key metrics
+        <p className="text-neutral-gray-600 max-w-3xl">
+          Monitor revenue, pacing, and AI hospitality alerts. Keep promises to guests by resolving bottlenecks before they reach the dining room.
         </p>
       </div>
 
@@ -128,6 +143,64 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         />
       </div>
 
+      {/* AI Bottleneck Alerts */}
+      <div className="grid gap-6 lg:grid-cols-2 mb-8">
+        <section className="bg-white rounded-3xl border border-neutral-200 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-neutral-400">AI Bottleneck Alerts</p>
+              <h2 className="text-2xl font-serif text-neutral-900 mt-1">Proactive Hospitality Signals</h2>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {aiAlerts.map((alert, idx) => (
+              <div
+                key={alert.title}
+                className={`rounded-2xl border p-4 ${
+                  alert.severity === 'warning'
+                    ? 'border-amber-200 bg-amber-50'
+                    : 'border-primary-100 bg-primary-50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-neutral-900">{alert.title}</h3>
+                  <span
+                    className={`text-xs font-semibold uppercase tracking-widest ${
+                      alert.severity === 'warning' ? 'text-amber-700' : 'text-primary-700'
+                    }`}
+                  >
+                    {alert.severity === 'warning' ? 'Action Needed' : 'Heads Up'}
+                  </span>
+                </div>
+                <p className="text-sm text-neutral-700 mb-3">{alert.description}</p>
+                <button
+                  type="button"
+                  className="inline-flex items-center text-sm font-semibold text-primary-700 hover:text-primary-900"
+                >
+                  {alert.action} →
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="bg-white rounded-3xl border border-neutral-200 shadow-sm p-6">
+          <p className="text-xs uppercase tracking-[0.35em] text-neutral-400">Hospitality Snapshot</p>
+          <h2 className="text-2xl font-serif text-neutral-900 mt-1 mb-4">Tonight’s readiness</h2>
+          <ul className="space-y-3 text-sm text-neutral-700">
+            <li>• {stats.activeReservations} reservations awaiting confirmation</li>
+            <li>• {stats.pendingOrders} orders queuing in kitchen display</li>
+            <li>• Loyalty momentum: {stats.activeUsers} active VIP profiles this week</li>
+          </ul>
+          <button
+            type="button"
+            onClick={() => setShowReservationModal(true)}
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-primary-600 text-white px-5 py-2 text-sm font-semibold hover:bg-primary-700 transition-colors"
+          >
+            Open Approval Console
+          </button>
+        </section>
+      </div>
+
       {/* Quick Actions */}
       <div className="bg-white rounded-lg border-2 border-neutral-gray-200 p-6">
         <h2 className="text-xl font-bold text-neutral-gray-800 mb-4">
@@ -162,26 +235,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="text-sm text-neutral-gray-600">Manage menu items</div>
           </Link>
           
-          <Link
-            to="/admin/users"
-            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"
-            onClick={() => setShowUsers(false)}
+          <button
+            type="button"
+            onClick={() => setShowUsers(true)}
+            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group text-left no-underline"
           >
             <Users className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
             <div className="font-semibold text-neutral-gray-800">Users</div>
             <div className="text-sm text-neutral-gray-600">Manage user accounts</div>
-          </Link>
-          
-          <Link
-            to="/admin/reservations"
-            className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"
-            onClick={() => setShowReservationModal(false)}
-          >
-            <Calendar className="w-8 h-8 text-primary-orange mb-2 group-hover:text-primary-orange-dark" />
-            <div className="font-semibold text-neutral-gray-800">Reservation Management</div>
-            <div className="text-sm text-neutral-gray-600">Manage all reservations</div>
-          </Link>
-          
+          </button>
+
           <Link
             to="/payments"
             className="p-4 border-2 border-primary-orange rounded-lg hover:bg-primary-orange-light transition-colors group block text-left no-underline"

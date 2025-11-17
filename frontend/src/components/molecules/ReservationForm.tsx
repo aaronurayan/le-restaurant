@@ -15,6 +15,7 @@ interface ReservationFormProps {
     customerEmail: string;
     customerPhone: string;
   };
+  initialSpecialRequest?: string;
 }
 
 export const ReservationForm: React.FC<ReservationFormProps> = ({
@@ -23,6 +24,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   loading = false,
   className = '',
   initialCustomerData,
+  initialSpecialRequest,
 }) => {
   const { getAvailableTables, getTimeSlots } = useReservationApi();
 
@@ -30,11 +32,16 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
     date: '',
     time: '',
     partySize: 2,
-    specialRequests: '',
+    specialRequests: initialSpecialRequest || '',
     customerName: initialCustomerData?.customerName || '',
     customerEmail: initialCustomerData?.customerEmail || '',
     customerPhone: initialCustomerData?.customerPhone || '',
   });
+  useEffect(() => {
+    if (initialSpecialRequest) {
+      setFormData((prev) => ({ ...prev, specialRequests: initialSpecialRequest }));
+    }
+  }, [initialSpecialRequest]);
 
   const [availableTables, setAvailableTables] = useState<Table[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);

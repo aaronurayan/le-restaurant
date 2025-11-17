@@ -149,124 +149,145 @@ const Payment: React.FC = () => {
 
   if (paymentComplete) {
     return (
-      <div className="max-w-md mx-auto py-12 px-4">
-        <div className="bg-white rounded-xl shadow-md p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-600" />
+      <main className="bg-neutral-50 min-h-screen py-12">
+        <div className="max-w-lg mx-auto px-4">
+          <div className="bg-white rounded-3xl shadow-lg p-8 text-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-9 h-9 text-green-600" />
+            </div>
+            <h2 className="text-3xl font-serif font-bold text-neutral-900 mb-3">Payment Confirmed</h2>
+            <p className="text-neutral-600 mb-6">
+              Your order #{orderId} is now in the kitchen queue. We’ve preserved all celebration notes and pairings.
+            </p>
+            <Button onClick={() => navigate(`/customer/orders/${orderId}`)}>
+              View Order Details
+            </Button>
           </div>
-          <h2 className="text-2xl font-bold text-neutral-900 mb-2">Payment Successful!</h2>
-          <p className="text-neutral-600 mb-6">
-            Your order #{orderId} has been confirmed and is being prepared.
-          </p>
-          <p className="text-neutral-600 mb-6">
-            You will be redirected to your order details page...
-          </p>
-          <Button onClick={() => navigate(`/customer/orders/${orderId}`)}>
-            View Order Details
-          </Button>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto py-12 px-4">
-      <div className="mb-6">
+    <main className="bg-neutral-50 min-h-screen py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <button 
           onClick={() => navigate('/checkout')}
-          className="flex items-center text-primary-600 hover:text-primary-700 mb-3"
+          className="flex items-center text-primary-600 hover:text-primary-700 mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           <span>Back to Checkout</span>
         </button>
-        <h1 className="text-2xl font-bold text-neutral-900 flex items-center">
-          <CreditCard className="w-6 h-6 mr-2" />
-          Payment Details
-        </h1>
-        <p className="text-neutral-600 mt-1">
-          Complete your payment for Order #{orderId}
-        </p>
-      </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
-      )}
-
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <form onSubmit={handleSubmitPayment}>
-          <div className="mb-4">
-            <Input
-              type="text"
-              label="Card Number"
-              placeholder="1234 5678 9012 3456"
-              value={formValues.cardNumber}
-              onChange={handleInputChange('cardNumber')}
-              maxLength={19}
-              required
-            />
-          </div>
-          
-          <div className="mb-4">
-            <Input
-              type="text"
-              label="Name on Card"
-              placeholder="John Doe"
-              value={formValues.cardName}
-              onChange={handleInputChange('cardName')}
-              required
-            />
-          </div>
-          
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1">
-              <Input
-                type="text"
-                label="Expiry Date"
-                placeholder="MM/YY"
-                value={formValues.expiryDate}
-                onChange={handleInputChange('expiryDate')}
-                maxLength={5}
-                required
-              />
-            </div>
-            <div className="w-1/3">
-              <Input
-                type="text"
-                label="CVV"
-                placeholder="123"
-                value={formValues.cvv}
-                onChange={handleInputChange('cvv')}
-                maxLength={4}
-                required
-              />
-            </div>
-          </div>
-          
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={processingPayment || !validateForm()}
-          >
-            {processingPayment ? (
-              <>
-                <LoadingSpinner size="sm" className="mr-2" />
-                Processing...
-              </>
-            ) : (
-              'Complete Payment'
-            )}
-          </Button>
-          
-          <div className="mt-4 text-center">
-            <p className="text-xs text-neutral-500">
-              This is a demo application. No real payments are processed.
+        <div className="grid gap-8 lg:grid-cols-[1.1fr,0.9fr]">
+          <section className="bg-white rounded-3xl shadow-lg border border-neutral-100 p-6">
+            <h1 className="text-3xl font-serif font-bold text-neutral-900 flex items-center mb-2">
+              <CreditCard className="w-6 h-6 mr-3" />
+              Experience Confirmation
+            </h1>
+            <p className="text-neutral-600 mb-6">
+              Secure order #{orderId}. Chef and courier timelines update as soon as payment clears.
             </p>
-          </div>
-        </form>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmitPayment} className="space-y-4">
+              <Input
+                type="text"
+                label="Card Number"
+                placeholder="1234 5678 9012 3456"
+                value={formValues.cardNumber}
+                onChange={handleInputChange('cardNumber')}
+                maxLength={19}
+                required
+              />
+              <Input
+                type="text"
+                label="Name on Card"
+                placeholder="Full Name"
+                value={formValues.cardName}
+                onChange={handleInputChange('cardName')}
+                required
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  type="text"
+                  label="Expiry Date"
+                  placeholder="MM/YY"
+                  value={formValues.expiryDate}
+                  onChange={handleInputChange('expiryDate')}
+                  maxLength={5}
+                  required
+                />
+                <Input
+                  type="text"
+                  label="CVV"
+                  placeholder="123"
+                  value={formValues.cvv}
+                  onChange={handleInputChange('cvv')}
+                  maxLength={4}
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={processingPayment || !validateForm()}
+              >
+                {processingPayment ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  'Complete Payment'
+                )}
+              </Button>
+              <p className="text-xs text-neutral-500 text-center">
+                This is a demo application. No real payments are processed.
+              </p>
+            </form>
+          </section>
+
+          <aside className="space-y-6">
+            <div className="bg-white rounded-3xl border border-neutral-200 shadow-sm p-6">
+              <p className="text-xs uppercase tracking-[0.35em] text-neutral-400 mb-2">Order Summary</p>
+              <h2 className="text-2xl font-serif text-neutral-900 mb-2">Tonight’s highlights</h2>
+              <p className="text-sm text-neutral-600 mb-4">
+                Chef Amélie and our couriers will finalize pacing once you confirm payment.
+              </p>
+              {order && (
+                <div className="space-y-2 text-sm text-neutral-700">
+                  <p>Subtotal: ${(order.subtotal || 0).toFixed(2)}</p>
+                  <p>Tax: ${(order.taxAmount || 0).toFixed(2)}</p>
+                  {order.tipAmount ? <p>Tip: ${(order.tipAmount || 0).toFixed(2)}</p> : null}
+                  <p className="text-lg font-semibold text-primary-700">
+                    Total: ${(order.totalAmount || (order.subtotal || 0) + (order.taxAmount || 0) + (order.tipAmount || 0)).toFixed(2)}
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="bg-primary-600 text-white rounded-3xl p-6">
+              <h3 className="text-xl font-semibold mb-2">Concierge adjustments?</h3>
+              <p className="text-sm text-primary-50 mb-4">
+                Call us to tweak pairings, delivery timing, or celebration notes before confirming payment.
+              </p>
+              <button
+                type="button"
+                className="w-full rounded-full bg-white text-primary-700 font-semibold px-4 py-2"
+                onClick={() => window.open('tel:+11234567890')}
+              >
+                +1 (123) 456-7890
+              </button>
+            </div>
+          </aside>
+        </div>
       </div>
-    </div>
+    </main>
   );
 };
 

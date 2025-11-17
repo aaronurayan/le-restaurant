@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useReservationManagementApi } from '../hooks/useReservationManagementApi';
@@ -20,6 +20,8 @@ const ReservationManagement: React.FC = () => {
     
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [reservationToDelete, setReservationToDelete] = useState<number | null>(null);
+    const [activeOccasion, setActiveOccasion] = useState<string>('all');
+    const occasionFilters = ['all', 'anniversary', 'birthday', 'business', 'allergy'];
 
     useEffect(() => {
         // Fetch reservations when the component mounts
@@ -88,6 +90,14 @@ const ReservationManagement: React.FC = () => {
         setReservationToDelete(null);
     };
 
+    const filteredReservations = useMemo(() => {
+        if (activeOccasion === 'all') return reservations;
+        return reservations.filter((reservation) => {
+            const note = reservation.specialRequests?.toLowerCase() || '';
+            return note.includes(activeOccasion);
+        });
+    }, [reservations, activeOccasion]);
+
     if (loading) {
         return (
             <div className="p-4">
@@ -120,16 +130,43 @@ const ReservationManagement: React.FC = () => {
                     <ArrowLeft className="w-4 h-4 mr-1" />
                     <span>Back to Dashboard</span>
                 </Link>
-                <h1 className="text-3xl font-bold text-neutral-gray-800">Reservation Management</h1>
-                <p className="text-neutral-gray-600 mt-1">View, approve, and manage all customer reservations</p>
+                <h1 className="text-3xl font-serif font-bold text-neutral-gray-900">Reservation Management</h1>
+                <p className="text-neutral-gray-600 mt-1">
+                    Anticipate needs by filtering structured requests. Approve celebrations with a single tap.
+                </p>
+            </div>
+            <div className="bg-white rounded-3xl shadow-sm border border-neutral-200 p-6 mb-6">
+                <h2 className="text-xl font-semibold text-neutral-900 mb-4">Structured Request Filters</h2>
+                <div className="flex flex-wrap gap-3">
+                    {occasionFilters.map((filter) => {
+                        const isActive = activeOccasion === filter;
+                        const label = filter === 'all' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1);
+                        return (
+                            <button
+                                key={filter}
+                                type="button"
+                                onClick={() => setActiveOccasion(filter)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                    isActive ? 'bg-primary-600 text-white shadow-lg' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                                }`}
+                            >
+                                {label}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
             <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-xl font-bold mb-4">All Reservations</h2>
-                {reservations.length === 0 ? (
+                {filteredReservations.length === 0 ? (
                     <p className="text-neutral-500">No reservations found.</p>
                 ) : (
                     <div className="space-y-4">
-                        {reservations.map((reservation) => (
+                        {filteredReservations.map((reservation) => {
+                            const reservationDate = reservation.reservationDate || (reservation as any).dateTime;
+                            const reservationTime = reservation.reservationTime || '';
+                            const specialRequests = reservation.specialRequests?.split(',').map(tag => tag.trim()).filter(Boolean) || [];
+                            return (
                             <div key={reservation.id} className="border border-neutral-200 rounded-lg p-4">
                                 <div className="flex justify-between items-start">
                                     <div>
@@ -140,11 +177,26 @@ const ReservationManagement: React.FC = () => {
                                             <strong>Guests:</strong> {reservation.partySize || reservation.guestCount || 'N/A'}
                                         </div>
                                         <div className="text-sm text-neutral-600">
-                                            <strong>Date & Time:</strong> {new Date(reservation.dateTime || reservation.reservationDate).toLocaleString()}
+                                            <strong>Date & Time:</strong>{' '}
+                                            {reservationDate
+                                                ? `${reservationDate} ${reservationTime}`
+                                                : 'TBD'}
                                         </div>
                                         <div className="text-sm text-neutral-600">
                                             <strong>Status:</strong> {reservation.status}
                                         </div>
+                                        {specialRequests.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {specialRequests.map((request, idx) => (
+                                                    <span
+                                                        key={`${reservation.id}-tag-${idx}`}
+                                                        className="px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-xs font-semibold"
+                                                    >
+                                                        {request}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex gap-2">
                                         {reservation.status === 'PENDING' && (
@@ -172,7 +224,7 @@ const ReservationManagement: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
                 )}
             </div>

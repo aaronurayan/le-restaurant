@@ -5,7 +5,7 @@ import { LoadingSpinner } from '../components/atoms/LoadingSpinner';
 import { ErrorMessage } from '../components/molecules/ErrorMessage';
 import { EmptyState } from '../components/molecules/EmptyState';
 import { Badge } from '../components/atoms/Badge';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { OrderDto, OrderStatus } from '../types/order';
 import { ShoppingBag, Clock, ArrowLeft } from 'lucide-react';
 
@@ -29,11 +29,14 @@ const getStatusColor = (status: OrderStatus): 'primary' | 'secondary' | 'success
  * Customer Orders Page Component
  * Displays all orders for the logged-in customer
  */
+const TIMELINE_STEPS: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'];
+
 const CustomerOrdersPage: React.FC = () => {
   const { user } = useAuth();
   const { loading, error, orders, getOrdersByCustomer } = useOrderApi();
   const [displayOrders, setDisplayOrders] = useState<OrderDto[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.id) {
@@ -104,19 +107,19 @@ const CustomerOrdersPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4 mr-1" />
           <span>Back to Dashboard</span>
         </Link>
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-neutral-gray-800">
-            <ShoppingBag className="w-7 h-7 inline-block mr-2 mb-1" />
-            My Orders
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <h1 className="text-3xl font-serif font-bold text-neutral-gray-900 flex items-center">
+            <ShoppingBag className="w-7 h-7 inline-block mr-2" />
+            Culinary Stories
           </h1>
+          <p className="text-neutral-gray-600">
+            Relive each course with timeline tracking and handoff notes from our kitchen.
+          </p>
         </div>
-        <p className="text-neutral-gray-600 mt-1">
-          View and track all your orders
-        </p>
       </div>
 
       {/* Filters */}
-      <div className="flex overflow-x-auto mb-6 pb-2">
+      <div className="flex overflow-x-auto mb-6 pb-2" role="tablist" aria-label="Order status filters">
         <button
           onClick={() => handleFilterChange('all')}
           className={`px-4 py-2 mr-2 rounded-full whitespace-nowrap ${
@@ -182,7 +185,9 @@ const CustomerOrdersPage: React.FC = () => {
       {/* Orders List */}
       {displayOrders && displayOrders.length > 0 ? (
         <div className="space-y-4">
-          {displayOrders.map((order) => (
+          {displayOrders.map((order) => {
+            const currentStatusIndex = TIMELINE_STEPS.indexOf(order.status);
+            return (
             <div key={order.id} className="bg-white rounded-lg border-2 border-neutral-gray-200 p-5">
               <div className="flex flex-wrap justify-between items-start gap-3">
                 <div>
@@ -221,8 +226,31 @@ const CustomerOrdersPage: React.FC = () => {
                   </Link>
                 </div>
               </div>
+              <div className="flex flex-wrap gap-2 mt-5">
+                {TIMELINE_STEPS.map((step) => {
+                  const stepIndex = TIMELINE_STEPS.indexOf(step);
+                  const isActive = currentStatusIndex === stepIndex;
+                  const isCompleted =
+                    currentStatusIndex !== -1 && stepIndex < currentStatusIndex;
+                  return (
+                    <span
+                      key={`${order.id}-${step}`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                        isActive
+                          ? 'bg-primary-600 text-white'
+                          : isCompleted
+                          ? 'bg-primary-100 text-primary-700'
+                          : 'bg-neutral-100 text-neutral-600'
+                      }`}
+                    >
+                      {step}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <EmptyState
@@ -232,7 +260,7 @@ const CustomerOrdersPage: React.FC = () => {
               : `No ${activeFilter.toLowerCase()} orders found`
           }
           actionText="Browse Menu"
-          onAction={() => window.location.href = '/'}
+          onAction={() => navigate('/')}
         />
       )}
     </div>
