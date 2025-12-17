@@ -1,11 +1,12 @@
 import React from 'react';
 import { DollarSign, Package, Calendar, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { StatCard } from '../molecules/StatCard';
 import { LoadingSpinner } from '../atoms/LoadingSpinner';
 import { ErrorMessage } from '../molecules/ErrorMessage';
 import UserManagementPanel from './UserManagementPanel';
 import ReservationModal from './ReservationModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 export interface AdminDashboardProps {
   /** Loading state */
@@ -55,8 +56,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     activeUsers: 0,
   },
 }) => {
+  const { user } = useAuth();
   const [showUsers, setShowUsers] = React.useState(false);
   const [showReservationModal, setShowReservationModal] = React.useState(false);
+  
+  // Defense-in-depth: Verify admin role even though route is protected
+  // Prevents accidental exposure if component is used outside ProtectedRoute
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
+    return <Navigate to="/" replace />;
+  }
   const aiAlerts = [
     {
       severity: 'warning' as const,

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useMenuManagementApi, MenuItem, MenuItemCreateRequest } from '../../hooks/useMenuManagementApi';
 import toast from 'react-hot-toast';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
@@ -6,6 +7,7 @@ import { useFormValidation, ValidationRules } from '../../hooks/useFormValidatio
 import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { ErrorMessage } from '../molecules/ErrorMessage';
 import { LoadingSpinner } from '../atoms/LoadingSpinner';
+import { useAuth } from '../../contexts/AuthContext';
 
 /**
  * Menu Management Panel Component (F103, F104)
@@ -27,6 +29,7 @@ interface MenuManagementPanelProps {
 }
 
 const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
+  const { user } = useAuth();
   const { 
     menuItems, 
     loading, 
@@ -37,6 +40,12 @@ const MenuManagementPanel: React.FC<MenuManagementPanelProps> = () => {
     deleteMenuItem,
     fetchCategories
   } = useMenuManagementApi();
+  
+  // Defense-in-depth: Verify admin/manager role even though route is protected
+  // Prevents accidental exposure if component is used outside ProtectedRoute
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
+    return <Navigate to="/" replace />;
+  }
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);

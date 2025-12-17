@@ -22,39 +22,41 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class MenuService {
-    
+
     private final MenuRepository menuRepository;
-    
+
     @Autowired
     public MenuService(MenuRepository menuRepository) {
         this.menuRepository = menuRepository;
     }
 
-    
     /**
      * Get all menu items (F103)
+     * 
      * @return List of all menu items
      */
     public List<MenuItemDto> findAllMenuItems() {
         return menuRepository.findAll().stream()
-            .map(this::convertToDto)
-            .collect(Collectors.toList());
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Get menu item by ID (F103)
+     * 
      * @param id Menu item ID
      * @return Menu item DTO
      * @throws RuntimeException if menu item not found
      */
     public MenuItemDto findMenuItemById(Long id) {
         MenuItem item = menuRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Menu item not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Menu item not found with id: " + id));
         return convertToDto(item);
     }
-    
+
     /**
      * Create new menu item (F104) **CRITICAL**
+     * 
      * @param request Create request DTO
      * @return Created menu item DTO
      * @throws IllegalArgumentException if menu item name already exists
@@ -64,7 +66,7 @@ public class MenuService {
         if (menuRepository.findByName(request.getName()).isPresent()) {
             throw new IllegalArgumentException("Menu item with name already exists: " + request.getName());
         }
-        
+
         MenuItem item = new MenuItem();
         item.setName(request.getName());
         item.setDescription(request.getDescription());
@@ -74,22 +76,23 @@ public class MenuService {
         item.setImageUrl(request.getImageUrl());
         item.setCreatedAt(OffsetDateTime.now());
         item.setUpdatedAt(OffsetDateTime.now());
-        
+
         MenuItem savedItem = menuRepository.save(item);
         return convertToDto(savedItem);
     }
-    
+
     /**
      * Update menu item (F104)
-     * @param id Menu item ID
+     * 
+     * @param id      Menu item ID
      * @param request Update request DTO
      * @return Updated menu item DTO
      * @throws RuntimeException if menu item not found
      */
     public MenuItemDto updateMenuItem(Long id, MenuItemUpdateRequestDto request) {
         MenuItem item = menuRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Menu item not found with id: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Menu item not found with id: " + id));
+
         if (request.getName() != null) {
             item.setName(request.getName());
         }
@@ -108,15 +111,16 @@ public class MenuService {
         if (request.getImageUrl() != null) {
             item.setImageUrl(request.getImageUrl());
         }
-        
+
         item.setUpdatedAt(OffsetDateTime.now());
-        
+
         MenuItem updatedItem = menuRepository.save(item);
         return convertToDto(updatedItem);
     }
-    
+
     /**
      * Delete menu item (F104)
+     * 
      * @param id Menu item ID
      * @throws RuntimeException if menu item not found
      */
@@ -126,50 +130,55 @@ public class MenuService {
         }
         menuRepository.deleteById(id);
     }
-    
+
     /**
      * Search menu items by name (F103)
+     * 
      * @param name Search term
      * @return List of matching menu items
      */
     public List<MenuItemDto> searchByName(String name) {
         return menuRepository.findByNameContainingIgnoreCase(name).stream()
-            .map(this::convertToDto)
-            .collect(Collectors.toList());
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Find menu items by category (F103)
+     * 
      * @param category Category name
      * @return List of menu items in category
      */
     public List<MenuItemDto> findByCategory(String category) {
         return menuRepository.findByCategory(category).stream()
-            .map(this::convertToDto)
-            .collect(Collectors.toList());
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Find menu items by availability (F103)
+     * 
      * @param available Availability status
      * @return List of menu items with matching availability
      */
     public List<MenuItemDto> findByAvailability(boolean available) {
         return menuRepository.findByAvailable(available).stream()
-            .map(this::convertToDto)
-            .collect(Collectors.toList());
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Get all unique categories (F103)
+     * 
      * @return List of category names
      */
     public List<String> getAllCategories() {
         return menuRepository.findDistinctCategories();
     }
-    
+
     /**
      * Convert MenuItem entity to DTO
+     * 
      * @param item MenuItem entity
      * @return MenuItemDto
      */
@@ -184,6 +193,65 @@ public class MenuService {
         dto.setImageUrl(item.getImageUrl());
         dto.setCreatedAt(item.getCreatedAt());
         dto.setUpdatedAt(item.getUpdatedAt());
+        // Phase 4.4 - Inventory fields
+        dto.setStockQuantity(item.getStockQuantity());
+        dto.setLowStockThreshold(item.getLowStockThreshold());
         return dto;
+    }
+
+    // =========================================================================
+    // Phase 4.2 - Image Management (CDN URL)
+    // =========================================================================
+
+    /**
+     * Update menu item image URL (CDN approach)
+     * 
+     * @param id       Menu item ID
+     * @param imageUrl CDN image URL
+     * @return Updated menu item DTO
+     */
+    public MenuItemDto updateMenuItemImage(Long id, String imageUrl) {
+        MenuItem item = menuRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Menu item not found with id: " + id));
+
+        item.setImageUrl(imageUrl);
+        item.setUpdatedAt(OffsetDateTime.now());
+
+        MenuItem updatedItem = menuRepository.save(item);
+        return convertToDto(updatedItem);
+    }
+
+    // =========================================================================
+    // Phase 4.4 - Inventory Management
+    // =========================================================================
+
+    /**
+     * Get all low stock items
+     * 
+     * @return List of items where stockQuantity <= lowStockThreshold
+     */
+    public List<MenuItemDto> getLowStockItems() {
+        return menuRepository.findAll().stream()
+                .filter(MenuItem::isLowStock)
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Update menu item stock quantity
+     * 
+     * @param id       Menu item ID
+     * @param quantity New stock quantity
+     * @return Updated menu item DTO
+     */
+    public MenuItemDto updateMenuItemStock(Long id, Integer quantity) {
+        MenuItem item = menuRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Menu item not found with id: " + id));
+
+        item.setStockQuantity(quantity);
+        item.setUpdatedAt(OffsetDateTime.now());
+
+        MenuItem updatedItem = menuRepository.save(item);
+        return convertToDto(updatedItem);
     }
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Navigate } from 'react-router-dom';
 import { 
   Users, 
   Plus, 
@@ -26,12 +27,21 @@ interface UserManagementPanelProps {
 }
 
 const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClose }) => {
+  const { users: currentUsers } = useUserApi();
+  const currentUser = currentUsers.find(u => u.email === localStorage.getItem('userEmail'));
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  
+  // Defense-in-depth: Verify admin role even though route is protected
+  // Prevents accidental exposure if component is used outside ProtectedRoute
+  if (!currentUser || currentUser.role !== 'ADMIN') {
+    return <Navigate to="/" replace />;
+  }
   
   // API 훅 사용
   const {

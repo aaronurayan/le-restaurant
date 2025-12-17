@@ -6,8 +6,20 @@
  * Backend: PENDING, CONFIRMED, PREPARING, READY, COMPLETED, CANCELLED
  */
 
-export type OrderType = 'DINE_IN' | 'TAKEOUT' | 'DELIVERY';
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED';
+export enum OrderType {
+  DINE_IN = 'DINE_IN',
+  TAKEOUT = 'TAKEOUT',
+  DELIVERY = 'DELIVERY'
+}
+
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PREPARING = 'PREPARING',
+  READY = 'READY',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED'
+}
 
 export interface OrderItemDto {
   id: number;

@@ -4,6 +4,7 @@ import com.lerestaurant.le_restaurant_backend.dto.AuthRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserDto;
 import com.lerestaurant.le_restaurant_backend.service.UserService;
+import com.lerestaurant.le_restaurant_backend.util.JwtUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,12 @@ import java.util.Map;
 public class AuthController {
 
     private final UserService userService;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/login")
@@ -30,10 +33,13 @@ public class AuthController {
         // Validation is now handled by @Valid annotation and GlobalExceptionHandler
         try {
             UserDto user = userService.authenticateUser(request.getEmail(), request.getPassword());
+            
+            // Generate JWT token
+            String token = jwtUtil.generateToken(user.getEmail(), user.getRole().toString());
+            
             Map<String, Object> response = new HashMap<>();
             response.put("user", user);
-            // In a real app you'd return a signed JWT or session token here
-            response.put("token", "mock-token");
+            response.put("token", token);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             String msg = e.getMessage();
@@ -48,10 +54,13 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody UserCreateRequestDto requestDto) {
         try {
             UserDto user = userService.createUser(requestDto);
+            
+            // Generate JWT token
+            String token = jwtUtil.generateToken(user.getEmail(), user.getRole().toString());
+            
             Map<String, Object> response = new HashMap<>();
             response.put("user", user);
-            // In a real app you'd return a signed JWT or session token here
-            response.put("token", "mock-token");
+            response.put("token", token);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             Map<String, String> error = new HashMap<>();

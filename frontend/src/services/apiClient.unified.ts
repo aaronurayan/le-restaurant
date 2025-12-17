@@ -188,6 +188,56 @@ class UnifiedApiClient {
   }
 
   /**
+   * Refresh authentication token
+   * ✅ 신규 추가: 401 에러 시 자동 토큰 갱신
+   */
+  private async refreshAuthToken(): Promise<string> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Token refresh failed');
+    }
+
+    const data = await response.json();
+    const newToken = data.token;
+
+    // 새 토큰 저장
+    localStorage.setItem('token', newToken);
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
+    }
+
+    logger.info('Auth token refreshed successfully');
+    return newToken;
+  }
+
+  /**
+   * Handle authentication failure
+   * ✅ 신규 추가: 인증 실패 시 로그아웃 처리
+   */
+  private handleAuthenticationFailure(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('auth');
+    
+    logger.warn('Authentication failed, redirecting to login');
+    
+    // 로그인 페이지로 리디렉션
+    window.location.href = '/login';
+  }
+
+  /**
    * Generate unique request ID
    */
   private generateRequestId(): string {
@@ -380,14 +430,63 @@ class UnifiedApiClient {
           const response = await fetch(url, finalConfig);
           responseSize = parseInt(response.headers.get('content-length') || '0', 10);
           
+          // ✅ 401 Unauthorized 처리 (토큰 갱신 로직)
+          if (response.status === 401) {
+            // Only attempt token refresh on first attempt and if not already retrying
+            if (attempt === 0 && !url.includes('/auth/refresh')) {
+              try {
+                logger.info('Attempting token refresh due to 401', { url, requestId });
+                
+                // 토큰 갱신 시도
+                const newToken = await this.refreshAuthToken();
+                this.setAuthToken(newToken);
+                
+                logger.info('Token refresh successful, retrying original request', { requestId });
+                
+                // 갱신된 토큰으로 재시도 (재귀 호출로 전체 재시도 로직 활용)
+                return await this.executeWithRetry<T>(url, {
+                  ...config,
+                  headers: {
+                    ...config.headers,
+                    'Authorization': `Bearer ${newToken}`,
+                  },
+                }, 0, requestId, originalContext); // retries=0 to prevent infinite loop
+                
+              } catch (refreshError) {
+                logger.error('Token refresh failed, logging out user', { requestId }, refreshError instanceof Error ? refreshError : new Error(String(refreshError)));
+                
+                // 토큰 갱신 실패 → 로그아웃 처리
+                this.handleAuthenticationFailure();
+                throw new ApiError(
+                  401,
+                  'Session expired. Please log in again.',
+                  requestId,
+                  url
+                );
+              }
+            } else {
+              // Second 401 after refresh attempt or refresh endpoint itself failed
+              logger.warn('401 after token refresh attempt, forcing logout', { requestId });
+              this.handleAuthenticationFailure();
+              throw new ApiError(
+                401,
+                'Authentication failed. Please log in again.',
+                requestId,
+                url
+              );
+            }
+          }
+          
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            
+            // ✅ 백엔드 에러 포맷에 맞춰 수정 (error, fieldErrors)
             const apiError = new ApiError(
               response.status,
-              errorData.message || `HTTP error! status: ${response.status}`,
+              errorData.error || errorData.message || `HTTP error! status: ${response.status}`,
               requestId,
               url,
-              errorData.errors
+              errorData.fieldErrors || errorData.errors
             );
 
             // Record performance metric

@@ -47,11 +47,15 @@ public class PaymentService {
     
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final DeliveryService deliveryService;
     
     @Autowired
-    public PaymentService(PaymentRepository paymentRepository, OrderRepository orderRepository) {
+    public PaymentService(PaymentRepository paymentRepository, 
+                         OrderRepository orderRepository,
+                         DeliveryService deliveryService) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
+        this.deliveryService = deliveryService;
     }
     
     /**
@@ -169,6 +173,19 @@ public class PaymentService {
             order.setStatus(Order.OrderStatus.CONFIRMED);
             orderRepository.save(order);
             logger.info("Order {} status automatically updated to CONFIRMED after payment completion", order.getId());
+        }
+        
+        // 자동 배달 생성 (F105→F106→F107 연결)
+        // DELIVERY 타입 주문이고 결제가 완료되면 자동으로 배달 생성
+        if (order.getOrderType() == Order.OrderType.DELIVERY) {
+            try {
+                deliveryService.createDeliveryForOrder(order.getId());
+                logger.info("Delivery automatically created for Order {} after payment completion", order.getId());
+            } catch (Exception e) {
+                // 배달 생성 실패해도 결제는 유지 (나중에 수동 생성 가능)
+                logger.error("Failed to auto-create delivery for Order {}: {}", order.getId(), e.getMessage());
+                // 실패 시에도 결제는 성공 상태 유지
+            }
         }
         
         return convertToDto(updatedPayment);

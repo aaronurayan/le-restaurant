@@ -4,8 +4,11 @@ import com.lerestaurant.le_restaurant_backend.dto.*;
 import com.lerestaurant.le_restaurant_backend.entity.*;
 import com.lerestaurant.le_restaurant_backend.repository.*;
 import com.lerestaurant.le_restaurant_backend.service.*;
+import com.lerestaurant.le_restaurant_backend.config.TestSecurityConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,6 +24,8 @@ import java.util.List;
  * Implements Separation of Concerns principle
  */
 @SpringBootTest
+@Import(TestSecurityConfig.class)
+@ActiveProfiles("test")
 public abstract class BaseE2ETest {
 
     @Autowired

@@ -38,7 +38,7 @@ A modern, full-stack restaurant management system built with **Spring Boot** bac
 - **Backend API**: https://le-restaurant-adbrdddye6cbdjf2.australiaeast-01.azurewebsites.net
 - **Frontend**: https://le-restaurant-frontend.azurestaticapps.net
 - **Database**: PostgreSQL 14 on Azure (Australia East)
-- **Auto-Deployment**: Azure DevOps Pipelines (push to `main` branch)
+- **Deployment**: Azure DevOps Pipelines (Manual trigger required)
 
 ### 💻 Local Development
 
@@ -57,7 +57,7 @@ cd le-restaurant
 
 # Start the Backend (Spring Boot)
 cd backend
-./mvnw spring-boot:run
+./gradlew bootRun
 # Backend will run on http://localhost:8080
 
 # In a new terminal, start the Frontend (React + Vite)
@@ -70,7 +70,7 @@ npm run dev
 #### Access Points
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:8080
-- **API Documentation**: http://localhost:8080/swagger-ui.html
+- **API Documentation**: http://localhost:8080/swagger-ui/index.html (requires springdoc-openapi)
 - **Health Check**: http://localhost:8080/api/health
 
 ---

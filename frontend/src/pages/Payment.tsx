@@ -112,13 +112,17 @@ const Payment: React.FC = () => {
         throw new Error('Failed to create payment');
       }
       
-      // Step 2: Process payment (simulate payment gateway processing)
+      // Step 2: Simulate payment gateway processing delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Step 3: Process payment (updates payment status to COMPLETED and order status to CONFIRMED automatically)
+      // Step 3: Process payment - backend automatically:
+      // - Updates payment status to COMPLETED
+      // - Updates order status to PAID
+      // - Creates delivery record
+      // - Sends notification
+      // No additional frontend calls needed - trust backend transaction integrity
       if (createdPayment.id) {
         await processPayment(createdPayment.id);
-        // Note: Order status is now automatically updated to CONFIRMED by PaymentService.processPayment()
       }
       
       // Clear the cart after successful payment

@@ -23,15 +23,14 @@ import java.util.Map;
 @RequestMapping("/api/menu-items")
 // CORS is handled globally in WebConfig
 public class MenuController {
-    
+
     private final MenuService menuService;
-    
+
     @Autowired
     public MenuController(MenuService menuService) {
         this.menuService = menuService;
     }
 
-    
     /**
      * GET ALL MENU ITEMS (F103 - Public)
      * Supports filtering by category, search, and availability
@@ -40,11 +39,10 @@ public class MenuController {
     public ResponseEntity<List<MenuItemDto>> getAllMenuItems(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Boolean available
-    ) {
+            @RequestParam(required = false) Boolean available) {
         // Exception handling is done by GlobalExceptionHandler
         List<MenuItemDto> items;
-        
+
         if (category != null && !category.isEmpty()) {
             items = menuService.findByCategory(category);
         } else if (search != null && !search.isEmpty()) {
@@ -54,10 +52,10 @@ public class MenuController {
         } else {
             items = menuService.findAllMenuItems();
         }
-        
+
         return ResponseEntity.ok(items);
     }
-    
+
     /**
      * GET MENU ITEM BY ID (F103 - Public)
      */
@@ -67,7 +65,7 @@ public class MenuController {
         MenuItemDto item = menuService.findMenuItemById(id);
         return ResponseEntity.ok(item);
     }
-    
+
     /**
      * CREATE MENU ITEM (F104 - Manager only) **CRITICAL**
      */
@@ -77,20 +75,19 @@ public class MenuController {
         MenuItemDto createdItem = menuService.createMenuItem(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
     }
-    
+
     /**
      * UPDATE MENU ITEM (F104 - Manager only)
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateMenuItem(
             @PathVariable Long id,
-            @Valid @RequestBody MenuItemUpdateRequestDto request
-    ) {
+            @Valid @RequestBody MenuItemUpdateRequestDto request) {
         // Exception handling is done by GlobalExceptionHandler
         MenuItemDto updatedItem = menuService.updateMenuItem(id, request);
         return ResponseEntity.ok(updatedItem);
     }
-    
+
     /**
      * DELETE MENU ITEM (F104 - Manager only)
      */
@@ -100,7 +97,7 @@ public class MenuController {
         menuService.deleteMenuItem(id);
         return ResponseEntity.noContent().build();
     }
-    
+
     /**
      * GET CATEGORIES (F103 - Public)
      */
@@ -109,5 +106,56 @@ public class MenuController {
         // Exception handling is done by GlobalExceptionHandler
         List<String> categories = menuService.getAllCategories();
         return ResponseEntity.ok(categories);
+    }
+
+    // =========================================================================
+    // Phase 4.2 - Image Management (CDN URL)
+    // =========================================================================
+
+    /**
+     * UPDATE MENU ITEM IMAGE (F104 - Manager only)
+     * Uses CDN URL approach - client provides the image URL
+     */
+    @PutMapping("/{id}/image")
+    public ResponseEntity<?> updateMenuItemImage(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        String imageUrl = request.get("imageUrl");
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "imageUrl is required"));
+        }
+        MenuItemDto updatedItem = menuService.updateMenuItemImage(id, imageUrl);
+        return ResponseEntity.ok(updatedItem);
+    }
+
+    // =========================================================================
+    // Phase 4.4 - Inventory Management
+    // =========================================================================
+
+    /**
+     * GET LOW STOCK ITEMS (F104 - Manager only)
+     * Returns items where stockQuantity <= lowStockThreshold
+     */
+    @GetMapping("/low-stock")
+    public ResponseEntity<List<MenuItemDto>> getLowStockItems() {
+        List<MenuItemDto> items = menuService.getLowStockItems();
+        return ResponseEntity.ok(items);
+    }
+
+    /**
+     * UPDATE MENU ITEM STOCK (F104 - Manager only)
+     */
+    @PutMapping("/{id}/stock")
+    public ResponseEntity<?> updateMenuItemStock(
+            @PathVariable Long id,
+            @RequestBody Map<String, Integer> request) {
+        Integer quantity = request.get("quantity");
+        if (quantity == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "quantity is required"));
+        }
+        MenuItemDto updatedItem = menuService.updateMenuItemStock(id, quantity);
+        return ResponseEntity.ok(updatedItem);
     }
 }

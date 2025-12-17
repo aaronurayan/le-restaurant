@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useReservationManagementApi } from '../hooks/useReservationManagementApi';
 import { ConfirmDialog } from '../components/molecules/ConfirmDialog';
@@ -17,6 +17,12 @@ const ReservationManagement: React.FC = () => {
         denyReservation, 
         deleteReservation 
     } = useReservationManagementApi();
+    
+    // Defense-in-depth: Verify admin/manager role even though route is protected
+    // Prevents accidental exposure if component is used outside ProtectedRoute
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
+        return <Navigate to="/" replace />;
+    }
     
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [reservationToDelete, setReservationToDelete] = useState<number | null>(null);

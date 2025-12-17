@@ -15,20 +15,20 @@ export interface Payment {
 }
 
 export enum PaymentMethod {
-  CREDIT_CARD = 'credit_card',
-  DEBIT_CARD = 'debit_card',
-  CASH = 'cash',
-  BANK_TRANSFER = 'bank_transfer',
-  DIGITAL_WALLET = 'digital_wallet'
+  CREDIT_CARD = 'CREDIT_CARD',
+  DEBIT_CARD = 'DEBIT_CARD',
+  CASH = 'CASH',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  DIGITAL_WALLET = 'DIGITAL_WALLET'
 }
 
 export enum PaymentStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  REFUNDED = 'refunded',
-  CANCELLED = 'cancelled'
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+  CANCELLED = 'CANCELLED'
 }
 
 export interface CreatePaymentRequest {

@@ -29,6 +29,7 @@ import {
   PaymentListResponse,
   PaymentProcessingResult
 } from '../services/paymentApiService';
+import { useOrderStore } from '../stores/orderStore';
 
 // =============================================================================
 // Payment List Management Hook
@@ -233,8 +234,18 @@ export const usePayment = () => {
    * Process payment
    */
   const processPayment = useCallback(async (id: number): Promise<PaymentProcessingResult | null> => {
+    const updateOrder = useOrderStore.getState().updateOrder;
+    
     try {
       const result = await paymentApiService.processPayment(id);
+      
+      // ✅ Payment 성공 후 Order 상태를 전역 상태에서 자동 업데이트
+      if (result && result.status === PaymentStatus.COMPLETED && result.orderId) {
+        updateOrder(result.orderId, {
+          status: 'CONFIRMED' as any, // Backend가 PENDING → CONFIRMED로 변경
+        });
+      }
+      
       // Reload payment data after processing
       await loadPaymentById(id);
       return result;

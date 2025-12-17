@@ -8,8 +8,8 @@ import java.time.OffsetDateTime;
 @Table(name = "payments")
 public class Payment {
 
-    public enum PaymentMethod { CREDIT_CARD, DEBIT_CARD, CASH, DIGITAL_WALLET }
-    public enum PaymentStatus { PENDING, COMPLETED, FAILED, REFUNDED }
+    public enum PaymentMethod { CREDIT_CARD, DEBIT_CARD, CASH, BANK_TRANSFER, DIGITAL_WALLET }
+    public enum PaymentStatus { PENDING, PROCESSING, COMPLETED, FAILED, REFUNDED, CANCELLED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

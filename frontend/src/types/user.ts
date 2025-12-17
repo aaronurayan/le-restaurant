@@ -14,15 +14,15 @@ export interface User {
 }
 
 export enum UserRole {
-  CUSTOMER = 'customer',
-  MANAGER = 'manager',
-  ADMIN = 'admin'
+  CUSTOMER = 'CUSTOMER',
+  MANAGER = 'MANAGER',
+  ADMIN = 'ADMIN'
 }
 
 export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SUSPENDED = 'suspended'
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED'
 }
 
 export interface CreateUserRequest {

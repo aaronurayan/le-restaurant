@@ -270,6 +270,67 @@ public class DeliveryService {
     }
     
     /**
+     * Auto-create delivery for completed DELIVERY-type order
+     * Called by PaymentService after successful payment processing
+     * 
+     * @param orderId Order ID that needs delivery
+     * @return Created delivery as DTO
+     * @throws RuntimeException if order not found, order type not DELIVERY, or delivery already exists
+     */
+    public DeliveryDto createDeliveryForOrder(Long orderId) {
+        logger.info("Auto-creating delivery for Order ID: {}", orderId);
+        
+        // Validate order exists
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+        
+        // Validate order type is DELIVERY
+        if (order.getOrderType() != Order.OrderType.DELIVERY) {
+            throw new RuntimeException("Order type must be DELIVERY to auto-create delivery. Found: " + order.getOrderType());
+        }
+        
+        // Check if delivery already exists for this order
+        List<Delivery> existingDeliveries = deliveryRepository.findByOrderId(orderId);
+        if (!existingDeliveries.isEmpty()) {
+            logger.warn("Delivery already exists for order {}, returning existing delivery", orderId);
+            return convertToDto(existingDeliveries.get(0));
+        }
+        
+        // Get customer's default delivery address
+        User customer = order.getCustomer();
+        if (customer == null) {
+            throw new RuntimeException("Order has no customer associated with ID: " + orderId);
+        }
+        
+        List<DeliveryAddress> addresses = deliveryAddressRepository.findByUserId(customer.getId());
+        
+        DeliveryAddress selectedAddress;
+        if (addresses.isEmpty()) {
+            throw new RuntimeException("No delivery address found for customer ID: " + customer.getId());
+        } else {
+            // Use default address if available, otherwise first address
+            selectedAddress = addresses.stream()
+                .filter(addr -> addr.getIsDefault() != null && addr.getIsDefault())
+                .findFirst()
+                .orElse(addresses.get(0));
+        }
+        
+        // Create delivery with default values
+        Delivery delivery = new Delivery();
+        delivery.setOrder(order);
+        delivery.setDeliveryAddress(selectedAddress);
+        delivery.setDeliveryFee(java.math.BigDecimal.valueOf(5.00)); // Default delivery fee $5.00
+        delivery.setEstimatedDeliveryTimeMinutes(30); // Default 30 minutes
+        delivery.setDeliveryInstructions("Auto-created after payment completion");
+        delivery.setStatus(Delivery.DeliveryStatus.ASSIGNED); // Default status ASSIGNED
+        
+        Delivery savedDelivery = deliveryRepository.save(delivery);
+        logger.info("Auto-created delivery with ID: {} for Order ID: {}", savedDelivery.getId(), orderId);
+        
+        return convertToDto(savedDelivery);
+    }
+    
+    /**
      * Convert Delivery entity to DTO
      * 
      * @param delivery Delivery entity
@@ -279,28 +340,59 @@ public class DeliveryService {
         DeliveryDto dto = new DeliveryDto();
         dto.setId(delivery.getId());
         
-        // Order info
-        dto.setOrderId(delivery.getOrder().getId());
-        dto.setOrderNumber(delivery.getOrder().getId().toString()); // Or implement order number generation
-        dto.setOrderTotal(delivery.getOrder().getTotalAmount());
-        
-        // Address info
-        dto.setAddressId(delivery.getDeliveryAddress().getId());
-        String fullAddress = delivery.getDeliveryAddress().getAddressLine1();
-        if (delivery.getDeliveryAddress().getAddressLine2() != null && !delivery.getDeliveryAddress().getAddressLine2().isEmpty()) {
-            fullAddress += ", " + delivery.getDeliveryAddress().getAddressLine2();
+        // Order info - with null checks
+        if (delivery.getOrder() != null) {
+            dto.setOrderId(delivery.getOrder().getId());
+            dto.setOrderNumber(delivery.getOrder().getId().toString());
+            dto.setOrderTotal(delivery.getOrder().getTotalAmount());
         }
-        fullAddress += ", " + delivery.getDeliveryAddress().getCity() + ", " + delivery.getDeliveryAddress().getState() + " " + delivery.getDeliveryAddress().getPostalCode();
-        dto.setFullAddress(fullAddress);
         
-        // Driver info
+        // Address info - with null checks
+        if (delivery.getDeliveryAddress() != null) {
+            dto.setAddressId(delivery.getDeliveryAddress().getId());
+            StringBuilder fullAddress = new StringBuilder();
+            
+            if (delivery.getDeliveryAddress().getAddressLine1() != null) {
+                fullAddress.append(delivery.getDeliveryAddress().getAddressLine1());
+            }
+            
+            if (delivery.getDeliveryAddress().getAddressLine2() != null 
+                && !delivery.getDeliveryAddress().getAddressLine2().isEmpty()) {
+                fullAddress.append(", ").append(delivery.getDeliveryAddress().getAddressLine2());
+            }
+            
+            if (delivery.getDeliveryAddress().getCity() != null) {
+                fullAddress.append(", ").append(delivery.getDeliveryAddress().getCity());
+            }
+            
+            if (delivery.getDeliveryAddress().getState() != null) {
+                fullAddress.append(", ").append(delivery.getDeliveryAddress().getState());
+            }
+            
+            if (delivery.getDeliveryAddress().getPostalCode() != null) {
+                fullAddress.append(" ").append(delivery.getDeliveryAddress().getPostalCode());
+            }
+            
+            dto.setFullAddress(fullAddress.toString());
+        }
+        
+        // Driver info - with null checks
         if (delivery.getDriver() != null && delivery.getDriver().getUser() != null) {
             dto.setDriverId(delivery.getDriver().getId());
             User driverUser = delivery.getDriver().getUser();
-            String driverName = (driverUser.getFirstName() != null ? driverUser.getFirstName() : "") + 
-                               " " + 
-                               (driverUser.getLastName() != null ? driverUser.getLastName() : "");
-            dto.setDriverName(driverName.trim());
+            
+            StringBuilder driverName = new StringBuilder();
+            if (driverUser.getFirstName() != null) {
+                driverName.append(driverUser.getFirstName());
+            }
+            if (driverUser.getLastName() != null) {
+                if (driverName.length() > 0) {
+                    driverName.append(" ");
+                }
+                driverName.append(driverUser.getLastName());
+            }
+            
+            dto.setDriverName(driverName.length() > 0 ? driverName.toString() : "Unknown Driver");
             dto.setDriverPhone(driverUser.getPhoneNumber());
         }
         

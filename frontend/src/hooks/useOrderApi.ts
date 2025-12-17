@@ -15,6 +15,7 @@ import { OrderDto, OrderCreateRequestDto, OrderUpdateRequestDto, OrderStatus } f
 import { apiClient } from '../services/apiClient.unified';
 import { API_ENDPOINTS } from '../config/api.config';
 import { ApiError } from '../services/apiClient.unified';
+import { useOrderStore } from '../stores/orderStore';
 
 /**
  * Hook for Order API operations (F105)
@@ -30,11 +31,15 @@ export const useOrderApi = () => {
    * Get all orders
    */
   const getAllOrders = useCallback(async () => {
+    const setOrders = useOrderStore.getState().setOrders;
+    const setLoading = useOrderStore.getState().setLoading;
+    const setError = useOrderStore.getState().setError;
+    
     setLoading(true);
     setError(null);
     try {
       const data = await apiClient.get<OrderDto[]>(API_ENDPOINTS.orders.base);
-      setOrders(data);
+      setOrders(data); // ✅ 전역 상태 업데이트
       return data;
     } catch (err) {
       const errorMsg = err instanceof ApiError 
@@ -50,14 +55,52 @@ export const useOrderApi = () => {
   }, []);
 
   /**
-   * Get order by ID
+   * Get order by ID with caching and request deduplication
    */
   const getOrderById = useCallback(async (orderId: number) => {
+    const { 
+      getCachedOrder, 
+      setCachedOrder, 
+      isPending, 
+      setPendingRequest, 
+      clearPendingRequest,
+      setCurrentOrder: setStoreCurrentOrder,
+      setLoading: setStoreLoading,
+      setError: setStoreError 
+    } = useOrderStore.getState();
+    
+    // Check cache first
+    const cachedOrder = getCachedOrder(orderId);
+    if (cachedOrder) {
+      setCurrentOrder(cachedOrder);
+      setStoreCurrentOrder(cachedOrder);
+      return cachedOrder;
+    }
+    
+    // Check if request is already pending (deduplication)
+    if (isPending(orderId)) {
+      const pendingRequest = useOrderStore.getState().pendingRequests.get(orderId);
+      if (pendingRequest) {
+        return await pendingRequest;
+      }
+    }
+    
     setLoading(true);
+    setStoreLoading(true);
     setError(null);
+    setStoreError(null);
+    
     try {
-      const data = await apiClient.get<OrderDto>(API_ENDPOINTS.orders.byId(orderId));
+      const requestPromise = apiClient.get<OrderDto>(API_ENDPOINTS.orders.byId(orderId));
+      setPendingRequest(orderId, requestPromise);
+      
+      const data = await requestPromise;
+      
+      // Update cache and state
+      setCachedOrder(orderId, data);
       setCurrentOrder(data);
+      setStoreCurrentOrder(data);
+      
       return data;
     } catch (err) {
       const errorMsg = err instanceof ApiError 
@@ -66,9 +109,12 @@ export const useOrderApi = () => {
         ? err.message 
         : 'Error fetching order';
       setError(errorMsg);
+      setStoreError(errorMsg);
       throw err;
     } finally {
       setLoading(false);
+      setStoreLoading(false);
+      clearPendingRequest(orderId);
     }
   }, []);
 
@@ -122,10 +168,16 @@ export const useOrderApi = () => {
    * Create new order
    */
   const createOrder = useCallback(async (orderData: OrderCreateRequestDto) => {
+    const addOrder = useOrderStore.getState().addOrder;
+    const setLoading = useOrderStore.getState().setLoading;
+    const setError = useOrderStore.getState().setError;
+    const setCurrentOrder = useOrderStore.getState().setCurrentOrder;
+    
     setLoading(true);
     setError(null);
     try {
       const data = await apiClient.post<OrderDto>(API_ENDPOINTS.orders.base, orderData);
+      addOrder(data); // ✅ 전역 상태에 추가
       setCurrentOrder(data);
       return data;
     } catch (err) {

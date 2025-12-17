@@ -23,27 +23,11 @@
 # Last Updated: October 23, 2025
 # ==============================================================================
 
-# Trigger Configuration
-trigger:
-  batch: true
-  branches:
-    include:
-      - main
-      - develop
-  paths:
-    exclude:
-      - README.md
-      - docs
-      - .gitignore
-      - '**/*.md'
+# Trigger Configuration - DISABLED (Manual trigger only)
+trigger: none
 
-# Pull Request Validation
-pr:
-  branches:
-    include:
-      - main
-      - develop
-  autoCancel: true
+# Pull Request Validation - DISABLED
+pr: none
 
 # Pipeline Resources
 pool:

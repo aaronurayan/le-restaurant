@@ -21,7 +21,7 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+
     /**
      * Handle validation errors from @Valid annotations
      */
@@ -30,18 +30,18 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex) {
         Map<String, Object> errors = new HashMap<>();
         Map<String, String> fieldErrors = new HashMap<>();
-        
+
         ex.getBindingResult().getFieldErrors().forEach(error -> {
             fieldErrors.put(error.getField(), error.getDefaultMessage());
         });
-        
+
         errors.put("error", "Validation failed");
         errors.put("fieldErrors", fieldErrors);
         errors.put("timestamp", OffsetDateTime.now().toString());
-        
+
         return ResponseEntity.badRequest().body(errors);
     }
-    
+
     /**
      * Handle IllegalArgumentException
      */
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
         error.put("timestamp", OffsetDateTime.now().toString());
         return ResponseEntity.badRequest().body(error);
     }
-    
+
     /**
      * Handle IllegalStateException
      */
@@ -65,7 +65,43 @@ public class GlobalExceptionHandler {
         error.put("timestamp", OffsetDateTime.now().toString());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
-    
+
+    /**
+     * Handle ResourceNotFoundException (404)
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(
+            ResourceNotFoundException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        error.put("timestamp", OffsetDateTime.now().toString());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handle BusinessLogicException (422)
+     */
+    @ExceptionHandler(BusinessLogicException.class)
+    public ResponseEntity<Map<String, Object>> handleBusinessLogicException(
+            BusinessLogicException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        error.put("timestamp", OffsetDateTime.now().toString());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+    }
+
+    /**
+     * Handle ValidationException (400)
+     */
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(
+            ValidationException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        error.put("timestamp", OffsetDateTime.now().toString());
+        return ResponseEntity.badRequest().body(error);
+    }
+
     /**
      * Handle RuntimeException (generic runtime exceptions)
      */
@@ -75,11 +111,11 @@ public class GlobalExceptionHandler {
         Map<String, Object> error = new HashMap<>();
         error.put("error", ex.getMessage());
         error.put("timestamp", OffsetDateTime.now().toString());
-        
+
         // Determine appropriate HTTP status based on error message
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         String message = ex.getMessage();
-        
+
         if (message != null) {
             if (message.contains("not found")) {
                 status = HttpStatus.NOT_FOUND;
@@ -89,8 +125,7 @@ public class GlobalExceptionHandler {
                 status = HttpStatus.BAD_REQUEST;
             }
         }
-        
+
         return ResponseEntity.status(status).body(error);
     }
 }
-
