@@ -6,7 +6,7 @@
 ![Total Guides](https://img.shields.io/badge/guides-5-blue)
 ![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
 
-**最終更新**: 2025-01-XX  
+**最終更新**: 2025-12-24  
 **ドキュメント番号**: 60-JA
 
 > **📖 関連**: [00. マスターインデックス](../00-MASTER-INDEX-ja.md) | [英語ガイド](../en/guides/README.md)
@@ -56,6 +56,6 @@
 
 ---
 
-**最終更新**: 2025-01-XX  
+**最終更新**: 2025-12-24  
 **メンテナンス**: 開発チーム
 

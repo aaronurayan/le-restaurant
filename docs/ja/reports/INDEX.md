@@ -5,7 +5,7 @@
 ![Document Number](https://img.shields.io/badge/document-51--JA-blue)
 ![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
 
-**最終更新**: 2025-01-XX  
+**最終更新**: 2025-12-24  
 **ドキュメント番号**: 51-JA
 
 > **📖 関連**: [00. マスターインデックス](../00-MASTER-INDEX-ja.md) | [英語レポート](../en/reports/INDEX.md)

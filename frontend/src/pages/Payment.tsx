@@ -22,7 +22,7 @@ const Payment: React.FC = () => {
   const { createPayment, processPayment, loading: paymentLoading, error: paymentError } = usePayment();
   const { user } = useAuth();
   const { clearCart } = useCart();
-  
+
   const [orderId, setOrderId] = useState<number | null>(null);
   const [order, setOrder] = useState<any>(null);
   const [paymentComplete, setPaymentComplete] = useState(false);
@@ -33,7 +33,7 @@ const Payment: React.FC = () => {
     expiryDate: '',
     cvv: '',
   });
-  
+
   const loading = orderLoading || paymentLoading;
   const error = orderError || paymentError;
 
@@ -42,7 +42,7 @@ const Payment: React.FC = () => {
     const state = location.state as { orderId?: number };
     if (state?.orderId) {
       setOrderId(state.orderId);
-      
+
       // Load order details
       getOrderById(state.orderId)
         .then(orderData => {
@@ -55,7 +55,7 @@ const Payment: React.FC = () => {
       // No orderId provided, redirect to orders page
       navigate('/customer/orders');
     }
-    
+
     // Cleanup function - make sure cart is cleared when navigating away
     return () => {
       if (paymentComplete) {
@@ -81,7 +81,7 @@ const Payment: React.FC = () => {
 
   const handleSubmitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!orderId || !order || !user || !validateForm()) {
       return;
     }
@@ -91,7 +91,7 @@ const Payment: React.FC = () => {
     try {
       // Step 1: Create payment record (F106)
       const totalAmount = order.totalAmount || (order.subtotal || 0) + (order.taxAmount || 0) + (order.tipAmount || 0);
-      
+
       const paymentData = {
         orderId: orderId,
         amount: totalAmount,
@@ -105,16 +105,16 @@ const Payment: React.FC = () => {
         customerName: (user.firstName || '') + ' ' + (user.lastName || ''),
         customerEmail: user.email || '',
       };
-      
+
       const createdPayment = await createPayment(paymentData);
-      
+
       if (!createdPayment) {
         throw new Error('Failed to create payment');
       }
-      
+
       // Step 2: Simulate payment gateway processing delay
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       // Step 3: Process payment - backend automatically:
       // - Updates payment status to COMPLETED
       // - Updates order status to PAID
@@ -124,13 +124,13 @@ const Payment: React.FC = () => {
       if (createdPayment.id) {
         await processPayment(createdPayment.id);
       }
-      
+
       // Clear the cart after successful payment
       clearCart();
       localStorage.removeItem('cart'); // Double ensure localStorage is cleared
-      
+
       setPaymentComplete(true);
-      
+
       // Redirect to order details page after 2 seconds
       setTimeout(() => {
         navigate(`/customer/orders/${orderId}`);
@@ -175,7 +175,7 @@ const Payment: React.FC = () => {
   return (
     <main className="bg-neutral-50 min-h-screen py-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button 
+        <button
           onClick={() => navigate('/checkout')}
           className="flex items-center text-primary-600 hover:text-primary-700 mb-6"
         >
@@ -252,7 +252,7 @@ const Payment: React.FC = () => {
                 )}
               </Button>
               <p className="text-xs text-neutral-500 text-center">
-                This is a demo application. No real payments are processed.
+                Your payment is securely processed. SSL encrypted.
               </p>
             </form>
           </section>

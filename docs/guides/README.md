@@ -1,85 +1,150 @@
-# User Guides Index
+# GUIDES Documentation Index
 
-**Last Updated**: 2025-11-15
-
-This directory contains user guides and documentation organized by topic with clear index numbers for easy access.
-
-## 📚 Quick Access Guide
-
-### 01. [Admin Dashboard Access](./01-admin-dashboard-access.md)
-How to access and use the admin dashboard.
-
-**Available in**: [English](./01-admin-dashboard-access.md) | [한국어](./ko/01-admin-dashboard-access.md)
+| Document Information | |
+|---------------------|------------------------|
+| **Document ID** | GUD-000-Index |
+| **Version** | 2.0 |
+| **Status** | Current |
+| **Last Updated** | 2025-12-24 |
+| **Maintainer** | Documentation Team |
 
 ---
 
-### 02. [Routing Verification](./02-routing-verification.md)
-Complete routing verification report showing all connected features and routes.
+## Table of Contents
 
-**Available in**: [English](./02-routing-verification.md) | [한국어](./ko/02-routing-verification.md)
-
----
-
-### 03. [UX Navigation Improvements](./03-ux-navigation-improvements.md)
-UX improvements made to navigation, back buttons, and mobile menu.
-
-**Available in**: [English](./03-ux-navigation-improvements.md) | [한국어](./ko/03-ux-navigation-improvements.md)
+1. [Overview](#1-overview)
+2. [Document Catalog](#2-document-catalog)
+3. [Quick Reference](#3-quick-reference)
+4. [Language Support](#4-language-support)
+5. [Related Documents](#5-related-documents)
 
 ---
 
-### 04. [Pipeline Improvements](./04-pipeline-improvements.md)
-Summary of Azure Pipeline improvements and critical fixes.
+## 1. Overview
 
-**Available in**: [English](./04-pipeline-improvements.md) | [한국어](./ko/04-pipeline-improvements.md)
+### 1.1 Purpose
 
----
+This index provides organized access to all user guides for the Le Restaurant project. Documents follow the `GUD-<NUMBER>-<Title>.md` naming convention.
 
-### 05. [Azure Pipeline Review](./05-azure-pipeline-review.md)
-Comprehensive senior developer review of Azure Pipeline architecture, security, and performance.
+### 1.2 Scope
 
-**Available in**: [English](./05-azure-pipeline-review.md) | [한국어](./ko/05-azure-pipeline-review.md)
-
----
-
-## 🌐 Language Support
-
-All guides are available in multiple languages:
-
-- **English** (Primary): `./01-*.md`, `./02-*.md`, etc.
-- **한국어 (Korean)**: `./ko/01-*.md`, `./ko/02-*.md`, etc.
-
-## 📋 Guide Categories
-
-### User Guides
-- [01. Admin Dashboard Access](./01-admin-dashboard-access.md) - How to access admin features
-
-### Technical Documentation
-- [02. Routing Verification](./02-routing-verification.md) - Route mapping and verification
-- [03. UX Navigation Improvements](./03-ux-navigation-improvements.md) - UX enhancements
-
-### DevOps & Deployment
-- [04. Pipeline Improvements](./04-pipeline-improvements.md) - CI/CD improvements
-- [05. Azure Pipeline Review](./05-azure-pipeline-review.md) - Comprehensive pipeline review
+This directory contains:
+- User guides for application features
+- Technical documentation for developers
+- DevOps and deployment guides
 
 ---
 
-## 🔗 Related Documentation
+## 2. Document Catalog
 
-- [Main Documentation Index](../INDEX.md) | [00. Master Index](../00-MASTER-INDEX.md)
-- **[10. Azure Deployment Guide](../10-AZURE-DEPLOYMENT-GUIDE.md)** - Complete Azure deployment instructions
-- **[11. Deployment Checklist](../11-DEPLOYMENT-CHECKLIST.md)** - Pre-deployment verification
-- **[12. Pipeline Setup Guide](../pipeline_guide/AZURE_PIPELINE_SETUP.md)** - CI/CD pipeline configuration
+### 2.1 User Guides
+
+| Document ID | Title | Description |
+|-------------|-------|-------------|
+| GUD-001 | [Admin Dashboard Access](./GUD-001-Admin-Dashboard-Access.md) | Access and navigate the admin dashboard |
+
+### 2.2 Technical Documentation
+
+| Document ID | Title | Description |
+|-------------|-------|-------------|
+| GUD-002 | [Routing Verification](./GUD-002-Routing-Verification.md) | Route mapping and verification report |
+| GUD-003 | [UX Navigation Improvements](./GUD-003-UX-Navigation-Improvements.md) | UX enhancements documentation |
+
+### 2.3 DevOps and Deployment
+
+| Document ID | Title | Description |
+|-------------|-------|-------------|
+| GUD-004 | [Pipeline Improvements](./GUD-004-Pipeline-Improvements.md) | CI/CD pipeline improvements |
+| GUD-005 | [Azure Pipeline Review](./GUD-005-Azure-Pipeline-Review.md) | Comprehensive pipeline review |
 
 ---
 
-## 📝 How to Use This Index
+## 3. Quick Reference
 
-1. **Find the guide number** (01-05) based on what you need
-2. **Click the link** to access the English version
-3. **For Korean**, navigate to `./ko/` directory with the same number
-4. **Follow cross-references** at the bottom of each guide for related topics
+### 3.1 By User Role
+
+| Role | Recommended Documents |
+|------|----------------------|
+| Administrator | GUD-001 |
+| Developer | GUD-002, GUD-003 |
+| DevOps Engineer | GUD-004, GUD-005 |
+
+### 3.2 By Topic
+
+| Topic | Documents |
+|-------|-----------|
+| Dashboard Access | GUD-001 |
+| Navigation | GUD-002, GUD-003 |
+| Deployment | GUD-004, GUD-005 |
 
 ---
 
-**Note**: All guides are numbered sequentially (01-05) for easy navigation. Guides are kept up-to-date and reflect the current state of the application.
+## 4. Language Support
+
+### 4.1 Available Languages
+
+| Language | Directory | Status |
+|----------|-----------|--------|
+| English | `./*.md` | Primary |
+| Korean | `./ko/*.md` | Available |
+
+### 4.2 Korean Versions
+
+| English | Korean |
+|---------|--------|
+| GUD-001-Admin-Dashboard-Access.md | ko/01-admin-dashboard-access.md |
+| GUD-002-Routing-Verification.md | ko/02-routing-verification.md |
+| GUD-003-UX-Navigation-Improvements.md | ko/03-ux-navigation-improvements.md |
+| GUD-004-Pipeline-Improvements.md | ko/04-pipeline-improvements.md |
+| GUD-005-Azure-Pipeline-Review.md | ko/05-azure-pipeline-review.md |
+
+---
+
+## 5. Related Documents
+
+### 5.1 Design Documentation
+
+| Document ID | Title | Location |
+|-------------|-------|----------|
+| DES-001 | Project Overview | [../DESIGN/DES-001-Project-Overview.md](../DESIGN/DES-001-Project-Overview.md) |
+| DES-003 | Azure DevOps Pipeline | [../DESIGN/DES-003-Azure-DevOps-Pipeline.md](../DESIGN/DES-003-Azure-DevOps-Pipeline.md) |
+
+### 5.2 Testing Documentation
+
+| Document ID | Title | Location |
+|-------------|-------|----------|
+| TST-002 | Test Strategy | [../TESTING/TST-002-Test-Strategy.md](../TESTING/TST-002-Test-Strategy.md) |
+
+### 5.3 Master Index
+
+For complete project documentation, see:
+- [00-MASTER-INDEX.md](../00-MASTER-INDEX.md)
+
+---
+
+## 6. Usage Guide
+
+### 6.1 Getting Started
+
+1. **Find the guide** by browsing the catalog in Section 2
+2. **Check the language** - all guides available in English and Korean
+3. **Follow cross-references** at the end of each guide for related topics
+
+### 6.2 Document Naming Convention
+
+All guide documents follow this format:
+
+```
+GUD-<NUMBER>-<Title>.md
+```
+
+| Component | Description |
+|-----------|-------------|
+| GUD | Document type prefix (Guide) |
+| NUMBER | Three-digit sequential number |
+| Title | Descriptive title with hyphens |
+
+---
+
+**End of Document**
 

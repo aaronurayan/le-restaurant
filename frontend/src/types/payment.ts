@@ -1,17 +1,23 @@
+/**
+ * Payment Types (F106)
+ * Data models matching backend PaymentDto.java exactly
+ */
+
 export interface Payment {
   id: number;
   orderId: number;
   amount: number;
-  currency: string;
-  method: PaymentMethod;
-  status: PaymentStatus;
+  paymentMethod: PaymentMethod;
   transactionId?: string;
+  status: PaymentStatus;
+  paymentDetails?: string;
+  paymentTime?: string;
   processedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  customerId?: number;  // F106 Enhancement: Customer ID for admin tracking
-  customerEmail: string;
-  customerName: string;
+  gatewayResponse?: string;
+  // Customer information (F106 Enhancement)
+  customerId?: number;
+  customerName?: string;
+  customerEmail?: string;
 }
 
 export enum PaymentMethod {
@@ -34,10 +40,10 @@ export enum PaymentStatus {
 export interface CreatePaymentRequest {
   orderId: number;
   amount: number;
-  currency: string;
-  method: PaymentMethod;
-  customerEmail: string;
-  customerName: string;
+  paymentMethod: PaymentMethod;
+  paymentDetails?: string;
+  customerEmail?: string;
+  customerName?: string;
 }
 
 export interface UpdatePaymentRequest {

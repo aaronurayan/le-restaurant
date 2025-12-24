@@ -1,8 +1,29 @@
-# 🚀 Azure DevOps Pipeline Configuration
+# DES-003 Azure DevOps Pipeline Configuration
 
-> **Reference Document**: Complete Azure DevOps CI/CD pipeline setup for Le Restaurant Java application.
+| Document Information | |
+|---------------------|------------------------|
+| **Document ID** | DES-003 |
+| **Version** | 2.0 |
+| **Status** | Approved |
+| **Last Updated** | 2025-12-24 |
+| **Author** | DevOps Team |
+| **Category** | Design Documentation |
 
-## 📋 Pipeline Overview
+---
+
+## Table of Contents
+
+1. [Pipeline Overview](#pipeline-overview)
+2. [CI/CD Workflow](#cicd-workflow)
+3. [Pipeline Configuration](#pipeline-configuration-files)
+4. [Pipeline Features](#pipeline-features)
+5. [Pipeline Monitoring](#pipeline-monitoring)
+6. [Security Configuration](#security-configuration)
+7. [Rollback Strategy](#rollback-strategy)
+
+---
+
+## 1. Pipeline Overview
 
 ### Pipeline Strategy
 **Approach**: GitFlow with Feature Branches  

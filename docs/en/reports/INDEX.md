@@ -6,7 +6,7 @@
 ![Total Reports](https://img.shields.io/badge/reports-13-blue)
 ![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
 
-**Last Updated**: 2025-01-XX  
+**Last Updated**: 2025-12-24  
 **Document Number**: 51-EN  
 **Total Reports**: 13
 
@@ -158,7 +158,7 @@ The following reports have been consolidated into the latest reports and removed
 **Note**: All legacy reports have been consolidated into the latest reports and removed. All reports are now organized in `en/reports/` directory with English headers. Some reports may still contain Korean content in the body, but headers and structure are standardized in English.
 
 **Total Reports**: 13  
-**Last Reorganization**: 2025-01-XX  
+**Last Reorganization**: 2025-12-24  
 **Numbering**: Reports are referenced in Master Index as 51-59+
 
 ---

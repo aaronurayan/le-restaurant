@@ -5,7 +5,7 @@
 ![Document Number](https://img.shields.io/badge/document-51--RU-blue)
 ![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
 
-**Последнее обновление**: 2025-01-XX  
+**Последнее обновление**: 2025-12-24  
 **Номер документа**: 51-RU
 
 > **📖 Связанные**: [00. Мастер-индекс](../00-MASTER-INDEX-ru.md) | [Английские отчеты](../en/reports/INDEX.md)

@@ -5,34 +5,34 @@
 
 ---
 
-## 📋 최종 완료 현황
+## 📋 Final Completion Status
 
-### ✅ 모든 DTO Validation 적용 완료
+### ✅ All DTO Validation Applied
 
-#### Create DTOs (8개)
+#### Create DTOs (8)
 1. ✅ `UserCreateRequestDto` - `@NotBlank`, `@Email`, `@Size(min=8)`
 2. ✅ `AuthRequestDto` - `@NotBlank`, `@Email`
 3. ✅ `OrderCreateRequestDto` - `@NotNull`, `@NotEmpty`, `@DecimalMin`, `@Valid`
 4. ✅ `OrderItemRequestDto` - `@NotNull`, `@Min(1)`
 5. ✅ `PaymentRequestDto` - `@NotNull`, `@DecimalMin(0.01)`
 6. ✅ `DeliveryCreateRequestDto` - `@NotNull`, `@DecimalMin`, `@Min(1)`
-7. ✅ `DeliveryAddressCreateRequestDto` - `@NotNull`, `@NotBlank` (주소 필드)
+7. ✅ `DeliveryAddressCreateRequestDto` - `@NotNull`, `@NotBlank` (address fields)
 8. ✅ `ReservationCreateRequestDto` - `@NotNull`, `@Min(1)`, `@Email`
 9. ✅ `MenuItemCreateRequestDto` - `@NotBlank`, `@NotNull`, `@DecimalMin(0.01)`
 
-#### Update DTOs (4개)
-1. ✅ `UserUpdateRequestDto` - `@Size(min=1)` (조건부)
-2. ✅ `MenuItemUpdateRequestDto` - `@Size(min=1)`, `@DecimalMin(0.01)` (조건부)
-3. ✅ `OrderUpdateRequestDto` - (필드가 optional이므로 validation 불필요)
-4. ✅ `DeliveryUpdateRequestDto` - (필드가 optional이므로 validation 불필요)
+#### Update DTOs (4)
+1. ✅ `UserUpdateRequestDto` - `@Size(min=1)` (conditional)
+2. ✅ `MenuItemUpdateRequestDto` - `@Size(min=1)`, `@DecimalMin(0.01)` (conditional)
+3. ✅ `OrderUpdateRequestDto` - (Fields are optional, validation not required)
+4. ✅ `DeliveryUpdateRequestDto` - (Fields are optional, validation not required)
 
-#### Action DTOs (2개)
+#### Action DTOs (2)
 1. ✅ `ReservationApprovalRequestDto` - `@NotNull` (approved, approverId)
-2. ✅ `ReservationDenialRequestDto` - `@NotBlank` (denialReason) - 이미 적용됨
+2. ✅ `ReservationDenialRequestDto` - `@NotBlank` (denialReason) - Already applied
 
-### ✅ 모든 Controller @Valid 적용 완료
+### ✅ All Controller @Valid Applied
 
-#### Create Endpoints (9개)
+#### Create Endpoints (9)
 1. ✅ `AuthController`: `/login`, `/register`
 2. ✅ `UserController`: `createUser`
 3. ✅ `OrderController`: `createOrder`
@@ -42,64 +42,64 @@
 7. ✅ `ReservationController`: `createReservation`
 8. ✅ `MenuController`: `createMenuItem`
 
-#### Update Endpoints (5개)
+#### Update Endpoints (5)
 1. ✅ `UserController`: `updateUser`
 2. ✅ `MenuController`: `updateMenuItem`
 3. ✅ `OrderController`: `updateOrder`
 4. ✅ `DeliveryController`: `updateDeliveryStatus`
 5. ✅ `DeliveryAddressController`: `updateAddress`
 
-#### Action Endpoints (2개)
+#### Action Endpoints (2)
 1. ✅ `ReservationController`: `approveReservation` (ReservationApprovalRequestDto)
 2. ✅ `ReservationController`: `rejectReservation` (ReservationDenialRequestDto)
 
 ---
 
-## 📊 최종 통계
+## 📊 Final Statistics
 
-### Validation 적용 현황
-- **Create DTO**: 9개 ✅
-- **Update DTO**: 4개 ✅
-- **Action DTO**: 2개 ✅
-- **총 DTO**: 15개 ✅
+### Validation Implementation Status
+- **Create DTO**: 9 ✅
+- **Update DTO**: 4 ✅
+- **Action DTO**: 2 ✅
+- **Total DTO**: 15 ✅
 
-### Controller @Valid 적용 현황
-- **Create Endpoints**: 9개 ✅
-- **Update Endpoints**: 5개 ✅
-- **Action Endpoints**: 2개 ✅
-- **총 Endpoints**: 16개 ✅
+### Controller @Valid Implementation Status
+- **Create Endpoints**: 9 ✅
+- **Update Endpoints**: 5 ✅
+- **Action Endpoints**: 2 ✅
+- **Total Endpoints**: 16 ✅
 
-### 코드 개선
-- **제거된 중복 코드**: ~60줄
-- **추가된 Validation 어노테이션**: ~50개
-- **개선된 Service 메서드**: 3개
-- **GlobalExceptionHandler**: 1개 ✅
-
----
-
-## 🎯 Validation 규칙 요약
-
-### 필수 필드 검증
-- `@NotNull`: Long, Integer, Boolean, Enum 타입
-- `@NotBlank`: String 타입 (null, empty, whitespace 모두 거부)
-- `@NotEmpty`: Collection 타입
-
-### 값 범위 검증
-- `@Size(min=1)`: 문자열 최소 길이
-- `@Size(min=8)`: 비밀번호 최소 길이
-- `@Min(value=1)`: 숫자 최소값
-- `@DecimalMin(value="0.01")`: 금액 최소값
-- `@DecimalMin(value="0.0")`: 음수 방지
-
-### 형식 검증
-- `@Email`: 이메일 형식 검증
-
-### 중첩 객체 검증
-- `@Valid`: 중첩된 DTO나 Collection 내부 객체 검증
+### Code Improvements
+- **Removed Duplicate Code**: ~60 lines
+- **Added Validation Annotations**: ~50
+- **Improved Service Methods**: 3
+- **GlobalExceptionHandler**: 1 ✅
 
 ---
 
-## 🔍 검증 완료 체크리스트
+## 🎯 Validation Rules Summary
+
+### Required Field Validation
+- `@NotNull`: Long, Integer, Boolean, Enum types
+- `@NotBlank`: String type (rejects null, empty, and whitespace)
+- `@NotEmpty`: Collection types
+
+### Value Range Validation
+- `@Size(min=1)`: Minimum string length
+- `@Size(min=8)`: Minimum password length
+- `@Min(value=1)`: Minimum numeric value
+- `@DecimalMin(value="0.01")`: Minimum amount value
+- `@DecimalMin(value="0.0")`: Prevent negative values
+
+### Format Validation
+- `@Email`: Email format validation
+
+### Nested Object Validation
+- `@Valid`: Validate nested DTOs or objects within Collections
+
+---
+
+## 🔍 Verification Checklist
 
 ### DTO Validation
 - [x] UserCreateRequestDto
@@ -127,31 +127,31 @@
 - [x] MenuController (2 endpoints)
 
 ### Infrastructure
-- [x] GlobalExceptionHandler 구현
-- [x] spring-boot-starter-validation 의존성 추가
-- [x] Service 레이어 중복 코드 제거
-- [x] Payment 검증 로직 강화
+- [x] GlobalExceptionHandler implementation
+- [x] spring-boot-starter-validation dependency added
+- [x] Service layer duplicate code removed
+- [x] Payment validation logic enhanced
 
 ---
 
-## ✅ 최종 검증
+## ✅ Final Verification
 
-- ✅ 모든 주요 DTO에 validation 어노테이션 추가
-- ✅ 모든 주요 Controller에 @Valid 추가
-- ✅ GlobalExceptionHandler 구현
-- ✅ Payment 검증 로직 강화
-- ✅ Service 레이어 중복 코드 제거
-- ✅ Update DTO에 조건부 validation 추가
-- ✅ Action DTO에 validation 추가
-- ✅ DeliveryAddress DTO에 validation 추가
-- ✅ Linter 에러 없음
-- ✅ 비즈니스 로직 검증 유지
+- ✅ Added validation annotations to all major DTOs
+- ✅ Added @Valid to all major Controllers
+- ✅ Implemented GlobalExceptionHandler
+- ✅ Enhanced Payment validation logic
+- ✅ Removed duplicate code from Service layer
+- ✅ Added conditional validation to Update DTOs
+- ✅ Added validation to Action DTOs
+- ✅ Added validation to DeliveryAddress DTOs
+- ✅ No linter errors
+- ✅ Retained business logic validation
 
-**완료율**: 100% ✅
+**Completion Rate**: 100% ✅
 
 ---
 
-## 📝 다음 단계 (선택 사항)
+## 📝 Next Steps (Optional)
 
 ### 1. Custom Validators
 - [ ] Password strength custom validator
@@ -160,15 +160,15 @@
 
 ### 2. Cross-field Validation
 - [ ] Reservation: guest email required if customerId is null
-- [ ] Payment: amount must match order total (이미 Service에서 처리)
+- [ ] Payment: amount must match order total (already handled in Service)
 
-### 3. 테스트 강화
-- [ ] Validation 실패 케이스 테스트
-- [ ] Payment 검증 로직 테스트
-- [ ] GlobalExceptionHandler 테스트
+### 3. Test Enhancement
+- [ ] Validation failure case tests
+- [ ] Payment validation logic tests
+- [ ] GlobalExceptionHandler tests
 
 ---
 
-**최종 상태**: Production Ready ✅  
-**모든 Validation 적용 완료**: 2025-01-27
+**Final Status**: Production Ready ✅  
+**All Validation Applied**: 2025-11-27
 

@@ -6,7 +6,7 @@
 ![Total Documents](https://img.shields.io/badge/documents-50%2B-blue)
 ![Multilingual](https://img.shields.io/badge/multilingual-4%20languages-orange)
 
-**最終更新**: 2025-01-XX  
+**最終更新**: 2025-12-24  
 **バージョン**: 2.0  
 **総ドキュメント数**: 50+
 
@@ -115,6 +115,6 @@
 
 ---
 
-**最終更新**: 2025-01-XX  
+**最終更新**: 2025-12-24  
 **メンテナンス**: 開発チーム
 

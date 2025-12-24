@@ -6,7 +6,7 @@
 ![Total Guides](https://img.shields.io/badge/guides-5-blue)
 ![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
 
-**최종 업데이트**: 2025-01-XX  
+**최종 업데이트**: 2025-12-24  
 **문서 번호**: 60-KO
 
 > **📖 관련**: [00. 마스터 인덱스](../00-MASTER-INDEX-ko.md) | [영어 가이드](../en/guides/README.md)

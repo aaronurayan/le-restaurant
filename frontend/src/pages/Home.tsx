@@ -4,7 +4,6 @@ import { Hero } from '../components/organisms/Hero';
 import { CategoryFilter } from '../components/organisms/CategoryFilter';
 import { MenuGrid } from '../components/molecules/MenuGrid';
 import { OrderStatus } from '../components/organisms/OrderStatus';
-import { mockOrders } from '../data/mockData';
 import { MenuItem } from '../types';
 import { useMenuApi } from '../hooks/useMenuApi';
 
@@ -21,7 +20,7 @@ export const Home: React.FC<HomeProps> = ({
   onFavorite,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  
+
   // API hook usage
   const {
     menuItems,
@@ -40,7 +39,7 @@ export const Home: React.FC<HomeProps> = ({
 
   const handleCategorySelect = async (categoryId: string | null) => {
     setSelectedCategory(categoryId);
-    
+
     if (categoryId) {
       await loadMenuItemsByCategory(categoryId);
     }

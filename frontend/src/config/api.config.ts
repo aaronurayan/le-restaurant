@@ -28,7 +28,7 @@ export const getApiBaseUrl = (): string => {
     // Remove trailing /api if present (API_ENDPOINTS already includes /api)
     return url.replace(/\/api$/, '');
   }
-  
+
   // Development: localhost
   const url = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
   // Remove trailing /api if present (API_ENDPOINTS already includes /api)
@@ -67,7 +67,7 @@ export const FEATURE_FLAGS = {
   enableDebugMode: import.meta.env.DEV,
   enableAnalytics: import.meta.env.PROD,
   enableErrorReporting: import.meta.env.PROD,
-  enableMockDataFallback: true,
+  enableMockDataFallback: false, // Backend is now fully implemented
 } as const;
 
 // =============================================================================
@@ -81,7 +81,7 @@ export const FEATURE_FLAGS = {
 export const API_ENDPOINTS = {
   // Health Check
   health: '/api/health',
-  
+
   // Authentication
   auth: {
     login: '/api/auth/login',
@@ -89,7 +89,7 @@ export const API_ENDPOINTS = {
     logout: '/api/auth/logout',
     refresh: '/api/auth/refresh',
   },
-  
+
   // Users
   users: {
     base: '/api/users',
@@ -100,7 +100,7 @@ export const API_ENDPOINTS = {
     updateStatus: (id: number) => `/api/users/${id}/status`,
     checkEmail: (email: string) => `/api/users/exists/${encodeURIComponent(email)}`,
   },
-  
+
   // Menu
   menu: {
     base: '/api/menu-items',
@@ -109,7 +109,7 @@ export const API_ENDPOINTS = {
     search: (query: string) => `/api/menu-items?search=${encodeURIComponent(query)}`,
     byCategory: (category: string) => `/api/menu-items?category=${encodeURIComponent(category)}`,
   },
-  
+
   // Orders
   orders: {
     base: '/api/orders',
@@ -118,7 +118,7 @@ export const API_ENDPOINTS = {
     byStatus: (status: string) => `/api/orders/status/${status}`,
     updateStatus: (id: number) => `/api/orders/${id}/status`,
   },
-  
+
   // Payments
   payments: {
     base: '/api/payments',
@@ -128,7 +128,7 @@ export const API_ENDPOINTS = {
     process: (id: number) => `/api/payments/${id}/process`,
     refund: (id: number) => `/api/payments/${id}/refund`,
   },
-  
+
   // Reservations
   reservations: {
     base: '/api/reservations',
@@ -144,7 +144,7 @@ export const API_ENDPOINTS = {
     availability: (date: string, time: string, partySize: number) => `/api/reservations/availability?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}&partySize=${partySize}`,
     test: '/api/reservations/test',
   },
-  
+
   // Cart
   cart: {
     base: '/api/cart',
@@ -154,7 +154,7 @@ export const API_ENDPOINTS = {
     removeItem: (itemId: string) => `/api/cart/items/${itemId}`,
     clear: '/api/cart/clear',
   },
-  
+
   // Delivery Persons
   deliveryPersons: {
     base: '/api/delivery/persons',
@@ -162,7 +162,7 @@ export const API_ENDPOINTS = {
     updateStatus: (id: string) => `/api/delivery/persons/${id}/status`,
     assignments: '/api/delivery/assignments',
   },
-  
+
   // Delivery
   delivery: {
     base: '/api/deliveries',
@@ -173,7 +173,7 @@ export const API_ENDPOINTS = {
     assign: (id: string) => `/api/deliveries/${id}/assign`,
     progress: (id: string) => `/api/deliveries/${id}/progress`,
   },
-  
+
   // Delivery Addresses
   deliveryAddresses: {
     base: '/api/delivery-addresses',

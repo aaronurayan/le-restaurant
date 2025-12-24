@@ -6,64 +6,64 @@
 
 ---
 
-## 📋 Entity 목록
+## 📋 Entity List
 
-총 **15개** Entity 파일 확인:
+Total **15** Entity files identified:
 
-### ✅ Core Entities (7개)
-1. **User.java** - 사용자 정보
-2. **Order.java** - 주문 정보
-3. **OrderItem.java** - 주문 항목
-4. **MenuItem.java** - 메뉴 항목
-5. **Payment.java** - 결제 정보
-6. **Delivery.java** - 배송 정보
-7. **Reservation.java** - 예약 정보
+### ✅ Core Entities (7)
+1. **User.java** - User information
+2. **Order.java** - Order information
+3. **OrderItem.java** - Order items
+4. **MenuItem.java** - Menu items
+5. **Payment.java** - Payment information
+6. **Delivery.java** - Delivery information
+7. **Reservation.java** - Reservation information
 
-### ✅ Supporting Entities (8개)
-8. **DeliveryAddress.java** - 배송 주소
-9. **DeliveryDriver.java** - 배송 기사
-10. **RestaurantTable.java** - 레스토랑 테이블
-11. **MenuCategory.java** - 메뉴 카테고리
-12. **PaymentRefund.java** - 환불 정보
-13. **UserSession.java** - 사용자 세션
-14. **CustomerPreference.java** - 고객 선호도
-15. **AuditLog.java** - 감사 로그
+### ✅ Supporting Entities (8)
+8. **DeliveryAddress.java** - Delivery address
+9. **DeliveryDriver.java** - Delivery driver
+10. **RestaurantTable.java** - Restaurant table
+11. **MenuCategory.java** - Menu category
+12. **PaymentRefund.java** - Refund information
+13. **UserSession.java** - User session
+14. **CustomerPreference.java** - Customer preferences
+15. **AuditLog.java** - Audit log
 
 ---
 
-## 🔍 발견된 문제점
+## 🔍 Identified Issues
 
 ### 🔴 Critical Issues
 
-#### 1. 잘못된 위치의 파일: `DeliveryService` ⚠️
+#### 1. Misplaced File: `DeliveryService` ⚠️
 
-**문제**:
-- `DeliveryService` 파일이 `entity/` 디렉토리에 있음
-- 실제로는 `Service` 클래스이므로 `service/` 디렉토리에 있어야 함
-- 패키지 선언: `package com.lerestaurant.le_restaurant_backend.service;` ✅
-- 파일 위치: `entity/DeliveryService` ❌
+**Issue**:
+- `DeliveryService` file is located in `entity/` directory
+- It's actually a `Service` class, so it should be in `service/` directory
+- Package declaration: `package com.lerestaurant.le_restaurant_backend.service;` ✅
+- File location: `entity/DeliveryService` ❌
 
-**영향도**: 높음  
-**우선순위**: 높음
+**Impact**: High  
+**Priority**: High
 
-**수정 필요**:
+**Fix Required**:
 ```bash
-# 파일 이동 필요
+# File move required
 mv backend/src/main/java/com/lerestaurant/le_restaurant_backend/entity/DeliveryService \
    backend/src/main/java/com/lerestaurant/le_restaurant_backend/service/DeliveryService.java
 ```
 
 ---
 
-## ✅ 잘 구현된 부분
+## ✅ Well-Implemented Areas
 
-### 1. JPA 어노테이션 사용
-- ✅ `@Entity`, `@Table` 적절히 사용
-- ✅ `@Id`, `@GeneratedValue` ID 생성 전략 명확
-- ✅ `@Column` 어노테이션으로 컬럼 매핑 명확
-- ✅ `@ManyToOne`, `@OneToMany` 관계 매핑 적절
+### 1. JPA Annotation Usage
+- ✅ `@Entity`, `@Table` used appropriately
+- ✅ `@Id`, `@GeneratedValue` ID generation strategy is clear
+- ✅ `@Column` annotation for clear column mapping
+- ✅ `@ManyToOne`, `@OneToMany` relationship mapping appropriate
 
-### 2. Enum 타입 사용
+### 2. Enum Type Usage
 - ✅ `UserRole`, `UserStatus` (User)
 - ✅ `OrderType`, `OrderStatus` (Order)
 - ✅ `PaymentMethod`, `PaymentStatus` (Payment)
@@ -72,7 +72,7 @@ mv backend/src/main/java/com/lerestaurant/le_restaurant_backend/entity/DeliveryS
 - ✅ `AddressType` (DeliveryAddress)
 - ✅ `ActionType` (AuditLog)
 
-### 3. 관계 매핑 (Relationships)
+### 3. Relationship Mapping
 
 #### User Entity
 ```java
@@ -116,7 +116,7 @@ private DeliveryAddress deliveryAddress;
 private DeliveryDriver driver;
 ```
 
-### 4. 자동 타임스탬프 관리
+### 4. Automatic Timestamp Management
 
 #### MenuItem.java
 ```java
@@ -132,28 +132,28 @@ protected void onUpdate() {
 }
 ```
 
-### 5. 데이터 타입 적절성
-- ✅ `BigDecimal` 사용 (금액 필드)
-- ✅ `OffsetDateTime` 사용 (타임스탬프)
-- ✅ `LocalDate`, `LocalTime` 사용 (Reservation)
+### 5. Appropriate Data Types
+- ✅ `BigDecimal` used (for monetary fields)
+- ✅ `OffsetDateTime` used (for timestamps)
+- ✅ `LocalDate`, `LocalTime` used (for Reservation)
 
 ---
 
-## ⚠️ 개선 권장 사항
+## ⚠️ Improvement Recommendations
 
-### 1. Lombok 사용 일관성
+### 1. Lombok Usage Consistency
 
-**현재 상태**:
-- `Delivery.java`: `@Data` 사용 ✅
-- 나머지 Entity: 수동 getter/setter ❌
+**Current Status**:
+- `Delivery.java`: Uses `@Data` ✅
+- Other Entities: Manual getter/setter ❌
 
-**권장사항**:
-- 모든 Entity에 Lombok 적용 또는
-- 모든 Entity에서 Lombok 제거 (일관성 유지)
+**Recommendation**:
+- Apply Lombok to all Entities, or
+- Remove Lombok from all Entities (maintain consistency)
 
-**예시**:
+**Example**:
 ```java
-// Option 1: Lombok 사용
+// Option 1: Use Lombok
 @Entity
 @Data
 @Table(name = "orders")
@@ -161,48 +161,48 @@ public class Order {
     // ...
 }
 
-// Option 2: 수동 getter/setter (현재 대부분)
+// Option 2: Manual getter/setter (current majority)
 @Entity
 @Table(name = "orders")
 public class Order {
-    // getter/setter 수동 작성
+    // Manual getter/setter
 }
 ```
 
-### 2. Delivery Entity 개선
+### 2. Delivery Entity Improvement
 
-**현재 문제**:
+**Current Issue**:
 ```java
-// 중복 필드
+// Duplicate fields
 private String customerName;
 private String phoneNumber;
 private String address;
 
-// 이미 관계로 연결되어 있음
+// Already connected via relationships
 @ManyToOne
 @JoinColumn(name = "order_id")
-private Order order;  // order.customer로 접근 가능
+private Order order;  // Accessible via order.customer
 
 @ManyToOne
 @JoinColumn(name = "delivery_address_id")
-private DeliveryAddress deliveryAddress;  // address 정보 포함
+private DeliveryAddress deliveryAddress;  // Contains address info
 ```
 
-**권장사항**:
-- 중복 필드 제거 또는
-- `@Transient`로 표시하여 DB에 저장하지 않도록 설정
+**Recommendation**:
+- Remove duplicate fields, or
+- Mark with `@Transient` to prevent DB storage
 
-### 3. Index 추가 권장
+### 3. Index Addition Recommended
 
-**현재**:
+**Current**:
 ```java
-// User.java만 index 있음
+// Only User.java has index
 @Table(name = "users", indexes = {
     @Index(name = "uk_users_email", columnList = "email", unique = true)
 })
 ```
 
-**권장**:
+**Recommended**:
 ```java
 // Order.java
 @Table(name = "orders", indexes = {
@@ -219,9 +219,9 @@ private DeliveryAddress deliveryAddress;  // address 정보 포함
 })
 ```
 
-### 4. Validation 어노테이션 추가
+### 4. Add Validation Annotations
 
-**권장**:
+**Recommended**:
 ```java
 @Entity
 @Table(name = "orders")
@@ -237,113 +237,113 @@ public class Order {
 }
 ```
 
-### 5. Reservation Entity 개선
+### 5. Reservation Entity Improvement
 
-**현재**:
+**Current**:
 ```java
-// 중복 메서드
+// Duplicate methods
 public User getApprovedBy() { return confirmedBy; }
 public void setApprovedBy(User approvedBy) { this.confirmedBy = approvedBy; }
 public Integer getNumberOfGuests() { return partySize; }
 public void setNumberOfGuests(Integer numberOfGuests) { this.partySize = numberOfGuests; }
 ```
 
-**권장사항**: 중복 메서드 제거 또는 명확한 네이밍 통일
+**Recommendation**: Remove duplicate methods or unify naming conventions
 
 ---
 
-## 📊 Entity별 상세 분석
+## 📊 Entity-by-Entity Analysis
 
 ### ✅ User.java
-- **상태**: ✅ 양호
-- **관계**: `@OneToMany` Order (LAZY)
-- **Enum**: `UserRole`, `UserStatus`
+- **Status**: ✅ Good
+- **Relationships**: `@OneToMany` Order (LAZY)
+- **Enums**: `UserRole`, `UserStatus`
 - **Index**: Email unique index ✅
-- **개선점**: 없음
+- **Improvements**: None needed
 
 ### ✅ Order.java
-- **상태**: ✅ 양호
-- **관계**: `@ManyToOne` User, RestaurantTable, `@OneToMany` OrderItem
-- **Enum**: `OrderType`, `OrderStatus`
+- **Status**: ✅ Good
+- **Relationships**: `@ManyToOne` User, RestaurantTable, `@OneToMany` OrderItem
+- **Enums**: `OrderType`, `OrderStatus`
 - **Cascade**: `CascadeType.ALL`, `orphanRemoval = true` ✅
-- **개선점**: Index 추가 권장
+- **Improvements**: Index addition recommended
 
 ### ✅ Payment.java
-- **상태**: ✅ 양호
-- **관계**: `@ManyToOne` Order (optional = false)
-- **Enum**: `PaymentMethod`, `PaymentStatus`
-- **개선점**: Index 추가 권장
+- **Status**: ✅ Good
+- **Relationships**: `@ManyToOne` Order (optional = false)
+- **Enums**: `PaymentMethod`, `PaymentStatus`
+- **Improvements**: Index addition recommended
 
 ### ✅ Delivery.java
-- **상태**: ⚠️ 개선 필요
-- **문제**: 중복 필드 (customerName, phoneNumber, address)
-- **Lombok**: `@Data` 사용 ✅
-- **개선점**: 중복 필드 제거 또는 `@Transient` 추가
+- **Status**: ⚠️ Needs Improvement
+- **Issue**: Duplicate fields (customerName, phoneNumber, address)
+- **Lombok**: Uses `@Data` ✅
+- **Improvements**: Remove duplicate fields or add `@Transient`
 
 ### ✅ Reservation.java
-- **상태**: ⚠️ 개선 필요
-- **문제**: 중복 메서드 (getApprovedBy, getNumberOfGuests)
-- **개선점**: 중복 메서드 정리
+- **Status**: ⚠️ Needs Improvement
+- **Issue**: Duplicate methods (getApprovedBy, getNumberOfGuests)
+- **Improvements**: Clean up duplicate methods
 
 ### ✅ MenuItem.java
-- **상태**: ✅ 양호
-- **특징**: `@PrePersist`, `@PreUpdate` 사용 ✅
-- **개선점**: 없음
+- **Status**: ✅ Good
+- **Features**: Uses `@PrePersist`, `@PreUpdate` ✅
+- **Improvements**: None needed
 
 ### ✅ DeliveryAddress.java
-- **상태**: ✅ 양호
-- **관계**: `@ManyToOne` User
-- **Enum**: `AddressType`
-- **개선점**: 없음
+- **Status**: ✅ Good
+- **Relationships**: `@ManyToOne` User
+- **Enums**: `AddressType`
+- **Improvements**: None needed
 
 ---
 
-## 🔧 수정 권장 사항 요약
+## 🔧 Recommended Fix Summary
 
-### 즉시 수정 필요 (High Priority)
-1. ✅ `DeliveryService` 파일을 `service/` 디렉토리로 이동
+### Immediate Fix Required (High Priority)
+1. ✅ Move `DeliveryService` file to `service/` directory
 
-### 중기 개선 (Medium Priority)
-2. ⚠️ Delivery Entity 중복 필드 정리
-3. ⚠️ Reservation Entity 중복 메서드 정리
-4. ⚠️ Index 추가 (Order, Payment 등)
+### Medium-term Improvements (Medium Priority)
+2. ⚠️ Clean up Delivery Entity duplicate fields
+3. ⚠️ Clean up Reservation Entity duplicate methods
+4. ⚠️ Add Indexes (Order, Payment, etc.)
 
-### 장기 개선 (Low Priority)
-5. ⚠️ Lombok 사용 일관성 확보
-6. ⚠️ Validation 어노테이션 추가
-
----
-
-## ✅ 전체 평가
-
-| 항목 | 점수 | 비고 |
-|------|------|------|
-| **JPA 어노테이션** | ⭐⭐⭐⭐⭐ (5/5) | 적절히 사용 |
-| **관계 매핑** | ⭐⭐⭐⭐⭐ (5/5) | 명확하고 적절 |
-| **Enum 사용** | ⭐⭐⭐⭐⭐ (5/5) | 적절히 사용 |
-| **데이터 타입** | ⭐⭐⭐⭐⭐ (5/5) | 적절 (BigDecimal, OffsetDateTime) |
-| **파일 구조** | ⭐⭐⭐☆☆ (3/5) | DeliveryService 잘못된 위치 |
-| **코드 일관성** | ⭐⭐⭐⭐☆ (4/5) | Lombok 사용 불일치 |
-
-**종합 점수**: ⭐⭐⭐⭐☆ (4/5)
+### Long-term Improvements (Low Priority)
+5. ⚠️ Ensure Lombok usage consistency
+6. ⚠️ Add Validation annotations
 
 ---
 
-## 📝 결론
+## ✅ Overall Assessment
 
-Entity Layer는 전반적으로 잘 구현되어 있습니다:
-- ✅ JPA 어노테이션 적절히 사용
-- ✅ 관계 매핑 명확
-- ✅ Enum 타입 적절히 사용
-- ✅ 데이터 타입 적절 (BigDecimal, OffsetDateTime)
+| Category | Score | Notes |
+|----------|-------|-------|
+| **JPA Annotations** | ⭐⭐⭐⭐⭐ (5/5) | Used appropriately |
+| **Relationship Mapping** | ⭐⭐⭐⭐⭐ (5/5) | Clear and appropriate |
+| **Enum Usage** | ⭐⭐⭐⭐⭐ (5/5) | Used appropriately |
+| **Data Types** | ⭐⭐⭐⭐⭐ (5/5) | Appropriate (BigDecimal, OffsetDateTime) |
+| **File Structure** | ⭐⭐⭐☆☆ (3/5) | DeliveryService in wrong location |
+| **Code Consistency** | ⭐⭐⭐⭐☆ (4/5) | Lombok usage inconsistent |
 
-**개선 필요 사항**:
-- 🔴 `DeliveryService` 파일 위치 수정 (즉시)
-- ⚠️ Delivery Entity 중복 필드 정리
-- ⚠️ Reservation Entity 중복 메서드 정리
-- ⚠️ Index 추가로 성능 개선
+**Overall Score**: ⭐⭐⭐⭐☆ (4/5)
 
 ---
 
-**다음 단계**: 발견된 문제점 수정 진행
+## 📝 Conclusion
+
+The Entity Layer is generally well-implemented:
+- ✅ JPA annotations used appropriately
+- ✅ Relationship mapping is clear
+- ✅ Enum types used appropriately
+- ✅ Data types appropriate (BigDecimal, OffsetDateTime)
+
+**Areas Needing Improvement**:
+- 🔴 Fix `DeliveryService` file location (Immediate)
+- ⚠️ Clean up Delivery Entity duplicate fields
+- ⚠️ Clean up Reservation Entity duplicate methods
+- ⚠️ Add Indexes for performance improvement
+
+---
+
+**Next Steps**: Proceed with fixing identified issues
 

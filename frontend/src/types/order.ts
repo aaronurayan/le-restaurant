@@ -36,7 +36,6 @@ export interface OrderDto {
   customerId: number;
   customerName: string;
   customerEmail: string;
-  customerPhone: string;
   tableId?: number;
   tableNumber?: string;
   orderType: OrderType;
@@ -50,7 +49,6 @@ export interface OrderDto {
   orderTime: string; // ISO datetime
   estimatedCompletion?: string;
   completedAt?: string;
-  createdAt: string;
 }
 
 export interface OrderItemRequestDto {

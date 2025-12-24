@@ -1,13 +1,32 @@
-# 🎨 Frontend Design Specification - Le Restaurant
+# DES-004 Frontend Design Specification
 
-> **Document Type**: Frontend Engineering Specification  
-> **Target Audience**: Senior Frontend Engineers, UI/UX Developers  
-> **Focus Areas**: Component Architecture, Design System, Performance, Maintainability  
-> **Technology Stack**: React 18+, TypeScript, Tailwind CSS, Vite  
+| Document Information | |
+|---------------------|------------------------|
+| **Document ID** | DES-004 |
+| **Version** | 2.0 |
+| **Status** | Approved |
+| **Last Updated** | 2025-12-24 |
+| **Author** | Frontend Team |
+| **Category** | Design Documentation |
+| **Technology** | React 18+, TypeScript, Tailwind CSS, Vite |
 
 ---
 
-## 🎯 Design Philosophy
+## Table of Contents
+
+1. [Design Philosophy](#design-philosophy)
+2. [Design System](#design-system)
+3. [Component Architecture](#component-architecture)
+4. [Component Library](#component-library)
+5. [Responsive Design](#responsive-design)
+6. [Performance Optimization](#performance-optimization)
+7. [Animation & Interactions](#animation--interactions)
+8. [Accessibility Features](#accessibility-features)
+9. [Testing Strategy](#testing-strategy)
+
+---
+
+## 1. Design Philosophy
 
 ### Core Principles
 - **Component-First Architecture**: Reusable, composable components

@@ -6,7 +6,7 @@
 ![Total Guides](https://img.shields.io/badge/guides-5-blue)
 ![Last Updated](https://img.shields.io/badge/updated-2025--01--XX-lightgrey)
 
-**Last Updated**: 2025-01-XX  
+**Last Updated**: 2025-12-24  
 **Document Number**: 60-EN
 
 > **📖 Related**: [00. Master Index](../00-MASTER-INDEX.md) | [Korean Guides](../ko/guides/README.md)

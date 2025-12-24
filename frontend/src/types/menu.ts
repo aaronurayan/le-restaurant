@@ -8,4 +8,7 @@ export interface MenuItem {
   available: boolean;
   createdAt?: string;
   updatedAt?: string;
+  // Phase 4.4 - Inventory Management
+  stockQuantity?: number;
+  lowStockThreshold?: number;
 }

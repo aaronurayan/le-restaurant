@@ -1,8 +1,31 @@
-# 🏗️ System Architecture Design
+# DES-002 System Architecture Design
 
-> **Reference Document**: Technical architecture specification for Le Restaurant ordering system with Azure DevOps integration.
+| Document Information | |
+|---------------------|------------------------|
+| **Document ID** | DES-002 |
+| **Version** | 2.0 |
+| **Status** | Approved |
+| **Last Updated** | 2025-12-24 |
+| **Author** | Architecture Team |
+| **Category** | Design Documentation |
 
-## 📐 Architecture Overview
+---
+
+## Table of Contents
+
+1. [Architecture Overview](#architecture-overview)
+2. [Architectural Layers](#architectural-layers)
+3. [Component Architecture](#component-architecture)
+4. [Data Architecture](#data-architecture)
+5. [API Architecture](#api-architecture)
+6. [Azure Architecture](#azure-architecture)
+7. [Security Architecture](#security-architecture)
+8. [Performance Architecture](#performance-architecture)
+9. [Integration Architecture](#integration-architecture)
+
+---
+
+## 1. Architecture Overview
 
 ### System Architecture Pattern
 **Pattern**: Layered Architecture with Microservices Readiness  

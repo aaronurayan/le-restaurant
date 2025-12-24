@@ -1,4 +1,40 @@
 // Delivery Management Types
+// ============================================================================
+// Backend DTO (matches DeliveryDto.java)
+// ============================================================================
+export interface DeliveryDto {
+  id: number;
+  orderId: number;
+  orderNumber?: string;
+  orderTotal?: number;
+  addressId?: number;
+  fullAddress?: string;
+  driverId?: number;
+  driverName?: string;
+  driverPhone?: string;
+  deliveryFee?: number;
+  estimatedDeliveryTimeMinutes?: number;
+  status: DeliveryStatusEnum;
+  deliveryInstructions?: string;
+  assignedAt?: string;
+  pickedUpAt?: string;
+  deliveredAt?: string;
+  deliveryPhotoUrl?: string;
+}
+
+export enum DeliveryStatusEnum {
+  PENDING = 'PENDING',
+  ASSIGNED = 'ASSIGNED',
+  PICKED_UP = 'PICKED_UP',
+  IN_TRANSIT = 'IN_TRANSIT',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  FAILED = 'FAILED'
+}
+
+// ============================================================================
+// Frontend Models (used by UI components)
+// ============================================================================
 export interface DeliveryPerson {
   id: string;
   name: string;

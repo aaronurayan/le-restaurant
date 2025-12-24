@@ -5,12 +5,12 @@
 
 ---
 
-## 📋 완료된 개선 사항 요약
+## 📋 Summary of Completed Improvements
 
-### 1. Bean Validation 완전 적용 ✅
+### 1. Complete Bean Validation Implementation ✅
 
-#### 의존성
-- ✅ `spring-boot-starter-validation` 추가
+#### Dependencies
+- ✅ Added `spring-boot-starter-validation`
 
 #### Create DTO Validation
 - ✅ `UserCreateRequestDto`: `@NotBlank`, `@Email`, `@Size(min=8)`
@@ -23,10 +23,10 @@
 - ✅ `MenuItemCreateRequestDto`: `@NotBlank`, `@NotNull`, `@DecimalMin(0.01)`
 
 #### Update DTO Validation
-- ✅ `UserUpdateRequestDto`: `@Size(min=1)` (조건부)
-- ✅ `MenuItemUpdateRequestDto`: `@Size(min=1)`, `@DecimalMin(0.01)` (조건부)
+- ✅ `UserUpdateRequestDto`: `@Size(min=1)` (conditional)
+- ✅ `MenuItemUpdateRequestDto`: `@Size(min=1)`, `@DecimalMin(0.01)` (conditional)
 
-#### Controller @Valid 적용
+#### Controller @Valid Application
 **Create Endpoints**:
 - ✅ `AuthController`: `/login`, `/register`
 - ✅ `UserController`: `createUser`
@@ -44,47 +44,47 @@
 
 ### 2. Global Exception Handler ✅
 
-- ✅ `GlobalExceptionHandler` 생성
-  - `MethodArgumentNotValidException` 처리
-  - `IllegalArgumentException` 처리
-  - `IllegalStateException` 처리
-  - 표준화된 에러 응답 형식
+- ✅ Created `GlobalExceptionHandler`
+  - `MethodArgumentNotValidException` handling
+  - `IllegalArgumentException` handling
+  - `IllegalStateException` handling
+  - Standardized error response format
 
-### 3. Payment 검증 강화 ✅
+### 3. Enhanced Payment Validation ✅
 
-- ✅ **금액 검증**: 결제 금액이 주문 총액과 일치하는지 확인
-- ✅ **중복 결제 방지**: 이미 완료된 결제가 있는지 확인
-- ✅ **명확한 에러 메시지**: 검증 실패 시 상세한 에러 메시지
+- ✅ **Amount Validation**: Verify payment amount matches order total
+- ✅ **Duplicate Payment Prevention**: Check for existing completed payments
+- ✅ **Clear Error Messages**: Detailed error messages on validation failure
 
-### 4. Service 레이어 코드 정리 ✅
+### 4. Service Layer Code Cleanup ✅
 
-#### 제거된 중복 Validation 코드
-- ✅ `UserService.createUser()`: email/password null 체크 제거 (Bean Validation으로 대체)
-- ✅ `OrderService.createOrder()`: items null/empty 체크 제거 (Bean Validation으로 대체)
-- ✅ `MenuController.createMenuItem()`: category null 체크 제거 (Bean Validation으로 대체)
-- ✅ `AuthController.login()`: 수동 validation 코드 제거 (Bean Validation으로 대체)
+#### Removed Duplicate Validation Code
+- ✅ `UserService.createUser()`: Removed email/password null check (replaced by Bean Validation)
+- ✅ `OrderService.createOrder()`: Removed items null/empty check (replaced by Bean Validation)
+- ✅ `MenuController.createMenuItem()`: Removed category null check (replaced by Bean Validation)
+- ✅ `AuthController.login()`: Removed manual validation code (replaced by Bean Validation)
 
-#### 유지된 비즈니스 로직 검증
-- ✅ `UserService`: Password strength 검증 (비즈니스 로직)
-- ✅ `UserService`: Email uniqueness 검증 (비즈니스 로직)
-- ✅ `OrderService`: Customer 존재 확인 (비즈니스 로직)
-- ✅ `OrderService`: Menu item 존재 및 가용성 확인 (비즈니스 로직)
-- ✅ `PaymentService`: Payment 금액 검증 (비즈니스 로직)
-- ✅ `PaymentService`: 중복 결제 방지 (비즈니스 로직)
-- ✅ `DeliveryService`: Order type 검증 (비즈니스 로직)
-- ✅ `ReservationService`: Table capacity 검증 (비즈니스 로직)
-- ✅ `ReservationService`: 중복 예약 확인 (비즈니스 로직)
+#### Retained Business Logic Validation
+- ✅ `UserService`: Password strength validation (business logic)
+- ✅ `UserService`: Email uniqueness validation (business logic)
+- ✅ `OrderService`: Customer existence check (business logic)
+- ✅ `OrderService`: Menu item existence and availability check (business logic)
+- ✅ `PaymentService`: Payment amount validation (business logic)
+- ✅ `PaymentService`: Duplicate payment prevention (business logic)
+- ✅ `DeliveryService`: Order type validation (business logic)
+- ✅ `ReservationService`: Table capacity validation (business logic)
+- ✅ `ReservationService`: Duplicate reservation check (business logic)
 
 ---
 
-## 📊 개선 전후 비교
+## 📊 Before/After Comparison
 
-### Before (개선 전)
+### Before (Pre-improvement)
 ```java
 // Controller
 @PostMapping
 public ResponseEntity<?> createUser(@RequestBody UserCreateRequestDto requestDto) {
-    // 수동 검증
+    // Manual validation
     if (requestDto.getEmail() == null || requestDto.getEmail().isEmpty()) {
         throw new IllegalArgumentException("Email required");
     }
@@ -104,17 +104,17 @@ public UserDto createUser(UserCreateRequestDto requestDto) {
 
 // DTO
 public class UserCreateRequestDto {
-    private String email; // 검증 없음
-    private String password; // 검증 없음
+    private String email; // No validation
+    private String password; // No validation
 }
 ```
 
-### After (개선 후)
+### After (Post-improvement)
 ```java
 // Controller
 @PostMapping
 public ResponseEntity<?> createUser(@Valid @RequestBody UserCreateRequestDto requestDto) {
-    // Bean Validation이 자동으로 처리
+    // Bean Validation handles this automatically
     // ...
 }
 
@@ -123,7 +123,7 @@ public UserDto createUser(UserCreateRequestDto requestDto) {
     // Basic input validation is now handled by Bean Validation
     // Only business logic validation remains here
     
-    // Validate password strength (비즈니스 로직)
+    // Validate password strength (business logic)
     if (!PasswordValidator.isStrong(requestDto.getPassword())) {
         throw new IllegalArgumentException("Password does not meet strength requirements");
     }
@@ -144,84 +144,84 @@ public class UserCreateRequestDto {
 
 ---
 
-## 🎯 개선 효과
+## 🎯 Improvement Benefits
 
-### 1. 코드 품질
-- ✅ **일관성**: 모든 DTO에 동일한 validation 패턴 적용
-- ✅ **재사용성**: Bean Validation 어노테이션 재사용
-- ✅ **가독성**: DTO 필드에 validation 규칙이 명시적으로 표시
-- ✅ **중복 제거**: Service 레이어의 중복 validation 코드 제거
+### 1. Code Quality
+- ✅ **Consistency**: Same validation pattern applied to all DTOs
+- ✅ **Reusability**: Bean Validation annotations are reusable
+- ✅ **Readability**: Validation rules explicitly displayed on DTO fields
+- ✅ **Deduplication**: Removed duplicate validation code from Service layer
 
-### 2. 유지보수성
-- ✅ **중앙화**: GlobalExceptionHandler로 에러 처리 통합
-- ✅ **표준화**: Spring 표준 validation 사용
-- ✅ **확장성**: 새로운 validation 규칙 추가 용이
-- ✅ **명확한 책임 분리**: Controller는 입력 검증, Service는 비즈니스 로직
+### 2. Maintainability
+- ✅ **Centralization**: Error handling unified through GlobalExceptionHandler
+- ✅ **Standardization**: Uses Spring standard validation
+- ✅ **Extensibility**: Easy to add new validation rules
+- ✅ **Clear Responsibility Separation**: Controllers handle input validation, Services handle business logic
 
-### 3. 보안 강화
-- ✅ **입력 검증**: 모든 API 엔드포인트에서 입력 검증 보장
-- ✅ **데이터 무결성**: Payment 금액 검증으로 데이터 일관성 보장
-- ✅ **중복 방지**: 중복 결제 방지로 비즈니스 로직 보호
-- ✅ **SQL Injection 방지**: 타입 검증으로 기본적인 보안 강화
+### 3. Security Enhancement
+- ✅ **Input Validation**: Guaranteed input validation on all API endpoints
+- ✅ **Data Integrity**: Payment amount validation ensures data consistency
+- ✅ **Duplicate Prevention**: Duplicate payment prevention protects business logic
+- ✅ **SQL Injection Prevention**: Type validation provides basic security enhancement
 
-### 4. 개발 생산성
-- ✅ **자동화**: 수동 validation 코드 작성 불필요
-- ✅ **에러 처리**: GlobalExceptionHandler로 일관된 에러 응답
-- ✅ **문서화**: Validation 어노테이션이 API 요구사항 문서화
-- ✅ **테스트 용이성**: Validation 로직이 명확하여 테스트 작성 용이
-
----
-
-## 📈 통계
-
-### Validation 적용 현황
-- **Create DTO**: 8개 ✅
-- **Update DTO**: 4개 ✅
-- **Controller Endpoints**: 12개 ✅
-- **Global Exception Handler**: 1개 ✅
-
-### 코드 개선
-- **제거된 중복 코드**: ~50줄
-- **추가된 Validation 어노테이션**: ~40개
-- **개선된 Service 메서드**: 3개
+### 4. Developer Productivity
+- ✅ **Automation**: No need to write manual validation code
+- ✅ **Error Handling**: Consistent error responses via GlobalExceptionHandler
+- ✅ **Documentation**: Validation annotations document API requirements
+- ✅ **Testability**: Clear validation logic makes test writing easier
 
 ---
 
-## ✅ 검증 완료
+## 📈 Statistics
 
-- ✅ 모든 주요 DTO에 validation 어노테이션 추가
-- ✅ 모든 주요 Controller에 @Valid 추가
-- ✅ GlobalExceptionHandler 구현
-- ✅ Payment 검증 로직 강화
-- ✅ Service 레이어 중복 코드 제거
-- ✅ Update DTO에 조건부 validation 추가
-- ✅ Linter 에러 없음
-- ✅ 비즈니스 로직 검증 유지
+### Validation Implementation Status
+- **Create DTOs**: 8 ✅
+- **Update DTOs**: 4 ✅
+- **Controller Endpoints**: 12 ✅
+- **Global Exception Handler**: 1 ✅
 
-**개선 완료율**: 100% ✅
+### Code Improvements
+- **Removed Duplicate Code**: ~50 lines
+- **Added Validation Annotations**: ~40
+- **Improved Service Methods**: 3
 
 ---
 
-## 📝 아키텍처 개선 요약
+## ✅ Verification Complete
 
-### Validation 계층 구조
+- ✅ Added validation annotations to all major DTOs
+- ✅ Added @Valid to all major Controllers
+- ✅ Implemented GlobalExceptionHandler
+- ✅ Enhanced Payment validation logic
+- ✅ Removed duplicate code from Service layer
+- ✅ Added conditional validation to Update DTOs
+- ✅ No linter errors
+- ✅ Retained business logic validation
+
+**Improvement Completion Rate**: 100% ✅
+
+---
+
+## 📝 Architecture Improvement Summary
+
+### Validation Layer Structure
 ```
 Controller Layer (@Valid)
     ↓
 DTO Layer (Bean Validation Annotations)
     ↓
-GlobalExceptionHandler (에러 처리)
+GlobalExceptionHandler (Error Handling)
     ↓
-Service Layer (비즈니스 로직 검증)
+Service Layer (Business Logic Validation)
 ```
 
-### 책임 분리
-- **Controller**: HTTP 요청/응답 처리, @Valid로 입력 검증 트리거
-- **DTO**: Bean Validation 어노테이션으로 필드 검증 규칙 정의
-- **GlobalExceptionHandler**: Validation 에러를 표준 형식으로 변환
-- **Service**: 비즈니스 로직 검증 (password strength, uniqueness, etc.)
+### Responsibility Separation
+- **Controller**: HTTP request/response handling, triggers input validation with @Valid
+- **DTO**: Defines field validation rules with Bean Validation annotations
+- **GlobalExceptionHandler**: Converts validation errors to standard format
+- **Service**: Business logic validation (password strength, uniqueness, etc.)
 
 ---
 
-**최종 상태**: Production Ready ✅
+**Final Status**: Production Ready ✅
 
