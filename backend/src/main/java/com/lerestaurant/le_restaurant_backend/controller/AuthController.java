@@ -1,8 +1,11 @@
 package com.lerestaurant.le_restaurant_backend.controller;
 
 import com.lerestaurant.le_restaurant_backend.dto.AuthRequestDto;
+import com.lerestaurant.le_restaurant_backend.dto.ForgotPasswordRequest;
+import com.lerestaurant.le_restaurant_backend.dto.ResetPasswordRequest;
 import com.lerestaurant.le_restaurant_backend.dto.UserCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserDto;
+import com.lerestaurant.le_restaurant_backend.service.PasswordResetService;
 import com.lerestaurant.le_restaurant_backend.service.UserService;
 import com.lerestaurant.le_restaurant_backend.util.JwtUtil;
 import jakarta.validation.Valid;
@@ -21,11 +24,13 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final PasswordResetService passwordResetService;
 
     @Autowired
-    public AuthController(UserService userService, JwtUtil jwtUtil) {
+    public AuthController(UserService userService, JwtUtil jwtUtil, PasswordResetService passwordResetService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/login")
@@ -47,6 +52,35 @@ public class AuthController {
             error.put("error", msg);
             // Always return 401 for any login failure, including user not found
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            String token = passwordResetService.generateResetToken(request.getEmail());
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Password reset token generated.");
+            response.put("resetToken", token); // Demo mode: token returned in response
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Password has been reset successfully. You can now log in.");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         }
     }
 

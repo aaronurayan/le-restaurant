@@ -19,16 +19,19 @@ import UserManagementPanel from './components/organisms/UserManagementPanel';
 import { MainLayout } from './components/templates/MainLayout';
 import ProtectedRoute from './components/organisms/ProtectedRoute';
 import { UserRole } from './types/user';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartSidebar } from './components/organisms/CartSidebar';
 import { useCart } from './hooks/useCart';
 import { MenuItem } from './types';
 import { ErrorBoundary } from './components/errors/ErrorBoundary';
+import { useSessionTimeout } from './hooks/useSessionTimeout';
+import SessionTimeoutModal from './components/molecules/SessionTimeoutModal';
 import './index.css';
 
 // AppContent component to use hooks that require Router context
 const AppContent: React.FC = () => {
   const location = useLocation();
+  const { isAuthenticated, logout } = useAuth();
   const {
     cartItems,
     cartTotal,
@@ -37,6 +40,11 @@ const AppContent: React.FC = () => {
     updateQuantity,
     removeFromCart,
   } = useCart();
+
+  const { showWarning, remainingSeconds, extendSession } = useSessionTimeout({
+    isAuthenticated,
+    onLogout: logout,
+  });
 
   const [favoritedItems, setFavoritedItems] = React.useState<Set<string>>(new Set());
   const [isCartOpen, setIsCartOpen] = React.useState(false);
@@ -84,6 +92,13 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="App">
+      {showWarning && (
+        <SessionTimeoutModal
+          remainingSeconds={remainingSeconds}
+          onExtend={extendSession}
+          onLogout={logout}
+        />
+      )}
       <MainLayout
         cartItemCount={cartItemCount}
         onCartClick={handleCartClick}

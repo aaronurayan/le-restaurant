@@ -1,11 +1,15 @@
 package com.lerestaurant.le_restaurant_backend.service;
 
+import com.lerestaurant.le_restaurant_backend.dto.LoginHistoryDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserUpdateRequestDto;
+import com.lerestaurant.le_restaurant_backend.entity.AuditLog;
 import com.lerestaurant.le_restaurant_backend.entity.User;
+import com.lerestaurant.le_restaurant_backend.repository.AuditLogRepository;
 import com.lerestaurant.le_restaurant_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,11 +47,13 @@ public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogRepository auditLogRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuditLogRepository auditLogRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditLogRepository = auditLogRepository;
     }
     
     /**
@@ -190,10 +196,35 @@ public class UserService {
             throw new RuntimeException("Invalid credentials");
         }
 
+        if (user.getStatus() == User.UserStatus.INACTIVE) {
+            throw new RuntimeException("Account is deactivated. Please contact support.");
+        }
+        if (user.getStatus() == User.UserStatus.SUSPENDED) {
+            throw new RuntimeException("Account is suspended. Please contact support.");
+        }
+
         user.setLastLogin(OffsetDateTime.now());
         userRepository.save(user);
 
+        AuditLog loginEvent = new AuditLog();
+        loginEvent.setUser(user);
+        loginEvent.setEntityType("AUTH_LOGIN");
+        loginEvent.setActionType(AuditLog.ActionType.VIEW);
+        loginEvent.setNewValues("SUCCESS");
+        loginEvent.setTimestamp(OffsetDateTime.now());
+        auditLogRepository.save(loginEvent);
+
         return convertToDto(user);
+    }
+
+    public List<LoginHistoryDto> getLoginHistory(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        return auditLogRepository
+                .findByUserAndEntityTypeOrderByTimestampDesc(user, "AUTH_LOGIN", PageRequest.of(0, 20))
+                .stream()
+                .map(log -> new LoginHistoryDto(log.getId(), log.getTimestamp(), log.getIpAddress(), "SUCCESS"))
+                .collect(Collectors.toList());
     }
 
     /**

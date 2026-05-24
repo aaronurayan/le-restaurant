@@ -8,6 +8,8 @@ import { EmptyState } from '../molecules/EmptyState';
 import { Badge } from '../atoms/Badge';
 import { OrderDto } from '../../types/order';
 import ReservationModal from './ReservationModal';
+import LoginHistoryPanel from '../molecules/LoginHistoryPanel';
+import { useAuth } from '../../contexts/AuthContext';
 
 export interface CustomerDashboardProps {
   /** Loading state */
@@ -57,6 +59,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   customerName = 'Guest',
   upcomingReservation,
 }) => {
+  const { user } = useAuth();
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -235,6 +238,13 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <EmptyState message="You haven't placed any orders yet" actionText="View menu" />
         )}
       </div>
+
+      {/* Login History (FR-209) */}
+      {user && (
+        <div className="mb-8">
+          <LoginHistoryPanel userId={user.id} />
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg border-2 border-neutral-gray-200 p-6">

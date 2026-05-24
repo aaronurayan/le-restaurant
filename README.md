@@ -14,6 +14,7 @@
 ![Vite](https://img.shields.io/badge/Vite-7.x-646CFF?style=flat-square&logo=vite)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14-336791?style=flat-square&logo=postgresql)
 ![Azure](https://img.shields.io/badge/Azure-Cloud-0078D4?style=flat-square&logo=microsoft-azure)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)
 
 **한국어** | [English](README.en.md) | [日本語](README.ja.md) | [Русский](README.ru.md)
 
@@ -23,9 +24,9 @@
 
 ## Overview
 
-A modern, full-stack restaurant management system built with **Spring Boot** backend and **React + TypeScript** frontend. Developed collaboratively by 5 UTS students for the Advanced Software Development course, featuring comprehensive order management, payment processing, delivery tracking, and table reservation capabilities.
+Le Restaurant is a full-stack restaurant management system built by 5 UTS students for the Advanced Software Development course. The system helps customers browse the menu, place orders, make table reservations, and track deliveries. Restaurant managers can manage menus, users, payments, and reservations from a single dashboard.
 
-**Core Concept**: A scalable, maintainable restaurant management platform following Atomic Design principles, with robust API connectivity, role-based access control, and comprehensive feature coverage for customers, staff, and managers.
+The project uses **Spring Boot** (Java 17) for the backend API and **React + TypeScript** for the frontend. All data is stored in **PostgreSQL** and the application is deployed on **Microsoft Azure**.
 
 ---
 
@@ -33,88 +34,109 @@ A modern, full-stack restaurant management system built with **Spring Boot** bac
 
 ### 🌐 Live Deployment (Azure)
 
-**The application is live on Azure!**
+The application is currently live on Azure:
 
-- **Backend API**: https://le-restaurant-adbrdddye6cbdjf2.australiaeast-01.azurewebsites.net
 - **Frontend**: https://le-restaurant-frontend.azurestaticapps.net
-- **Database**: PostgreSQL 14 on Azure (Australia East)
-- **Deployment**: Azure DevOps Pipelines (Manual trigger required)
+- **Backend API**: https://le-restaurant-adbrdddye6cbdjf2.australiaeast-01.azurewebsites.net
+- **API Docs (Swagger)**: https://le-restaurant-adbrdddye6cbdjf2.australiaeast-01.azurewebsites.net/swagger-ui/index.html
 
-### 💻 Local Development
+### 🐳 Run with Docker (Recommended for Local)
 
-#### Prerequisites
-- **Java 17+** (for backend)
-- **Node.js 18+** (for frontend)
-- **PostgreSQL 14+** (or use H2 for development)
-- **Git** (for version control)
-
-#### Getting Started
+The easiest way to run the full stack locally is Docker Compose. You only need **Docker** installed.
 
 ```bash
 # Clone the repository
 git clone https://github.com/aaronurayan/le-restaurant.git
 cd le-restaurant
 
-# Start the Backend (Spring Boot)
+# Start the entire stack (PostgreSQL + Backend + Frontend)
+docker compose up --build
+
+# When done
+docker compose down
+```
+
+After the containers start:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080
+- **Health Check**: http://localhost:8080/api/health
+
+### 💻 Local Development (Without Docker)
+
+#### Prerequisites
+- Java 17+
+- Node.js 18+
+- Git
+
+```bash
+# Clone the repository
+git clone https://github.com/aaronurayan/le-restaurant.git
+cd le-restaurant
+
+# Start the Backend (uses H2 in-memory database by default)
 cd backend
 ./gradlew bootRun
-# Backend will run on http://localhost:8080
+# Backend runs on http://localhost:8080
 
-# In a new terminal, start the Frontend (React + Vite)
+# In a new terminal, start the Frontend
 cd frontend
 npm install
 npm run dev
-# Frontend will run on http://localhost:5173
+# Frontend runs on http://localhost:5173
 ```
 
 #### Access Points
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:8080
-- **API Documentation**: http://localhost:8080/swagger-ui/index.html (requires springdoc-openapi)
+- **API Documentation**: http://localhost:8080/swagger-ui/index.html
 - **Health Check**: http://localhost:8080/api/health
 
 ---
 
 ## 🏗️ Architecture
 
-### Core Components
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     Browser (User)                          │
+│        React 18 + TypeScript  ·  Tailwind CSS  ·  Vite     │
+└─────────────────────────┬────────────────────────────────────┘
+                          │  HTTP/JSON (Axios)
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│            Spring Boot REST API  (Java 17)                  │
+│                                                              │
+│   Auth (JWT)  │  Menu  │  Order  │  Payment  │  Delivery   │
+│               │        │         │           │  Reservation │
+│   ── Spring Security ── Spring Data JPA ──────────────────  │
+└─────────────────────────┬────────────────────────────────────┘
+                          │  JDBC
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│         PostgreSQL 14  (H2 for local dev)                   │
+│  18 tables: User · Order · MenuItem · Payment · Reservation │
+└──────────────────────────────────────────────────────────────┘
 
-#### Backend (Spring Boot)
-- **Controllers**: REST API endpoints (`/api/*`)
-- **Services**: Business logic layer
-- **Repositories**: Data access layer (Spring Data JPA)
-- **Entities**: Domain models (User, Order, MenuItem, Payment, etc.)
-- **DTOs**: Data transfer objects for API communication
-- **Config**: Security, CORS, and application configuration
+Cloud Deployment:
+  Frontend  ──►  Azure Static Web Apps
+  Backend   ──►  Azure App Service
+  Database  ──►  Azure Database for PostgreSQL (Australia East)
 
-#### Frontend (React + TypeScript)
-- **Atoms**: Basic UI components (Button, Input, Badge, etc.)
-- **Molecules**: Composite components (MenuCard, OrderCard, etc.)
-- **Organisms**: Complex UI sections (MenuManagementPanel, OrderManagementPanel, etc.)
-- **Templates**: Page layouts (MainLayout)
-- **Pages**: Route components
-- **Hooks**: Custom React hooks for API operations
-- **Services**: API client and service layers
-- **Contexts**: Global state management (Auth, Cart)
+Docker:
+  frontend  ──►  nginx:1.25-alpine  (port 3000)
+  backend   ──►  eclipse-temurin:17-jre-alpine  (port 8080)
+  postgres  ──►  postgres:14-alpine  (port 5432)
+```
 
-### Design Patterns
+### Design Patterns Used
 
-- **Atomic Design**: Component architecture (Atoms → Molecules → Organisms → Templates → Pages)
-- **Singleton Pattern**: API client instances
-- **Repository Pattern**: Data access abstraction
-- **Service Layer Pattern**: Business logic separation
-- **DTO Pattern**: Data transfer objects
-- **Dependency Injection**: Spring IoC container
-- **Custom Hooks**: Reusable React logic
-
-### Performance Optimizations
-
-- **API Client**: Unified client with retry logic and health checks
-- **Mock Data Fallback**: Graceful degradation when backend is unavailable
-- **Lazy Loading**: Code splitting with React Router
-- **Connection Pooling**: Database connection management
-- **Caching**: Strategic caching for menu items and user data
-- **Optimistic Updates**: Immediate UI feedback
+| Pattern | Where we used it |
+|---------|-----------------|
+| Atomic Design | React components (Atoms → Molecules → Organisms → Pages) |
+| Repository Pattern | Spring Data JPA repositories |
+| Service Layer | Business logic separated from controllers |
+| DTO Pattern | Request/response objects for all API endpoints |
+| Dependency Injection | Spring IoC container |
+| Singleton | Unified API client in frontend |
 
 ---
 
@@ -122,181 +144,179 @@ npm run dev
 
 ```
 le-restaurant/
-├── backend/                          # Spring Boot API
+├── backend/                          # Spring Boot API (Java 17)
 │   ├── src/main/java/
-│   │   ├── controller/              # REST controllers
-│   │   │   ├── AuthController.java
-│   │   │   ├── UserController.java
-│   │   │   ├── MenuController.java
-│   │   │   ├── OrderController.java
-│   │   │   ├── PaymentController.java
-│   │   │   ├── DeliveryController.java
-│   │   │   └── ReservationController.java
-│   │   ├── service/                # Business logic
-│   │   ├── repository/            # Data access
-│   │   ├── entity/               # Domain models
-│   │   ├── dto/                  # Data transfer objects
-│   │   └── config/               # Configuration
-│   ├── src/main/resources/
-│   │   └── application.properties
-│   └── pom.xml
+│   │   ├── controller/              # REST controllers (11 total)
+│   │   ├── service/                 # Business logic (9 services)
+│   │   ├── repository/              # Data access (18 repositories)
+│   │   ├── entity/                  # Database models (18 entities)
+│   │   ├── dto/                     # Request/Response objects (50+)
+│   │   └── config/                  # Security, CORS, OpenAPI
+│   ├── src/test/java/               # Unit + E2E tests (33 test files)
+│   ├── Dockerfile
+│   └── build.gradle
 │
-├── frontend/                       # React + TypeScript app
+├── frontend/                         # React 18 + TypeScript
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── atoms/            # Basic UI components
-│   │   │   ├── molecules/        # Composite components
-│   │   │   ├── organisms/        # Complex UI sections
-│   │   │   └── templates/       # Page layouts
-│   │   ├── pages/                # Route components
-│   │   ├── hooks/                # Custom React hooks
-│   │   ├── services/             # API services
-│   │   ├── contexts/             # Global state
-│   │   ├── types/                # TypeScript types
-│   │   └── config/               # Configuration
-│   ├── package.json
-│   └── vite.config.ts
+│   │   │   ├── atoms/               # Basic UI elements (Button, Input...)
+│   │   │   ├── molecules/           # Composite components (MenuCard, OrderCard...)
+│   │   │   ├── organisms/           # Complex sections (Header, AdminDashboard...)
+│   │   │   └── templates/           # Page layouts
+│   │   ├── pages/                   # Route components (12 pages)
+│   │   ├── hooks/                   # Custom React hooks (17 hooks)
+│   │   ├── services/                # API client and services
+│   │   ├── contexts/                # Auth and Cart global state
+│   │   └── types/                   # TypeScript type definitions
+│   ├── Dockerfile
+│   └── package.json
 │
-├── docs/                           # Documentation
-│   ├── frontend/                  # Frontend docs
-│   ├── backend/                   # Backend docs
-│   ├── design/                    # Design docs
-│   ├── testing/                   # Test guides
-│   └── requirements/              # Requirements
+├── e2e/                              # Playwright browser E2E tests
+│   ├── tests/                       # 4 test spec files
+│   └── playwright.config.ts
 │
-└── README.md                      # This file
+├── integration-tests/                # Jest API integration tests
+│   └── *.test.js                    # 5 test files (health, auth, menu, orders, reservations)
+│
+├── docs/                             # 50+ documentation files
+├── docker-compose.yml                # Full stack Docker setup
+├── azure-pipelines.yml               # CI/CD pipeline (Azure DevOps)
+└── README.md
 ```
 
 ---
 
 ## 🎯 Key Features
 
-### 👤 User Management (F100-F102)
-- **User Registration**: Email-based account creation
-- **Authentication**: Secure login with session management
-- **User Management**: Manager dashboard for user CRUD operations
-- **Role-Based Access**: Customer, Staff, Manager roles
+### 👤 User Management (F100–F102)
+- **F100 – User Registration**: Create an account with email, password, name, and phone number. Includes a **password strength indicator** (Weak / Fair / Good / Strong).
+- **F101 – Authentication**: Secure login with JWT tokens. Includes **Remember me** (30-day session) and **Forgot Password** reset flow. A **session timeout warning** appears after 25 minutes of inactivity. Deactivated or suspended accounts cannot log in.
+- **F102 – User Management**: Managers can view, edit, deactivate, reactivate, and delete customer accounts. Customers can view their **login history** (last 20 logins) from their dashboard.
 
-### 🍽️ Menu Management (F103-F104)
-- **Menu Display**: Category-based menu browsing
-- **Search & Filter**: Real-time search and filtering
-- **Menu Management**: CRUD operations for menu items
-- **Image Management**: Menu item image uploads
+### 🍽️ Menu Management (F103–F104)
+- **F103 – Menu Display**: Browse menu items by category. Search by name. See price, description, and availability.
+- **F104 – Menu Management**: Managers can add, edit, and delete menu items.
 
-### 🛒 Order & Payment (F105-F106)
-- **Order Creation**: Shopping cart with item management
-- **Order Tracking**: Real-time order status updates
-- **Payment Processing**: Multiple payment methods
-- **Transaction Management**: Payment history and reconciliation
+### 🛒 Order & Payment (F105–F106)
+- **F105 – Order Management**: Add items to cart, place orders, and track status (Pending → Preparing → Ready → Completed).
+- **F106 – Payment Management**: Pay with credit card, debit card, cash, bank transfer, or digital wallet. Managers can process refunds and view **full payment details**.
 
 ### 🚚 Delivery Management (F107)
-- **Delivery Assignment**: Driver assignment system
-- **Status Tracking**: Real-time delivery status updates
-- **Address Management**: Customer delivery addresses
-- **Progress Updates**: Customer notifications
+- **F107 – Delivery Tracking**: Assign delivery drivers to orders, track delivery status in real time, and manage customer addresses.
 
-### 🍽️ Table Reservation (F108-F109)
-- **Table Booking**: Date/time-based reservations
-- **Availability Checking**: Real-time table availability
-- **Reservation Management**: Manager approval/denial system
-- **Customer Dashboard**: Reservation history and status
+### 📅 Table Reservation (F108–F109)
+- **F108 – Reservation Booking**: Customers choose a date, time, and party size to book a table.
+- **F109 – Reservation Management**: Managers approve or deny reservations. Customers can view **full reservation details** from their booking history.
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Backend
-- **Java 17** - Programming language
-- **Spring Boot 3.x** - Application framework
-- **Spring Data JPA** - Data persistence
-- **PostgreSQL 14** - Production database
-- **H2 Database** - Development database
-- **Maven** - Dependency management
-- **Spring Security** - Authentication & authorization
-
-### Frontend
-- **React 18** - UI library
-- **TypeScript 5.x** - Type-safe JavaScript
-- **Vite 7.x** - Build tool and dev server
-- **Tailwind CSS 3.x** - Utility-first CSS framework
-- **React Router DOM** - Client-side routing
-- **Axios** - HTTP client
-- **React Hook Form** - Form management
-- **Zustand** - State management
-- **Lucide React** - Icon library
-
-### DevOps & Cloud
-- **Azure App Service** - Backend hosting
-- **Azure Static Web Apps** - Frontend hosting
-- **Azure PostgreSQL** - Production database
-- **Azure DevOps** - CI/CD pipelines
-- **Docker** - Containerization (optional)
+| Layer | Technology |
+|-------|-----------|
+| Backend language | Java 17 |
+| Backend framework | Spring Boot 3.x |
+| Security | Spring Security + JWT (jjwt) |
+| Database (prod) | PostgreSQL 14 |
+| Database (dev) | H2 (in-memory) |
+| ORM | Spring Data JPA (Hibernate) |
+| API docs | Swagger / SpringDoc OpenAPI |
+| Build tool | Gradle |
+| Frontend language | TypeScript 5.x |
+| Frontend framework | React 18 |
+| Build tool | Vite 7.x |
+| CSS | Tailwind CSS 3.x |
+| HTTP client | Axios |
+| Forms | React Hook Form |
+| State management | Zustand + React Context |
+| Icons | Lucide React |
+| Containerisation | Docker + Docker Compose |
+| Cloud hosting | Microsoft Azure |
+| CI/CD | Azure DevOps Pipelines |
+| Unit testing (backend) | JUnit 5 + Mockito + JaCoCo |
+| Unit testing (frontend) | Vitest + Testing Library |
+| Browser E2E testing | Playwright |
+| API integration testing | Jest + Axios |
 
 ---
 
-## 👥 Team Collaboration
+## 🧪 Testing Strategy
 
-This project is developed by **5 UTS students** working collaboratively:
+We follow a three-layer testing approach:
 
-| Feature # | Name | Description | Owner |
-|-----------|------|-------------|-------|
-| **F100** | User Registration | Customers can create a new account with email and password. | **Junayeed Halim** |
-| **F101** | User Authentication | Registered customers can log in to their account. | **Junayeed Halim** |
-| **F102** | User Management (Manager) | Managers can view, edit, and delete customer accounts. | **Jungwook Van** |
-| **F103** | Menu Display | View food items by category, including images, prices, and availability. | **Mikhail Zhelnin** |
-| **F104** | Menu Management (Manager) | Create, update, delete, and manage menu items, prices, and images. | **Mikhail Zhelnin** |
-| **F105** | Order Management | Create and submit orders with a payment system and order confirmation. | **Damaq Zain** |
-| **F106** | Payment Management | Handle customer payments for orders, including transaction processing. | **Jungwook Van** |
-| **F107** | Delivery Management | Manage customer deliveries, including assigning delivery personnel and tracking. | **Aaron Urayan** |
-| **F108** | Table Reservation | Customers can book tables for a specific date, time, and number of guests. | **Damaq Zain** |
-| **F109** | Reservation Management (Manager) | View, approve, deny, and manage all customer reservations. | **Aaron Urayan** |
+```
+         Browser E2E Tests (Playwright)      ← 4 spec files, real browser
+        ─────────────────────────────────
+       API Integration Tests (Jest)          ← 5 test files, live backend
+      ────────────────────────────────────
+     Unit Tests + E2E Scenarios (JUnit)      ← 33 test files, mocked/real DB
+    ─────────────────────────────────────
+   Frontend Component Tests (Vitest)         ← 23 test files
+```
+
+**CI/CD Pipeline Stages** (`azure-pipelines.yml`):
+1. **Code Quality** — ESLint (frontend) + Checkstyle (backend)
+2. **Build & Test** — Unit tests (80% coverage required), E2E Java scenarios, JS integration tests
+3. **Browser E2E** — Playwright tests against a running full stack
+4. **Security Scan** — `npm audit` + OWASP dependency check
+
+---
+
+## 👥 Team Roles
+
+| Role | Name | Responsibilities |
+|------|------|-----------------|
+| **Project Manager & Developer** | **Jungwook Van** | System architecture, CI/CD pipelines, branch integration, documentation · F102 (User Management) · F106 (Payment Management) |
+| Developer | Aaron Urayan | F107 (Delivery Management) · F109 (Reservation Management) · GitHub repository setup |
+| Developer | Damaq Zain | F105 (Order Management) · F108 (Table Reservation) |
+| Developer | Junayeed Halim | F100 (User Registration) · F101 (User Authentication) · Azure Pipelines CI setup |
+| Developer | Mikhail Zhelnin | F103 (Menu Display) · F104 (Menu Management) |
+
+---
+
+## 📅 Project Timeline
+
+| Phase | Period | What We Did |
+|-------|--------|-------------|
+| Phase 1 — Planning | Aug 2025 (Weeks 1–2) | Set up the GitHub repository, wrote the Software Requirements Specification (SRS), designed the database schema and system architecture. Defined 10 features (F100–F109) and assigned each to a team member. |
+| Phase 2 — Prototype | Sep 2025 (Weeks 3–4) | Built a working Spring Boot backend skeleton and React frontend prototype. Configured Azure Pipelines CI and pushed the first working prototype to the repo. |
+| Phase 3 — Development | Oct 2025 (Weeks 5–8) | Each team member developed their assigned features on separate branches. We merged everything into `main`, fixed integration bugs, and wrote unit tests and 10 end-to-end scenario tests. |
+| Phase 4 — Testing & Polish | Nov 2025 (Weeks 9–10) | Ran all E2E scenario tests, fixed remaining frontend bugs, improved the UI, and added multilingual documentation (Korean, Japanese, Russian). |
+| Phase 5 — Finalisation | Dec 2025 (Weeks 11–12) | Added the remaining planned features (password strength indicator, payment details view, reservation details view). Set up Docker packaging, GitHub Container Registry, and automated release. Completed all documentation. |
+
+**Total project duration**: August 2025 – December 2025 (5 months)
 
 ---
 
 ## 📚 Documentation
 
-All project documentation is organized in the [`docs/`](docs/) directory:
+All project documentation is in the [`docs/`](docs/) directory:
 
-- **📖 Documentation Index**: [`docs/README.md`](docs/README.md)
-- **🎨 Frontend Documentation**: [`docs/frontend/`](docs/frontend/)
-- **🏗️ Design & Architecture**: [`docs/design/`](docs/design/)
+- **📖 Master Index**: [`docs/00-MASTER-INDEX.md`](docs/00-MASTER-INDEX.md)
+- **📋 Requirements (SRS)**: [`docs/REQUIREMENTS/`](docs/REQUIREMENTS/)
+- **🏗️ Architecture & Design**: [`docs/REQUIREMENTS/system-architecture/`](docs/REQUIREMENTS/system-architecture/)
 - **🧪 Testing**: [`docs/testing/`](docs/testing/)
-- **📋 Requirements**: [`docs/requirements/`](docs/requirements/)
-- **🚀 Deployment**: [`docs/AZURE_DEPLOYMENT_GUIDE.md`](docs/AZURE_DEPLOYMENT_GUIDE.md)
+- **🚀 Deployment Guide**: [`docs/AZURE_DEPLOYMENT_GUIDE.md`](docs/AZURE_DEPLOYMENT_GUIDE.md)
 
 ---
 
 ## 🎓 Academic Project
 
-This project is developed as part of **41026 Advanced Software Development** at the University of Technology Sydney (UTS), Spring Semester 2025.
+This project was developed for **41026 Advanced Software Development** at the University of Technology Sydney (UTS), Spring Semester 2025.
 
-### 👨‍🎓 Team Members
-- **Junayeed Halim** - User Registration & Authentication (F100, F101)
-- **Jungwook Van** - User Management & Payment Management (F102, F106)
-- **Mikhail Zhelnin** - Menu Display & Management (F103, F104)
-- **Damaq Zain** - Order Management & Table Reservation (F105, F108)
-- **Aaron Urayan** - Delivery Management & Reservation Management (F107, F109)
-
-### 🏫 University Information
 - **Course**: [41026 Advanced Software Development](https://coursehandbook.uts.edu.au/subject/2026/41026) (6 Credit Points)
 - **Institution**: University of Technology Sydney (UTS)
 - **Semester**: Spring 2025
 - **Project Type**: Collaborative Group Assignment
 
-**Note**: This is an academic project developed by UTS students and not intended for commercial use.
+This is an academic project developed by UTS students and is not intended for commercial use.
 
 ---
 
 ## 📄 License
 
-This project is developed for academic purposes as part of the UTS Advanced Software Development course.
+Developed for academic purposes as part of the UTS Advanced Software Development course.
 
 ---
 
-**Last Updated**: 2025-11-15
-
----
-
-## 📚 Course Reference
-
-- **UTS Course Handbook**: [41026 Advanced Software Development](https://coursehandbook.uts.edu.au/subject/2026/41026)
+**Last Updated**: 2025-12-25

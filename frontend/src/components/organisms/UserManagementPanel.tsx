@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
-import { 
-  Users, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Search, 
+import {
+  Users,
+  Plus,
+  Edit,
+  Trash2,
+  Search,
   UserCheck,
   Shield,
   Mail,
   Phone,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  UserX,
+  UserPlus
 } from 'lucide-react';
 import { User, UserRole, UserStatus, CreateUserRequest, UpdateUserRequest } from '../../types/user';
 import UserFormModal from './UserFormModal';
@@ -37,9 +39,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
-  // Defense-in-depth: Verify admin role even though route is protected
-  // Prevents accidental exposure if component is used outside ProtectedRoute
-  if (!currentUser || currentUser.role !== 'ADMIN') {
+  // Defense-in-depth: Verify manager or admin role
+  if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER')) {
     return <Navigate to="/" replace />;
   }
   
@@ -52,6 +53,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
     loadUsers,
     createUser,
     updateUser,
+    updateUserStatus,
     deleteUser
   } = useUserApi();
 
@@ -153,6 +155,17 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
   const handleCancelDelete = () => {
     setShowDeleteConfirm(false);
     setUserToDelete(null);
+  };
+
+  const handleToggleStatus = async (user: User) => {
+    try {
+      clearError();
+      const newStatus = user.status === UserStatus.ACTIVE ? UserStatus.INACTIVE : UserStatus.ACTIVE;
+      await updateUserStatus(user.id, newStatus);
+      await loadUsers();
+    } catch (err) {
+      handleError(err, 'Failed to update user status');
+    }
   };
 
   const getRoleIcon = (role: UserRole) => {
@@ -389,6 +402,18 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ isOpen, onClo
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => handleToggleStatus(user)}
+                          className={user.status === UserStatus.ACTIVE
+                            ? 'text-orange-600 hover:text-orange-900 p-1'
+                            : 'text-green-600 hover:text-green-900 p-1'}
+                          title={user.status === UserStatus.ACTIVE ? 'Deactivate user' : 'Activate user'}
+                          aria-label={user.status === UserStatus.ACTIVE ? 'Deactivate user' : 'Activate user'}
+                        >
+                          {user.status === UserStatus.ACTIVE
+                            ? <UserX className="w-4 h-4" />
+                            : <UserPlus className="w-4 h-4" />}
+                        </button>
                         <button
                           onClick={() => {
                             setSelectedUser(user);
