@@ -266,6 +266,67 @@ stages:
               artifact: backend-build
               publishLocation: pipeline
 
+      # JavaScript API Integration Tests
+      - job: JsIntegrationTests
+        displayName: JavaScript API Integration Tests
+        dependsOn: BackendBuildTest
+        steps:
+          - checkout: self
+            fetchDepth: 1
+
+          - task: JavaToolInstaller@0
+            displayName: 'Install Java $(JAVA_VERSION)'
+            inputs:
+              versionSpec: $(JAVA_VERSION)
+              jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
+
+          - task: NodeTool@0
+            displayName: 'Install Node.js $(NODE_VERSION)'
+            inputs:
+              versionSpec: $(NODE_VERSION)
+
+          - task: Cache@2
+            displayName: Cache Gradle Dependencies
+            inputs:
+              key: 'gradle | "$(Agent.OS)" | $(BACKEND_PATH)/gradle/wrapper/gradle-wrapper.properties'
+              restoreKeys: |
+                gradle | "$(Agent.OS)"
+              path: /home/vsts/.gradle/caches
+
+          - script: |
+              cd $(BACKEND_PATH)
+              chmod +x gradlew
+              ./gradlew bootRun --args='--spring.profiles.active=default' &
+              BACKEND_PID=$!
+              echo "Backend PID: $BACKEND_PID"
+              # Wait for backend to start (up to 60 seconds)
+              for i in $(seq 1 12); do
+                sleep 5
+                if curl -sf http://localhost:8080/api/health > /dev/null 2>&1; then
+                  echo "✅ Backend is up after $((i * 5)) seconds"
+                  break
+                fi
+                echo "Waiting for backend... ($((i * 5))s)"
+              done
+            displayName: '🚀 Start Backend for Integration Tests'
+
+          - script: |
+              cd integration-tests
+              npm install
+              BASE_URL=http://localhost:8080 npx jest --testTimeout=15000 --forceExit
+            displayName: '🧪 Run JavaScript Integration Tests'
+            continueOnError: true
+
+          - task: PublishTestResults@2
+            displayName: '📊 Publish JS Integration Test Results'
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: 'integration-tests/junit-report/*.xml'
+              failTaskOnFailedTests: false
+              testRunTitle: 'JavaScript API Integration Tests'
+            condition: always()
+
       # E2E Integration Tests (Scenario Tests)
       - job: E2EIntegrationTests
         displayName: E2E Integration Tests (Scenario Tests)
@@ -366,7 +427,93 @@ stages:
             continueOnError: true
 
   # ==============================================================================
-  # STAGE 4: DEPLOY TO AZURE (DISABLED - Uncomment when Azure is configured)
+  # STAGE 4: PLAYWRIGHT BROWSER E2E TESTS
+  # ==============================================================================
+  - stage: PlaywrightE2E
+    displayName: '🎭 Browser E2E Tests (Playwright)'
+    dependsOn: BuildAndTest
+    condition: succeeded()
+    jobs:
+      - job: PlaywrightTests
+        displayName: Playwright Browser E2E Tests
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - checkout: self
+            fetchDepth: 1
+
+          - task: JavaToolInstaller@0
+            displayName: 'Install Java $(JAVA_VERSION)'
+            inputs:
+              versionSpec: $(JAVA_VERSION)
+              jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
+
+          - task: NodeTool@0
+            displayName: 'Install Node.js $(NODE_VERSION)'
+            inputs:
+              versionSpec: $(NODE_VERSION)
+
+          - task: Cache@2
+            displayName: Cache Gradle Dependencies
+            inputs:
+              key: 'gradle | "$(Agent.OS)" | $(BACKEND_PATH)/gradle/wrapper/gradle-wrapper.properties'
+              restoreKeys: |
+                gradle | "$(Agent.OS)"
+              path: /home/vsts/.gradle/caches
+
+          - script: |
+              # Start backend
+              cd $(BACKEND_PATH)
+              chmod +x gradlew
+              ./gradlew bootRun &
+              for i in $(seq 1 12); do
+                sleep 5
+                if curl -sf http://localhost:8080/api/health > /dev/null 2>&1; then
+                  echo "✅ Backend ready"
+                  break
+                fi
+              done
+
+              # Build and preview frontend
+              cd $(Build.SourcesDirectory)/$(FRONTEND_PATH)
+              npm ci
+              npm run build
+              npm run preview &
+              sleep 8
+              echo "✅ Frontend preview started on port 4173"
+            displayName: '🚀 Start Full Stack for E2E Tests'
+
+          - script: |
+              cd e2e
+              npm install
+              npx playwright install --with-deps chromium
+            displayName: '📦 Install Playwright'
+
+          - script: |
+              cd e2e
+              BASE_URL=http://localhost:4173 npx playwright test --reporter=junit,html
+            displayName: '🧪 Run Playwright E2E Tests'
+            continueOnError: true
+
+          - task: PublishTestResults@2
+            displayName: '📊 Publish Playwright Results'
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: 'e2e/playwright-report/results.xml'
+              failTaskOnFailedTests: false
+              testRunTitle: 'Browser E2E Tests (Playwright)'
+            condition: always()
+
+          - task: PublishPipelineArtifact@1
+            displayName: '📦 Publish Playwright HTML Report'
+            inputs:
+              targetPath: 'e2e/playwright-report'
+              artifact: playwright-report
+            condition: always()
+
+  # ==============================================================================
+  # STAGE 5: DEPLOY TO AZURE (DISABLED - Uncomment when Azure is configured)
   # ==============================================================================
   # - stage: DeployProduction
   #   displayName: '🚀 Deploy to Azure Production'

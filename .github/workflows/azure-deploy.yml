@@ -27,11 +27,20 @@ jobs:
         distribution: 'temurin'
         cache: 'gradle'
         
-    - name: Build with Gradle
+    - name: Test and Build with Gradle
       run: |
         cd backend
         chmod +x gradlew
-        ./gradlew clean bootJar -x test
+        ./gradlew clean test bootJar
+
+    - name: Publish Test Results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Backend Tests
+        path: backend/build/test-results/test/*.xml
+        reporter: java-junit
+        fail-on-error: false
         
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2

@@ -19,6 +19,7 @@ import {
 import { Reservation, ReservationStatus } from '../../types/reservation';
 import { useReservationApi } from '../../hooks/useReservationApi';
 import { ReservationCard } from '../molecules/ReservationCard';
+import ReservationDetailsModal from '../molecules/ReservationDetailsModal';
 
 interface CustomerReservationListProps {
   customerId: string;
@@ -49,6 +50,7 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
   const [filterType, setFilterType] = useState<'upcoming' | 'past'>('upcoming');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
+  const [detailReservation, setDetailReservation] = useState<Reservation | null>(null);
 
   // Load customer's reservations on mount and when customerId changes
   useEffect(() => {
@@ -138,11 +140,11 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
   };
 
   /**
-   * View reservation details (expand inline or navigate)
+   * View reservation details — opens the details modal
    */
   const handleViewDetails = (reservationId: string) => {
-    // TODO: Implement detailed view
-    console.log('View details for reservation:', reservationId);
+    const found = apiReservations.find((r: Reservation) => r.id === reservationId);
+    if (found) setDetailReservation(found);
   };
 
   const upcomingCount = apiReservations.filter((r: Reservation) => {
@@ -305,6 +307,14 @@ export const CustomerReservationList: React.FC<CustomerReservationListProps> = (
             />
           ))}
         </div>
+      )}
+
+      {/* Reservation Details Modal */}
+      {detailReservation && (
+        <ReservationDetailsModal
+          reservation={detailReservation as any}
+          onClose={() => setDetailReservation(null)}
+        />
       )}
 
       {/* Cancellation Confirmation Modal */}

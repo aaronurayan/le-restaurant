@@ -1,0 +1,67 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          PREV=$(git tag --sort=-version:refname | sed -n '2p')
+          echo "prev=${PREV:-HEAD~10}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          TAG=${{ github.ref_name }}
+          PREV=${{ steps.prev_tag.outputs.prev }}
+          echo "## What's Changed" > changelog.md
+          echo "" >> changelog.md
+          git log ${PREV}..HEAD --pretty=format:"- %s (%an)" --no-merges >> changelog.md
+          echo "" >> changelog.md
+          echo "" >> changelog.md
+          echo "## Docker Images" >> changelog.md
+          echo "" >> changelog.md
+          echo "Pull and run with Docker Compose:" >> changelog.md
+          echo '```bash' >> changelog.md
+          echo "# Clone the repo and run" >> changelog.md
+          echo "git clone https://github.com/${{ github.repository }}.git" >> changelog.md
+          echo "cd le-restaurant" >> changelog.md
+          echo "docker compose up" >> changelog.md
+          echo '```' >> changelog.md
+          echo "" >> changelog.md
+          echo "Or pull individual images:" >> changelog.md
+          echo '```bash' >> changelog.md
+          echo "docker pull ghcr.io/${{ github.repository_owner }}/le-restaurant/backend:${TAG}" >> changelog.md
+          echo "docker pull ghcr.io/${{ github.repository_owner }}/le-restaurant/frontend:${TAG}" >> changelog.md
+          echo '```' >> changelog.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Le Restaurant ${{ github.ref_name }}
+          body_path: changelog.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

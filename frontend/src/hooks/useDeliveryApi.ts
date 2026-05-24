@@ -212,11 +212,12 @@ export const useDeliveryApi = () => {
         // Note: Delivery persons endpoint may need to be added to API_ENDPOINTS
         return await apiClient.get<DeliveryPerson[]>('/api/delivery/persons');
       } else {
-        // Return mock data when backend is not connected
+        console.warn('[API Fallback] Using mock data for delivery persons. Backend may be unavailable.');
         return mockDeliveryPersons;
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch delivery persons');
+      console.warn('[API Fallback] Using mock data for delivery persons due to error.');
       return mockDeliveryPersons;
     } finally {
       setLoading(false);

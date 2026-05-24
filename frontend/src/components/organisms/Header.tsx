@@ -171,10 +171,14 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onCartClick}
                 className="relative p-2.5 rounded-lg hover:bg-neutral-100 transition-all duration-200 hover:shadow-md"
                 aria-label={`Shopping cart with ${cartItemCount} items`}
+                data-testid="cart-button"
               >
                 <ShoppingCart className="w-6 h-6 text-neutral-700" />
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg animate-pulse-gentle border-2 border-white">
+                  <span
+                    data-testid="cart-count"
+                    className="absolute -top-1 -right-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg animate-pulse-gentle border-2 border-white"
+                  >
                     {cartItemCount > 99 ? '99+' : cartItemCount}
                   </span>
                 )}
