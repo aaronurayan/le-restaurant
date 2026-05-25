@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,6 +14,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Spring Security Configuration with RBAC
@@ -46,33 +53,70 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Explicit CorsConfigurationSource so Spring Security's CorsFilter
+     * (enabled via cors(withDefaults())) can resolve allowed origins.
+     * Must mirror the origins defined in WebConfig.addCorsMappings().
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        String allowed = System.getenv("CORS_ALLOWED_ORIGINS");
+        if (allowed == null || allowed.trim().isEmpty()) {
+            config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "https://le-restaurant-frontend.azurestaticapps.net"
+            ));
+            config.addAllowedOriginPattern("https://*.azurestaticapps.net");
+        } else {
+            config.setAllowedOrigins(Arrays.stream(allowed.split(","))
+                .map(String::trim).filter(s -> !s.isEmpty()).toList());
+        }
+
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless API
-            .cors(cors -> cors.disable()) // CORS configured in WebConfig
-            .sessionManagement(session -> 
+            .cors(Customizer.withDefaults()) // Delegate CORS to WebConfig (WebMvcConfigurer)
+            .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
+                // Allow all CORS preflight requests through before auth checks
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                 // H2 Console (Development only - remove in production)
                 .requestMatchers("/h2-console/**").permitAll()
-                
+
                 // Public endpoints
                 .requestMatchers("/api/health").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
+                // Menu browsing is public (FR-103, FR-205) — controller is /api/menu-items
+                .requestMatchers(HttpMethod.GET, "/api/menu-items").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/menu-items/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-                
+
                 // User Management (F102) - ADMIN only for sensitive operations
                 .requestMatchers(HttpMethod.POST, "/api/users").hasAnyRole("ADMIN", "MANAGER")
                 .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyRole("ADMIN", "MANAGER", "CUSTOMER")
                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/users").hasAnyRole("ADMIN", "MANAGER")
                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("ADMIN", "MANAGER", "CUSTOMER")
-                
+
                 // Menu Management (F103) - ADMIN/MANAGER for modifications
-                .requestMatchers(HttpMethod.POST, "/api/menu/**").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.PUT, "/api/menu/**").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.DELETE, "/api/menu/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers(HttpMethod.POST, "/api/menu-items").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers(HttpMethod.PUT, "/api/menu-items/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers(HttpMethod.DELETE, "/api/menu-items/**").hasAnyRole("ADMIN", "MANAGER")
                 
                 // Order Management (F105) - Staff can view/manage all orders
                 .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
