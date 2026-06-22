@@ -2,6 +2,7 @@ package com.lerestaurant.le_restaurant_backend.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -100,6 +101,19 @@ public class GlobalExceptionHandler {
         error.put("error", ex.getMessage());
         error.put("timestamp", OffsetDateTime.now().toString());
         return ResponseEntity.badRequest().body(error);
+    }
+
+    /**
+     * Handle authorization failures (ownership / RBAC) — 403 Forbidden.
+     * Must be declared before the generic RuntimeException handler so it takes precedence.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(
+            AccessDeniedException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        error.put("timestamp", OffsetDateTime.now().toString());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     /**

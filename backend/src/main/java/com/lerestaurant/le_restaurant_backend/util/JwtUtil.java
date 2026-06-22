@@ -4,9 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -24,14 +26,28 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:le-restaurant-super-secret-key-for-jwt-token-generation-minimum-256-bits}")
+    // No default value: the application MUST be started with a jwt.secret (JWT_SECRET env var).
+    // A missing property fails fast at startup rather than silently using a known, committed key.
+    @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}") // 24 hours in milliseconds
     private Long expiration;
 
+    /** HS256 requires a key of at least 256 bits (32 bytes). */
+    private static final int MIN_SECRET_BYTES = 32;
+
+    @PostConstruct
+    void validateSecret() {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                "jwt.secret must be set (env JWT_SECRET) and be at least " + MIN_SECRET_BYTES
+                + " bytes for HS256. Refusing to start with a missing or weak signing key.");
+        }
+    }
+
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String extractUsername(String token) {

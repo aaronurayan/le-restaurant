@@ -4,10 +4,8 @@ import com.lerestaurant.le_restaurant_backend.dto.*;
 import com.lerestaurant.le_restaurant_backend.entity.*;
 import com.lerestaurant.le_restaurant_backend.repository.*;
 import com.lerestaurant.le_restaurant_backend.service.*;
-import com.lerestaurant.le_restaurant_backend.config.TestSecurityConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -23,8 +21,11 @@ import java.util.List;
  * Provides common test data setup and helper methods
  * Implements Separation of Concerns principle
  */
+// These E2E tests exercise the service layer directly (not via HTTP/MockMvc), so they do
+// not need a permissive security chain. Importing TestSecurityConfig here previously created
+// a SECOND SecurityFilterChain alongside the real one, causing UnreachableFilterChainException
+// at context load. The real SecurityConfig is sufficient and never intercepts direct calls.
 @SpringBootTest
-@Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 public abstract class BaseE2ETest {
 
@@ -42,6 +43,12 @@ public abstract class BaseE2ETest {
 
     @Autowired
     protected DeliveryService deliveryService;
+
+    @Autowired
+    protected DeliveryAddressService deliveryAddressService;
+
+    @Autowired
+    protected DeliveryDriverRepository deliveryDriverRepository;
 
     @Autowired
     protected ReservationService reservationService;
@@ -103,18 +110,50 @@ public abstract class BaseE2ETest {
     protected PaymentDto processPayment(Long orderId, BigDecimal amount) {
         PaymentRequestDto paymentDto = new PaymentRequestDto();
         paymentDto.setOrderId(orderId);
-        paymentDto.setAmount(amount);
+        // PaymentService validates amount == order total (incl. tax). The caller-supplied
+        // amount is often just the subtotal, so always pay the authoritative order total.
+        OrderDto order = orderService.getOrderById(orderId);
+        paymentDto.setAmount(order.getTotalAmount());
         paymentDto.setPaymentMethod(Payment.PaymentMethod.CREDIT_CARD);
-        return paymentService.createPayment(paymentDto);
+        // createPayment yields a PENDING payment; process it so the helper returns a
+        // COMPLETED payment (matches the "payment made" intent the scenarios assert on).
+        PaymentDto created = paymentService.createPayment(paymentDto);
+        return paymentService.processPayment(created.getId());
     }
 
     /**
      * Helper: Create a delivery for an order
      */
     protected DeliveryDto createDelivery(Long orderId) {
+        // A delivery requires an existing delivery address; create one for the order's customer.
+        OrderDto order = orderService.getOrderById(orderId);
+        DeliveryAddressCreateRequestDto addressDto = new DeliveryAddressCreateRequestDto();
+        addressDto.setUserId(order.getCustomerId());
+        addressDto.setAddressLine1("1 Test Street");
+        addressDto.setCity("Sydney");
+        addressDto.setState("NSW");
+        addressDto.setPostalCode("2000");
+        addressDto.setCountry("Australia");
+        DeliveryAddressDto address = deliveryAddressService.createAddress(addressDto);
+
         DeliveryCreateRequestDto deliveryDto = new DeliveryCreateRequestDto();
         deliveryDto.setOrderId(orderId);
+        deliveryDto.setDeliveryAddressId(address.getId());
         return deliveryService.createDelivery(deliveryDto);
+    }
+
+    /**
+     * Helper: Register a DeliveryDriver for an existing user and return the driver id.
+     * Delivery driver assignment looks up a DeliveryDriver (not a User), so tests must
+     * create one rather than passing a plain user id.
+     */
+    protected Long createDriver(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        DeliveryDriver driver = new DeliveryDriver();
+        driver.setUser(user);
+        driver.setVehicleType("CAR");
+        driver.setLicensePlate("TEST-001");
+        return deliveryDriverRepository.save(driver).getId();
     }
 
     /**

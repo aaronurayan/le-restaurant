@@ -124,7 +124,9 @@ class ReservationServiceComprehensiveTest {
     private static final String GUEST_PHONE = "+61-412-345-678"; // Australian mobile
     private static final String CUSTOMER_EMAIL = "customer@lerestaurant.com";
     private static final Long CUSTOMER_ID = 3L;
-    private static final String RESERVATION_DATE = "2025-11-15"; // Friday dinner (popular time)
+    // Always a future date: the service rejects past reservation dates, so a hardcoded
+    // calendar date would rot over time. Computed ~1 month out from "now".
+    private static final String RESERVATION_DATE = LocalDate.now().plusMonths(1).toString();
     private static final String RESERVATION_TIME_PRIME = "19:00"; // Prime dinner time
     private static final String RESERVATION_TIME_EARLY = "17:30"; // Early bird
     private static final String RESERVATION_TIME_LATE = "21:00"; // Late dinner

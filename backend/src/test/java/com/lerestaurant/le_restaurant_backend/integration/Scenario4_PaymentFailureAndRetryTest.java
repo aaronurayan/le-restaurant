@@ -45,8 +45,8 @@ class Scenario4_PaymentFailureAndRetryTest extends BaseE2ETest {
         assertNotNull(successPayment);
         assertEquals(Payment.PaymentStatus.COMPLETED, successPayment.getStatus());
 
-        // Verify order status updated to PREPARING
+        // A completed payment confirms the order (status CONFIRMED).
         OrderDto paidOrder = orderService.getOrderById(orderId);
-        assertEquals(Order.OrderStatus.PREPARING, paidOrder.getStatus());
+        assertEquals(Order.OrderStatus.CONFIRMED, paidOrder.getStatus());
     }
 }

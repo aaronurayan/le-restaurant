@@ -75,20 +75,19 @@ class ApiError extends Error {
 }
 
 // HTTP 요청 헬퍼 함수
-// TODO: [HIGH] 요청 ID, 타임스탬프, 재시도 로직 추가
-// TODO: [MEDIUM] 요청/응답 로깅 시스템 구축
-// TODO: [MEDIUM] 네트워크 상태 감지 및 오프라인 처리
 async function apiRequest<T>(
-  endpoint: string, 
+  endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
+  const token = localStorage.getItem('authToken');
+  const authHeader = token ? { 'Authorization': `Bearer ${token}` } : {};
+
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
-      // TODO: [MEDIUM] JWT 토큰 자동 추가
-      // 'Authorization': `Bearer ${getAuthToken()}`,
+      ...authHeader,
       ...options.headers,
     },
     ...options,
@@ -138,63 +137,53 @@ export const menuApi = {
 };
 
 // 주문 관련 API
-// TODO: [HIGH] 주문 API 완전 구현 필요
-// TODO: [MEDIUM] 주문 상태 업데이트 API 추가
-// TODO: [MEDIUM] 주문 취소 API 추가
-// TODO: [MEDIUM] 주문 히스토리 조회 API 추가
 export const orderApi = {
-  // 주문 생성
-  createOrder: (order: Omit<Order, 'id' | 'orderNumber' | 'orderDate'>): Promise<Order> => 
+  createOrder: (order: Omit<Order, 'id' | 'orderNumber' | 'orderDate'>): Promise<Order> =>
     apiRequest<Order>('/orders', {
       method: 'POST',
       body: JSON.stringify(order),
     }),
-  
-  // 주문 상태 조회
-  getOrderStatus: (orderId: string): Promise<Order> => 
-    apiRequest<Order>(`/orders/${orderId}/status`),
-    
-  // TODO: [MEDIUM] 추가 주문 API들
-  // updateOrderStatus: (orderId: string, status: OrderStatus): Promise<Order>
-  // cancelOrder: (orderId: string): Promise<void>
-  // getOrderHistory: (customerId: string): Promise<Order[]>
+
+  getOrderStatus: (orderId: string): Promise<Order> =>
+    apiRequest<Order>(`/orders/${orderId}`),
+
+  getOrdersByCustomer: (customerId: number): Promise<Order[]> =>
+    apiRequest<Order[]>(`/orders/customer/${customerId}`),
+
+  // Cancel an order. The backend exposes cancellation as DELETE /orders/{id}
+  // (owner or staff); there is no PATCH /status handler.
+  cancelOrder: (orderId: number): Promise<{ message: string }> =>
+    apiRequest<{ message: string }>(`/orders/${orderId}`, {
+      method: 'DELETE',
+    }),
 };
 
 // 장바구니 관련 API
-// TODO: [HIGH] 장바구니 API 완전 구현 필요
-// TODO: [MEDIUM] 장바구니 비우기 API 추가
-// TODO: [MEDIUM] 장바구니 아이템 일괄 수정 API 추가
-// TODO: [LOW] 장바구니 저장/복원 기능 (로컬 스토리지 연동)
 export const cartApi = {
-  // 장바구니 아이템 추가
-  addToCart: (item: CartItem): Promise<CartItem> => 
+  addToCart: (item: CartItem): Promise<CartItem> =>
     apiRequest<CartItem>('/cart/items', {
       method: 'POST',
       body: JSON.stringify(item),
     }),
-  
-  // 장바구니 조회
-  getCart: (): Promise<CartItem[]> => 
+
+  getCart: (): Promise<CartItem[]> =>
     apiRequest<CartItem[]>('/cart/items'),
-  
-  // 장바구니 아이템 수정
-  updateCartItem: (itemId: string, quantity: number): Promise<CartItem> => 
+
+  updateCartItem: (itemId: string, quantity: number): Promise<CartItem> =>
     apiRequest<CartItem>(`/cart/items/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify({ quantity }),
     }),
-  
-  // 장바구니 아이템 삭제
-  removeFromCart: (itemId: string): Promise<void> => 
+
+  removeFromCart: (itemId: string): Promise<void> =>
     apiRequest<void>(`/cart/items/${itemId}`, {
       method: 'DELETE',
     }),
-    
-  // TODO: [MEDIUM] 추가 장바구니 API들
-  // clearCart: (): Promise<void>
-  // updateCartItems: (items: CartItem[]): Promise<CartItem[]>
-  // saveCart: (): Promise<void>
-  // restoreCart: (): Promise<CartItem[]>
+
+  clearCart: (cartId: number): Promise<void> =>
+    apiRequest<void>(`/cart/${cartId}/items`, {
+      method: 'DELETE',
+    }),
 };
 
 // API 상태 확인

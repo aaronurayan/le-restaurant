@@ -131,7 +131,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={'space-y-6 ' + className}>
+    <form onSubmit={handleSubmit} className={'space-y-6 ' + className} data-testid="reservation-form">
       {/* Date and Time Selection */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

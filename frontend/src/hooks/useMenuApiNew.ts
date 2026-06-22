@@ -60,7 +60,7 @@ export const useMenuList = () => {
       },
       true, // Use mock data on failure
       async () => {
-        // Mock data fallback
+        console.warn('[API Fallback] Using mock data for menu items. Backend may be unavailable.');
         const mockResponse = menuApiService['getMockMenuList'](currentFilters);
         setCategories(mockResponse.categories);
         return mockResponse.items; // Extract items array from response

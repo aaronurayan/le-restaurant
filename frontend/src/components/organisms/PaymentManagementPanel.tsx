@@ -29,6 +29,7 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
   const [methodFilter, setMethodFilter] = useState<PaymentMethod | 'all'>('all');
   const [showRefundConfirm, setShowRefundConfirm] = useState(false);
   const [paymentToRefund, setPaymentToRefund] = useState<number | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   
   // API 훅 사용
   const {
@@ -431,10 +432,7 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
-                          onClick={() => {
-                            // TODO: Implement payment details view
-                            console.log('View payment details:', payment);
-                          }}
+                          onClick={() => setSelectedPayment(payment)}
                           className="text-primary-600 hover:text-primary-900 p-1"
                           title="View payment details"
                           aria-label="View payment details"
@@ -478,6 +476,78 @@ const PaymentManagementPanel: React.FC<PaymentManagementPanelProps> = ({ isOpen,
           </div>
         </div>
       </div>
+
+      {/* Payment Details Modal */}
+      {selectedPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-100">
+              <h3 className="text-lg font-semibold text-neutral-900">Payment Details</h3>
+              <button
+                onClick={() => setSelectedPayment(null)}
+                className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+                aria-label="Close payment details"
+              >
+                <span className="text-neutral-500 text-xl">×</span>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Order ID</p>
+                  <p className="text-sm font-semibold text-neutral-900 mt-1">#{selectedPayment.orderId}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Transaction ID</p>
+                  <p className="text-sm font-semibold text-neutral-900 mt-1">{selectedPayment.transactionId || '—'}</p>
+                </div>
+              </div>
+              <hr className="border-neutral-100" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Customer</p>
+                  <p className="text-sm text-neutral-900 mt-1">{selectedPayment.customerName}</p>
+                  <p className="text-xs text-neutral-500">{selectedPayment.customerEmail}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Amount</p>
+                  <p className="text-sm font-bold text-neutral-900 mt-1">{formatCurrency(selectedPayment.amount, selectedPayment.currency)}</p>
+                </div>
+              </div>
+              <hr className="border-neutral-100" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Payment Method</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {getMethodIcon(selectedPayment.method)}
+                    <span className="text-sm text-neutral-900 capitalize">{selectedPayment.method.replace('_', ' ')}</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {getStatusIcon(selectedPayment.status)}
+                    <span className={getStatusBadge(selectedPayment.status)}>{selectedPayment.status}</span>
+                  </div>
+                </div>
+              </div>
+              <hr className="border-neutral-100" />
+              <div>
+                <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Date</p>
+                <p className="text-sm text-neutral-900 mt-1">{formatDate(selectedPayment.createdAt)}</p>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-neutral-100 bg-neutral-50 flex justify-end">
+              <button
+                onClick={() => setSelectedPayment(null)}
+                className="btn btn-secondary"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Refund Confirmation Dialog */}
       <ConfirmDialog

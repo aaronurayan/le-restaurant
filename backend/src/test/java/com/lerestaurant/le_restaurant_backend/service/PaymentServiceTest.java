@@ -50,6 +50,9 @@ class PaymentServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private AuthorizationService authorizationService;
+
     @InjectMocks
     private PaymentService paymentService;
 

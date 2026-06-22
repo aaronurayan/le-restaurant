@@ -1,0 +1,14 @@
+{
+  "name": "le-restaurant-e2e",
+  "version": "1.0.0",
+  "description": "Playwright browser E2E tests for Le Restaurant",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report",
+    "test:ci": "playwright test --reporter=junit,html"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0"
+  }
+}

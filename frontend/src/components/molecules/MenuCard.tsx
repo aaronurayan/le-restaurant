@@ -33,12 +33,15 @@ export const MenuCard: React.FC<MenuCardProps> = ({
   };
   
   return (
-    <div className={`
-      bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300
-      overflow-hidden border border-neutral-100 group
-      ${!item.isAvailable ? 'opacity-75' : ''}
-      ${className}
-    `}>
+    <div
+      data-testid="menu-item"
+      className={`
+        bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300
+        overflow-hidden border border-neutral-100 group
+        ${!item.isAvailable ? 'opacity-75' : ''}
+        ${className}
+      `}
+    >
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden">
         <img

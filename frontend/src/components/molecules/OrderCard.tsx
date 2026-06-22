@@ -1,5 +1,6 @@
 import React from 'react';
 import { OrderDto } from '../../types/order';
+import { getOrderStatusClasses } from '../../utils/statusColors';
 
 interface OrderCardProps {
   order: OrderDto;
@@ -13,14 +14,8 @@ interface OrderCardProps {
  * Displays order summary in card format
  */
 export const OrderCard: React.FC<OrderCardProps> = ({ order, onViewDetails, onEdit, onDelete }) => {
-  const statusColors: Record<string, string> = {
-    PENDING: 'bg-yellow-100 text-yellow-800',
-    CONFIRMED: 'bg-blue-100 text-blue-800',
-    PREPARING: 'bg-purple-100 text-purple-800',
-    READY: 'bg-green-100 text-green-800',
-    COMPLETED: 'bg-gray-100 text-gray-800',
-    CANCELLED: 'bg-red-100 text-red-800',
-  };
+  // Shared mapping so an order's status renders the same colour here as in OrderStatusBadge.
+  const statusClasses = getOrderStatusClasses(order.status);
 
   const typeColors: Record<string, string> = {
     DINE_IN: 'text-blue-600',
@@ -36,7 +31,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onViewDetails, onEd
           <h3 className="text-lg font-semibold text-gray-800">Order #{order.id}</h3>
           <p className="text-sm text-gray-600">{order.customerName}</p>
         </div>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[order.status]}`}>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusClasses.bg} ${statusClasses.text}`}>
           {order.status}
         </span>
       </div>

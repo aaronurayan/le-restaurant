@@ -7,6 +7,7 @@ import com.lerestaurant.le_restaurant_backend.dto.DeliveryCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.DeliveryUpdateRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Delivery.DeliveryStatus;
 import com.lerestaurant.le_restaurant_backend.service.DeliveryService;
+import com.lerestaurant.le_restaurant_backend.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -51,6 +52,10 @@ class DeliveryControllerTest {
     @MockBean
     private DeliveryService deliveryService;
 
+    // Satisfies the auto-included JwtAuthenticationFilter (depends on JwtUtil).
+    @MockBean
+    private JwtUtil jwtUtil;
+
     private DeliveryDto testDelivery;
 
     @BeforeEach
@@ -58,8 +63,8 @@ class DeliveryControllerTest {
         testDelivery = new DeliveryDto();
         testDelivery.setId(1L);
         testDelivery.setOrderId(100L);
-        testDelivery.setStatus(DeliveryStatus.PENDING);
-        testDelivery.setCreatedAt(OffsetDateTime.now());
+        testDelivery.setStatus(DeliveryStatus.ASSIGNED);
+        testDelivery.setAssignedAt(OffsetDateTime.now());
     }
 
     // =========================================================================
@@ -151,7 +156,7 @@ class DeliveryControllerTest {
         void shouldCreateDelivery() throws Exception {
             DeliveryCreateRequestDto createDto = new DeliveryCreateRequestDto();
             createDto.setOrderId(100L);
-            createDto.setAddressId(1L);
+            createDto.setDeliveryAddressId(1L);
 
             when(deliveryService.createDelivery(any(DeliveryCreateRequestDto.class)))
                     .thenReturn(testDelivery);
@@ -214,7 +219,7 @@ class DeliveryControllerTest {
 
             when(deliveryService.assignDriver(1L, 5L)).thenReturn(assignedDelivery);
 
-            mockMvc.perform(put("/api/deliveries/1/assign/5")
+            mockMvc.perform(post("/api/deliveries/1/assign-driver/5")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
@@ -229,7 +234,7 @@ class DeliveryControllerTest {
             when(deliveryService.assignDriver(1L, 999L))
                     .thenThrow(new RuntimeException("Driver not found with id: 999"));
 
-            mockMvc.perform(put("/api/deliveries/1/assign/999")
+            mockMvc.perform(post("/api/deliveries/1/assign-driver/999")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isNotFound());
@@ -251,7 +256,8 @@ class DeliveryControllerTest {
             mockMvc.perform(delete("/api/deliveries/1")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
-                    .andExpect(status().isNoContent());
+                    // DeliveryController.deleteDelivery returns 200 OK with a body (not 204).
+                    .andExpect(status().isOk());
 
             verify(deliveryService, times(1)).deleteDelivery(1L);
         }

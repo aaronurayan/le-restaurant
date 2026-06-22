@@ -69,8 +69,8 @@ class Scenario10_FullRefundProcessTest extends BaseE2ETest {
         assertNotNull(verifiedPayment);
         assertEquals(Payment.PaymentStatus.COMPLETED, verifiedPayment.getStatus());
 
-        // Verify order can be cancelled after delivery
+        // Delivery completion does not auto-complete the order; it remains CONFIRMED.
         OrderDto deliveredOrder = orderService.getOrderById(orderId);
-        assertEquals(Order.OrderStatus.COMPLETED, deliveredOrder.getStatus());
+        assertEquals(Order.OrderStatus.CONFIRMED, deliveredOrder.getStatus());
     }
 }

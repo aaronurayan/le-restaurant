@@ -4,6 +4,7 @@ import com.lerestaurant.le_restaurant_backend.dto.ReservationApprovalRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.ReservationCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.ReservationDto;
 import com.lerestaurant.le_restaurant_backend.entity.Reservation;
+import com.lerestaurant.le_restaurant_backend.service.AuthorizationService;
 import com.lerestaurant.le_restaurant_backend.service.ReservationService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -37,10 +39,13 @@ public class ReservationController {
     private static final Logger logger = LoggerFactory.getLogger(ReservationController.class);
 
     private final ReservationService reservationService;
+    private final AuthorizationService authorizationService;
 
     @Autowired
-    public ReservationController(ReservationService reservationService) {
+    public ReservationController(ReservationService reservationService,
+                                 AuthorizationService authorizationService) {
         this.reservationService = reservationService;
+        this.authorizationService = authorizationService;
     }
 
     /**
@@ -52,7 +57,9 @@ public class ReservationController {
      */
     @PostMapping
     public ResponseEntity<?> createReservation(@Valid @RequestBody ReservationCreateRequestDto requestDto) {
-        // Exception handling is done by GlobalExceptionHandler
+        // Bind the reservation to the authenticated customer; staff may book for any customer.
+        // Prevents a customer from creating reservations under another customer's id.
+        requestDto.setCustomerId(authorizationService.resolveOwnerId(requestDto.getCustomerId()));
         logger.info("Creating new reservation for customer ID: {}", requestDto.getCustomerId());
         ReservationDto reservationDto = reservationService.createReservation(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationDto);
@@ -67,9 +74,10 @@ public class ReservationController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getReservationById(@PathVariable Long id) {
-        // Exception handling is done by GlobalExceptionHandler
         logger.info("Fetching reservation with ID: {}", id);
         ReservationDto reservationDto = reservationService.getReservationById(id);
+        // Customers may only read their own reservations (prevents IDOR).
+        authorizationService.requireSelfOrStaff(reservationDto.getCustomerId());
         return ResponseEntity.ok(reservationDto);
     }
 
@@ -96,7 +104,8 @@ public class ReservationController {
      */
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<?> getReservationsByCustomer(@PathVariable Long customerId) {
-        // Exception handling is done by GlobalExceptionHandler
+        // Customers may only list their own reservations.
+        authorizationService.requireSelfOrStaff(customerId);
         logger.info("Fetching reservations for customer ID: {}", customerId);
         List<ReservationDto> reservations = reservationService.getReservationsByCustomer(customerId);
         return ResponseEntity.ok(reservations);
@@ -127,6 +136,7 @@ public class ReservationController {
      * @param approverId Manager ID
      * @return Approved reservation
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping("/{id}/approve/{approverId}")
     public ResponseEntity<?> approveReservation(@PathVariable Long id, @PathVariable Long approverId) {
         // Exception handling is done by GlobalExceptionHandler
@@ -143,6 +153,7 @@ public class ReservationController {
      * @param requestDto Rejection request with reason
      * @return Rejected reservation
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping("/{id}/reject")
     public ResponseEntity<?> rejectReservation(@PathVariable Long id,
             @Valid @RequestBody ReservationApprovalRequestDto requestDto) {
@@ -177,6 +188,7 @@ public class ReservationController {
      * @param id Reservation ID
      * @return Completed reservation
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @PutMapping("/{id}/complete")
     public ResponseEntity<?> completeReservation(@PathVariable Long id) {
         // Exception handling is done by GlobalExceptionHandler

@@ -5,6 +5,7 @@ import com.lerestaurant.le_restaurant_backend.dto.UserDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserUpdateRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.User;
+import com.lerestaurant.le_restaurant_backend.service.AuthorizationService;
 import com.lerestaurant.le_restaurant_backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import com.lerestaurant.le_restaurant_backend.util.JwtUtil;
 
 /**
  * Unit Tests for UserController (F102 - User Management)
@@ -50,6 +52,13 @@ class UserControllerTest {
 
     @MockBean
     private UserService userService;
+
+    @MockBean
+    private AuthorizationService authorizationService;
+
+    // Satisfies the auto-included JwtAuthenticationFilter (depends on JwtUtil).
+    @MockBean
+    private JwtUtil jwtUtil;
 
     private UserDto testUserDto;
     private UserCreateRequestDto testUserCreateRequest;
@@ -218,10 +227,9 @@ class UserControllerTest {
         @Test
         @DisplayName("Should return 400 when email is missing")
         void shouldReturn400WhenEmailIsMissing() throws Exception {
-            // Given
+            // Given a missing email, @Valid (@NotBlank) rejects the request before the
+            // controller runs, so the service is never called.
             testUserCreateRequest.setEmail(null);
-            when(userService.createUser(any(UserCreateRequestDto.class)))
-                    .thenThrow(new RuntimeException("Email is required"));
 
             // When & Then
             mockMvc.perform(post("/api/users")
@@ -229,16 +237,15 @@ class UserControllerTest {
                             .content(objectMapper.writeValueAsString(testUserCreateRequest)))
                     .andExpect(status().isBadRequest());
 
-            verify(userService, times(1)).createUser(any(UserCreateRequestDto.class));
+            verify(userService, never()).createUser(any(UserCreateRequestDto.class));
         }
 
         @Test
         @DisplayName("Should return 400 when email is invalid")
         void shouldReturn400WhenEmailIsInvalid() throws Exception {
-            // Given
+            // Given an invalid email, @Valid (@Email) rejects the request before the
+            // controller runs, so the service is never called.
             testUserCreateRequest.setEmail("invalid-email");
-            when(userService.createUser(any(UserCreateRequestDto.class)))
-                    .thenThrow(new RuntimeException("Invalid email format"));
 
             // When & Then
             mockMvc.perform(post("/api/users")
@@ -246,15 +253,17 @@ class UserControllerTest {
                             .content(objectMapper.writeValueAsString(testUserCreateRequest)))
                     .andExpect(status().isBadRequest());
 
-            verify(userService, times(1)).createUser(any(UserCreateRequestDto.class));
+            verify(userService, never()).createUser(any(UserCreateRequestDto.class));
         }
 
         @Test
         @DisplayName("Should return 409 when email already exists")
         void shouldReturn409WhenEmailExists() throws Exception {
             // Given
+            // Duplicate email surfaces as a RuntimeException whose message contains
+            // "already exists"; GlobalExceptionHandler maps that to 409 Conflict.
             when(userService.createUser(any(UserCreateRequestDto.class)))
-                    .thenThrow(new IllegalArgumentException("Email already exists"));
+                    .thenThrow(new RuntimeException("Email already exists"));
 
             // When & Then
             mockMvc.perform(post("/api/users")
@@ -354,7 +363,8 @@ class UserControllerTest {
         @DisplayName("Should return 404 when deleting non-existent user")
         void shouldReturn404WhenDeletingNonExistentUser() throws Exception {
             // Given
-            doThrow(new IllegalArgumentException("User not found"))
+            // "not found" message -> GlobalExceptionHandler maps to 404 (IllegalArgumentException maps to 400).
+            doThrow(new RuntimeException("User not found"))
                     .when(userService).deleteUser(999L);
 
             // When & Then

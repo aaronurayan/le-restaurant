@@ -6,6 +6,7 @@ import com.lerestaurant.le_restaurant_backend.dto.MenuItemDto;
 import com.lerestaurant.le_restaurant_backend.dto.MenuItemCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.MenuItemUpdateRequestDto;
 import com.lerestaurant.le_restaurant_backend.service.MenuService;
+import com.lerestaurant.le_restaurant_backend.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -51,6 +52,11 @@ class MenuControllerTest {
     @MockBean
     private MenuService menuService;
 
+    // Satisfies the JwtAuthenticationFilter (a Filter bean auto-included by @WebMvcTest),
+    // which depends on JwtUtil. Without this the slice's ApplicationContext fails to load.
+    @MockBean
+    private JwtUtil jwtUtil;
+
     private MenuItemDto testMenuItem;
     private MenuItemCreateRequestDto createRequestDto;
 
@@ -95,7 +101,7 @@ class MenuControllerTest {
             List<MenuItemDto> menuItems = Arrays.asList(testMenuItem, item2);
             when(menuService.findAllMenuItems()).thenReturn(menuItems);
 
-            mockMvc.perform(get("/api/menu")
+            mockMvc.perform(get("/api/menu-items")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
@@ -112,7 +118,7 @@ class MenuControllerTest {
         void shouldReturnEmptyList() throws Exception {
             when(menuService.findAllMenuItems()).thenReturn(Collections.emptyList());
 
-            mockMvc.perform(get("/api/menu")
+            mockMvc.perform(get("/api/menu-items")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
@@ -133,7 +139,7 @@ class MenuControllerTest {
         void shouldReturnMenuItemById() throws Exception {
             when(menuService.findMenuItemById(1L)).thenReturn(testMenuItem);
 
-            mockMvc.perform(get("/api/menu/1")
+            mockMvc.perform(get("/api/menu-items/1")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
@@ -150,7 +156,7 @@ class MenuControllerTest {
             when(menuService.findMenuItemById(999L))
                     .thenThrow(new RuntimeException("Menu item not found with id: 999"));
 
-            mockMvc.perform(get("/api/menu/999")
+            mockMvc.perform(get("/api/menu-items/999")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isNotFound());
@@ -170,7 +176,7 @@ class MenuControllerTest {
             when(menuService.createMenuItem(any(MenuItemCreateRequestDto.class)))
                     .thenReturn(testMenuItem);
 
-            mockMvc.perform(post("/api/menu")
+            mockMvc.perform(post("/api/menu-items")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(createRequestDto)))
                     .andDo(print())
@@ -186,7 +192,7 @@ class MenuControllerTest {
         void shouldReturn400WhenNameIsMissing() throws Exception {
             createRequestDto.setName(null);
 
-            mockMvc.perform(post("/api/menu")
+            mockMvc.perform(post("/api/menu-items")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(createRequestDto)))
                     .andDo(print())
@@ -199,7 +205,7 @@ class MenuControllerTest {
             when(menuService.createMenuItem(any(MenuItemCreateRequestDto.class)))
                     .thenThrow(new IllegalArgumentException("Menu item with name already exists"));
 
-            mockMvc.perform(post("/api/menu")
+            mockMvc.perform(post("/api/menu-items")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(createRequestDto)))
                     .andDo(print())
@@ -231,7 +237,7 @@ class MenuControllerTest {
             when(menuService.updateMenuItem(eq(1L), any(MenuItemUpdateRequestDto.class)))
                     .thenReturn(updatedItem);
 
-            mockMvc.perform(put("/api/menu/1")
+            mockMvc.perform(put("/api/menu-items/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
                     .andDo(print())
@@ -251,7 +257,7 @@ class MenuControllerTest {
             when(menuService.updateMenuItem(eq(999L), any(MenuItemUpdateRequestDto.class)))
                     .thenThrow(new RuntimeException("Menu item not found with id: 999"));
 
-            mockMvc.perform(put("/api/menu/999")
+            mockMvc.perform(put("/api/menu-items/999")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
                     .andDo(print())
@@ -271,7 +277,7 @@ class MenuControllerTest {
         void shouldDeleteMenuItem() throws Exception {
             doNothing().when(menuService).deleteMenuItem(1L);
 
-            mockMvc.perform(delete("/api/menu/1")
+            mockMvc.perform(delete("/api/menu-items/1")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isNoContent());
@@ -285,7 +291,7 @@ class MenuControllerTest {
             doThrow(new RuntimeException("Menu item not found with id: 999"))
                     .when(menuService).deleteMenuItem(999L);
 
-            mockMvc.perform(delete("/api/menu/999")
+            mockMvc.perform(delete("/api/menu-items/999")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isNotFound());
@@ -305,8 +311,8 @@ class MenuControllerTest {
             when(menuService.searchByName("risotto"))
                     .thenReturn(Arrays.asList(testMenuItem));
 
-            mockMvc.perform(get("/api/menu/search")
-                    .param("name", "risotto")
+            mockMvc.perform(get("/api/menu-items")
+                    .param("search", "risotto")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
@@ -329,7 +335,8 @@ class MenuControllerTest {
             when(menuService.findByCategory("Main Course"))
                     .thenReturn(Arrays.asList(testMenuItem));
 
-            mockMvc.perform(get("/api/menu/category/Main Course")
+            mockMvc.perform(get("/api/menu-items")
+                    .param("category", "Main Course")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())

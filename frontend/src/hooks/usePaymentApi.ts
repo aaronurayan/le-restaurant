@@ -71,7 +71,7 @@ export const usePaymentList = () => {
       },
       true, // Use mock data on failure
       async () => {
-        // Mock data fallback
+        console.warn('[API Fallback] Using mock data for payments. Backend may be unavailable.');
         const mockResponse = paymentApiService['getMockPaymentList'](currentFilters);
         return mockResponse.payments; // Extract payments array from response
       }

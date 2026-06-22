@@ -3,9 +3,9 @@
 | Document Information | |
 |---------------------|------------------------|
 | **Document ID** | REQ-001 |
-| **Version** | 2.0 |
+| **Version** | 3.0 |
 | **Status** | Approved |
-| **Last Updated** | 2025-12-24 |
+| **Last Updated** | 2026-05-25 |
 | **Author** | Le Restaurant Development Team |
 | **Reviewer** | Product Owner |
 
@@ -91,15 +91,15 @@ This specification covers all functional requirements organized by:
 | ID | Requirement | User Type | Priority | Status |
 |----|-------------|-----------|----------|--------|
 | FR-200 | Customer account registration | Customer | Medium | Done |
-| FR-201 | Email verification | Customer | Medium | Planned |
-| FR-202 | Password strength indicator | Customer | Low | Planned |
-| FR-203 | Password reset | Customer | High | Planned |
-| FR-204 | Registration error messages | Customer | Medium | Planned |
+| FR-201 | Email verification | Customer | Medium | Deferred |
+| FR-202 | Password strength indicator | Customer | Low | Done |
+| FR-203 | Password reset | Customer | High | Done |
+| FR-204 | Registration error messages | Customer | Medium | Done |
 | FR-301 | Staff registration | Staff | High | Done |
 | FR-302 | View registration details | Staff | Medium | Done |
 | FR-303 | Update registration details | Staff | Medium | Done |
 | FR-304 | Cancel registration | Staff | Medium | Done |
-| FR-101 | Manage user registrations | Manager | High | Planned |
+| FR-101 | Manage user registrations | Manager | High | Done |
 
 ### 3.2 Detailed Requirements
 
@@ -157,13 +157,13 @@ As a Staff User, I want to register so that I can create a user profile with app
 | ID | Requirement | User Type | Priority | Status |
 |----|-------------|-----------|----------|--------|
 | FR-205 | Anonymous browsing | Customer | Medium | Done |
-| FR-206 | Customer login | Customer | High | Planned |
-| FR-207 | Remember me option | Customer | Low | Planned |
-| FR-208 | Session timeout warning | Customer | Medium | Planned |
-| FR-209 | Login history | Customer | Medium | Planned |
+| FR-206 | Customer login | Customer | High | Done |
+| FR-207 | Remember me option | Customer | Low | Done |
+| FR-208 | Session timeout warning | Customer | Medium | Done |
+| FR-209 | Login history | Customer | Medium | Done |
 | FR-305 | Staff login | Staff | High | Done |
 | FR-306 | Staff logout | Staff | High | Done |
-| FR-102 | Force logout capability | Manager | High | Planned |
+| FR-102 | Force logout capability | Manager | High | Done |
 
 ### 4.2 Detailed Requirements
 
@@ -322,6 +322,7 @@ As a Customer, I want to view the restaurant menu with categories so that I can 
 |---------|------|--------|---------|
 | 1.0 | 2025-01-27 | Product Team | Initial document creation |
 | 2.0 | 2025-12-24 | Development Team | Restructured to technical writer format |
+| 3.0 | 2026-05-25 | Jungwook Van | Implemented FR-202, FR-203, FR-206, FR-207, FR-208, FR-209, FR-101, FR-102; FR-201 deferred (requires mail server) |
 
 ---
 
