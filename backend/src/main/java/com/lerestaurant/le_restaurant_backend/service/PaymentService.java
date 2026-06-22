@@ -105,7 +105,8 @@ public class PaymentService {
         payment.setPaymentMethod(requestDto.getPaymentMethod());
         payment.setTransactionId(UUID.randomUUID().toString());
         payment.setStatus(Payment.PaymentStatus.PENDING);
-        payment.setPaymentDetails(requestDto.getPaymentDetails());
+        // Never persist raw card data. Store only the payment method label as a reference.
+        payment.setPaymentDetails(sanitizePaymentDetails(requestDto.getPaymentMethod()));
         payment.setPaymentTime(OffsetDateTime.now());
         
         // Save payment to database
@@ -157,12 +158,20 @@ public class PaymentService {
     public PaymentDto processPayment(Long id) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment not found with id: " + id));
-        
-        // 실제 결제 처리 로직 (외부 결제 게이트웨이 연동)
-        // 여기서는 간단히 성공으로 처리
+
+        if (payment.getStatus() == Payment.PaymentStatus.COMPLETED) {
+            throw new IllegalStateException("Payment has already been processed");
+        }
+
+        // NOTE: This is a simulated payment flow for academic/demo purposes.
+        // In production, replace this block with a real payment gateway (e.g. Stripe, PayPal):
+        //   1. Call gateway tokenisation API with card token (never raw card data)
+        //   2. Handle gateway response (success / decline / error)
+        //   3. Store gateway transaction reference, not card details
+        logger.info("Processing payment {} (simulated gateway)", id);
         payment.setStatus(Payment.PaymentStatus.COMPLETED);
         payment.setProcessedAt(OffsetDateTime.now());
-        payment.setGatewayResponse("Payment processed successfully");
+        payment.setGatewayResponse("SIMULATED_SUCCESS");
         
         Payment updatedPayment = paymentRepository.save(payment);
         
@@ -224,6 +233,11 @@ public class PaymentService {
         paymentRepository.delete(payment);
     }
     
+    private String sanitizePaymentDetails(Payment.PaymentMethod method) {
+        // Store only a non-sensitive label — never raw card numbers, CVVs, or expiry dates
+        return method != null ? "METHOD:" + method.name() : "UNKNOWN";
+    }
+
     private PaymentDto convertToDto(Payment payment) {
         User customer = payment.getOrder().getCustomer();
         String customerName = customer != null 

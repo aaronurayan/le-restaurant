@@ -7,6 +7,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -76,15 +78,27 @@ public class UserController {
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequestDto requestDto) {
-        // Exception handling is done by GlobalExceptionHandler
+    public ResponseEntity<?> updateUser(@PathVariable Long id,
+                                        @Valid @RequestBody UserUpdateRequestDto requestDto,
+                                        Authentication authentication) {
+        // CUSTOMER role may only update their own profile
+        boolean isCustomer = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_CUSTOMER"));
+        if (isCustomer) {
+            UserDto authenticatedUser = userService.getUserByEmail(authentication.getName());
+            if (!authenticatedUser.getId().equals(id)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Access denied: customers can only update their own profile"));
+            }
+        }
         UserDto user = userService.updateUser(id, requestDto);
         return ResponseEntity.ok(user);
     }
-    
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/{id}/status")
-    public ResponseEntity<?> updateUserStatus(@PathVariable Long id, @RequestBody Map<String, User.UserStatus> statusRequest) {
-        // Exception handling is done by GlobalExceptionHandler
+    public ResponseEntity<?> updateUserStatus(@PathVariable Long id,
+                                              @RequestBody Map<String, User.UserStatus> statusRequest) {
         User.UserStatus status = statusRequest.get("status");
         UserDto user = userService.updateUserStatus(id, status);
         return ResponseEntity.ok(user);

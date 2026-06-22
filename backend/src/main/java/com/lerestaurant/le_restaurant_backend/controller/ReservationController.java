@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -127,6 +128,7 @@ public class ReservationController {
      * @param approverId Manager ID
      * @return Approved reservation
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping("/{id}/approve/{approverId}")
     public ResponseEntity<?> approveReservation(@PathVariable Long id, @PathVariable Long approverId) {
         // Exception handling is done by GlobalExceptionHandler
@@ -143,6 +145,7 @@ public class ReservationController {
      * @param requestDto Rejection request with reason
      * @return Rejected reservation
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping("/{id}/reject")
     public ResponseEntity<?> rejectReservation(@PathVariable Long id,
             @Valid @RequestBody ReservationApprovalRequestDto requestDto) {
@@ -177,6 +180,7 @@ public class ReservationController {
      * @param id Reservation ID
      * @return Completed reservation
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @PutMapping("/{id}/complete")
     public ResponseEntity<?> completeReservation(@PathVariable Long id) {
         // Exception handling is done by GlobalExceptionHandler
