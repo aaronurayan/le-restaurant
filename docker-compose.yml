@@ -25,6 +25,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       POSTGRES_USER: lerestaurant
       POSTGRES_PASSWORD: lerestaurant
+      # JWT signing key — must be supplied (e.g. via a .env file). Compose fails fast if unset.
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set (see .env.example)}
     depends_on:
       postgres:
         condition: service_healthy

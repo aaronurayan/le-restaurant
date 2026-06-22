@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lerestaurant.le_restaurant_backend.dto.PaymentDto;
 import com.lerestaurant.le_restaurant_backend.dto.PaymentRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Payment;
+import com.lerestaurant.le_restaurant_backend.service.AuthorizationService;
 import com.lerestaurant.le_restaurant_backend.service.PaymentService;
 
 import jakarta.validation.Valid;
@@ -30,12 +31,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/payments")
 // CORS is handled globally in WebConfig
 public class PaymentController {
-    
+
     private final PaymentService paymentService;
-    
+    private final AuthorizationService authorizationService;
+
     @Autowired
-    public PaymentController(PaymentService paymentService) {
+    public PaymentController(PaymentService paymentService, AuthorizationService authorizationService) {
         this.paymentService = paymentService;
+        this.authorizationService = authorizationService;
     }
     
     @PostMapping
@@ -47,8 +50,9 @@ public class PaymentController {
     
     @GetMapping("/{id}")
     public ResponseEntity<?> getPaymentById(@PathVariable Long id) {
-        // Exception handling is done by GlobalExceptionHandler
         PaymentDto payment = paymentService.getPaymentById(id);
+        // Customers may only read payments for their own orders (prevents IDOR).
+        authorizationService.requireSelfOrStaff(payment.getCustomerId());
         return ResponseEntity.ok(payment);
     }
     
@@ -61,6 +65,10 @@ public class PaymentController {
     @GetMapping("/order/{orderId}")
     public ResponseEntity<List<PaymentDto>> getPaymentsByOrderId(@PathVariable Long orderId) {
         List<PaymentDto> payments = paymentService.getPaymentsByOrderId(orderId);
+        // Customers may only read payments belonging to their own orders (prevents IDOR).
+        if (!authorizationService.isStaff()) {
+            payments.forEach(p -> authorizationService.requireSelfOrStaff(p.getCustomerId()));
+        }
         return ResponseEntity.ok(payments);
     }
     

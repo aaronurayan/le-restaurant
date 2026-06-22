@@ -4,6 +4,7 @@ import com.lerestaurant.le_restaurant_backend.dto.OrderCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.OrderDto;
 import com.lerestaurant.le_restaurant_backend.dto.OrderUpdateRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Order;
+import com.lerestaurant.le_restaurant_backend.service.AuthorizationService;
 import com.lerestaurant.le_restaurant_backend.service.OrderService;
 
 import jakarta.validation.Valid;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 /**
  * Order Management REST Controller (F105)
- * 
+ *
  * Provides endpoints for order CRUD operations and status management.
  * Base URL: /api/orders
  */
@@ -27,16 +28,20 @@ import java.util.Map;
 public class OrderController {
 
     private final OrderService orderService;
+    private final AuthorizationService authorizationService;
 
     @Autowired
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, AuthorizationService authorizationService) {
         this.orderService = orderService;
+        this.authorizationService = authorizationService;
     }
 
     /** Create a new order */
     @PostMapping
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderCreateRequestDto requestDto) {
-        // Exception handling is done by GlobalExceptionHandler
+        // Bind the order to the authenticated customer; staff may place orders for any customer.
+        // Prevents a customer from creating orders under another customer's id.
+        requestDto.setCustomerId(authorizationService.resolveOwnerId(requestDto.getCustomerId()));
         OrderDto order = orderService.createOrder(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
@@ -44,8 +49,9 @@ public class OrderController {
     /** Get order by ID */
     @GetMapping("/{id}")
     public ResponseEntity<?> getOrderById(@PathVariable Long id) {
-        // Exception handling is done by GlobalExceptionHandler
         OrderDto order = orderService.getOrderById(id);
+        // Customers may only read their own orders (prevents IDOR).
+        authorizationService.requireSelfOrStaff(order.getCustomerId());
         return ResponseEntity.ok(order);
     }
 
@@ -58,6 +64,8 @@ public class OrderController {
     /** Get orders by customer ID */
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<OrderDto>> getOrdersByCustomerId(@PathVariable Long customerId) {
+        // Customers may only list their own orders (prevents enumerating others' history).
+        authorizationService.requireSelfOrStaff(customerId);
         return ResponseEntity.ok(orderService.getOrdersByCustomerId(customerId));
     }
 
@@ -85,7 +93,9 @@ public class OrderController {
     /** Delete / cancel order */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
-        // Exception handling is done by GlobalExceptionHandler
+        // Customers may only cancel their own orders (prevents cancelling others' orders).
+        OrderDto order = orderService.getOrderById(id);
+        authorizationService.requireSelfOrStaff(order.getCustomerId());
         orderService.deleteOrder(id);
         return ResponseEntity.ok(Map.of("message", "Order cancelled successfully"));
     }

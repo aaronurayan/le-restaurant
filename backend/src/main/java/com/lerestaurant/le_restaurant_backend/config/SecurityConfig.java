@@ -118,29 +118,49 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/menu-items/**").hasAnyRole("ADMIN", "MANAGER")
                 .requestMatchers(HttpMethod.DELETE, "/api/menu-items/**").hasAnyRole("ADMIN", "MANAGER")
                 
-                // Order Management (F105) - Staff can view/manage all orders
+                // Order Management (F105) - Staff manage all; customers own only (ownership checked in controller)
+                // NOTE: more specific matchers MUST precede the generic /** matcher (first match wins).
                 .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/orders/status/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/orders").hasAnyRole("STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/orders/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
-                
-                // Payment Management (F106) - Customers create, staff/manager view all
-                .requestMatchers(HttpMethod.POST, "/api/payments").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/payments").hasAnyRole("STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
+
+                // Cart (server-side) - any authenticated user; ownership enforced in the controller
+                .requestMatchers("/api/cart/**").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
+
+                // Payment Management (F106) - Customers own only; staff/manager privileged ops
                 .requestMatchers(HttpMethod.POST, "/api/payments/*/process").hasAnyRole("STAFF", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/payments/*/refund").hasAnyRole("MANAGER", "ADMIN")
-                
+                .requestMatchers(HttpMethod.POST, "/api/payments").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/payments/status/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/payments").hasAnyRole("STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/payments/**").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasAnyRole("MANAGER", "ADMIN")
+
                 // Delivery Management (F107) - Staff and drivers
+                .requestMatchers(HttpMethod.POST, "/api/deliveries/*/assign-driver/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/deliveries").hasAnyRole("STAFF", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/deliveries/**").hasAnyRole("STAFF", "DRIVER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/deliveries/**").hasAnyRole("STAFF", "DRIVER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/deliveries/**").hasAnyRole("MANAGER", "ADMIN")
-                
-                // Reservation Management (F108) - Customers create, staff/manager manage
+
+                // Delivery addresses (F107) - any authenticated user; ownership enforced in the controller
+                .requestMatchers("/api/delivery-addresses/**").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
+
+                // Reservation Management (F108) - Customers own only; staff/manager manage
                 .requestMatchers(HttpMethod.POST, "/api/reservations").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/reservations/timeslots").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/reservations/availability").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/reservations/date/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/reservations/status/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/reservations").hasAnyRole("STAFF", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/reservations/**").hasAnyRole("CUSTOMER", "STAFF", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/reservations/**").hasAnyRole("STAFF", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/reservations/**").hasAnyRole("MANAGER", "ADMIN")
-                
+
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

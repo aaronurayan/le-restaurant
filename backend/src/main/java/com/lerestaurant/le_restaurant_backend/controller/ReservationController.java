@@ -4,6 +4,7 @@ import com.lerestaurant.le_restaurant_backend.dto.ReservationApprovalRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.ReservationCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.ReservationDto;
 import com.lerestaurant.le_restaurant_backend.entity.Reservation;
+import com.lerestaurant.le_restaurant_backend.service.AuthorizationService;
 import com.lerestaurant.le_restaurant_backend.service.ReservationService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -38,10 +39,13 @@ public class ReservationController {
     private static final Logger logger = LoggerFactory.getLogger(ReservationController.class);
 
     private final ReservationService reservationService;
+    private final AuthorizationService authorizationService;
 
     @Autowired
-    public ReservationController(ReservationService reservationService) {
+    public ReservationController(ReservationService reservationService,
+                                 AuthorizationService authorizationService) {
         this.reservationService = reservationService;
+        this.authorizationService = authorizationService;
     }
 
     /**
@@ -53,7 +57,9 @@ public class ReservationController {
      */
     @PostMapping
     public ResponseEntity<?> createReservation(@Valid @RequestBody ReservationCreateRequestDto requestDto) {
-        // Exception handling is done by GlobalExceptionHandler
+        // Bind the reservation to the authenticated customer; staff may book for any customer.
+        // Prevents a customer from creating reservations under another customer's id.
+        requestDto.setCustomerId(authorizationService.resolveOwnerId(requestDto.getCustomerId()));
         logger.info("Creating new reservation for customer ID: {}", requestDto.getCustomerId());
         ReservationDto reservationDto = reservationService.createReservation(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationDto);
@@ -68,9 +74,10 @@ public class ReservationController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getReservationById(@PathVariable Long id) {
-        // Exception handling is done by GlobalExceptionHandler
         logger.info("Fetching reservation with ID: {}", id);
         ReservationDto reservationDto = reservationService.getReservationById(id);
+        // Customers may only read their own reservations (prevents IDOR).
+        authorizationService.requireSelfOrStaff(reservationDto.getCustomerId());
         return ResponseEntity.ok(reservationDto);
     }
 
@@ -97,7 +104,8 @@ public class ReservationController {
      */
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<?> getReservationsByCustomer(@PathVariable Long customerId) {
-        // Exception handling is done by GlobalExceptionHandler
+        // Customers may only list their own reservations.
+        authorizationService.requireSelfOrStaff(customerId);
         logger.info("Fetching reservations for customer ID: {}", customerId);
         List<ReservationDto> reservations = reservationService.getReservationsByCustomer(customerId);
         return ResponseEntity.ok(reservations);

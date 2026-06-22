@@ -48,14 +48,17 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final DeliveryService deliveryService;
-    
+    private final AuthorizationService authorizationService;
+
     @Autowired
-    public PaymentService(PaymentRepository paymentRepository, 
+    public PaymentService(PaymentRepository paymentRepository,
                          OrderRepository orderRepository,
-                         DeliveryService deliveryService) {
+                         DeliveryService deliveryService,
+                         AuthorizationService authorizationService) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.deliveryService = deliveryService;
+        this.authorizationService = authorizationService;
     }
     
     /**
@@ -77,7 +80,11 @@ public class PaymentService {
                     logger.error("Payment creation failed: order not found - {}", requestDto.getOrderId());
                     return new RuntimeException("Order not found with id: " + requestDto.getOrderId());
                 });
-        
+
+        // A customer may only pay for their own order; staff may pay on behalf of any customer.
+        authorizationService.requireSelfOrStaff(
+                order.getCustomer() != null ? order.getCustomer().getId() : null);
+
         // Validate payment amount matches order total
         BigDecimal orderTotal = order.getTotalAmount();
         if (requestDto.getAmount().compareTo(orderTotal) != 0) {

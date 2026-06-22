@@ -57,17 +57,15 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        try {
-            String token = passwordResetService.generateResetToken(request.getEmail());
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Password reset token generated.");
-            response.put("resetToken", token); // Demo mode: token returned in response
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+        // Generate the token server-side. The token is NEVER returned in the response:
+        // exposing it would let any unauthenticated caller reset any account's password.
+        // It is delivered out-of-band (email in production; server log in demo mode).
+        passwordResetService.generateResetToken(request.getEmail());
+        // Always return the same generic response regardless of whether the email exists,
+        // to prevent account enumeration.
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "If an account exists for that email, a password reset link has been sent.");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/reset-password")
@@ -87,6 +85,10 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody UserCreateRequestDto requestDto) {
         try {
+            // Public self-registration may ONLY create CUSTOMER accounts. Ignore any
+            // client-supplied role to prevent privilege escalation (e.g. registering as ADMIN).
+            // Privileged accounts are created via the protected POST /api/users endpoint.
+            requestDto.setRole(com.lerestaurant.le_restaurant_backend.entity.User.UserRole.CUSTOMER);
             UserDto user = userService.createUser(requestDto);
             
             // Generate JWT token

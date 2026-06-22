@@ -3,6 +3,7 @@ package com.lerestaurant.le_restaurant_backend.controller;
 import com.lerestaurant.le_restaurant_backend.dto.AddToCartRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.CartDto;
 import com.lerestaurant.le_restaurant_backend.dto.UpdateCartItemRequestDto;
+import com.lerestaurant.le_restaurant_backend.service.AuthorizationService;
 import com.lerestaurant.le_restaurant_backend.service.CartService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,19 +15,25 @@ import java.util.Map;
 
 /**
  * Cart Controller (Phase 4.1)
- * 
+ *
  * REST API endpoints for server-side cart management.
  * Base URL: /api/cart
+ *
+ * The {@code userId} is supplied as a request parameter, so every endpoint verifies it
+ * matches the authenticated principal (staff excepted) to prevent reading/mutating
+ * another user's cart (IDOR).
  */
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
 
     private final CartService cartService;
+    private final AuthorizationService authorizationService;
 
     @Autowired
-    public CartController(CartService cartService) {
+    public CartController(CartService cartService, AuthorizationService authorizationService) {
         this.cartService = cartService;
+        this.authorizationService = authorizationService;
     }
 
     /**
@@ -35,6 +42,7 @@ public class CartController {
      */
     @GetMapping
     public ResponseEntity<CartDto> getCart(@RequestParam Long userId) {
+        authorizationService.requireSelfOrStaff(userId);
         CartDto cart = cartService.getCart(userId);
         return ResponseEntity.ok(cart);
     }
@@ -47,6 +55,7 @@ public class CartController {
     public ResponseEntity<CartDto> addToCart(
             @RequestParam Long userId,
             @Valid @RequestBody AddToCartRequestDto request) {
+        authorizationService.requireSelfOrStaff(userId);
         CartDto cart = cartService.addItemToCart(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(cart);
     }
@@ -60,6 +69,7 @@ public class CartController {
             @RequestParam Long userId,
             @PathVariable Long itemId,
             @Valid @RequestBody UpdateCartItemRequestDto request) {
+        authorizationService.requireSelfOrStaff(userId);
         CartDto cart = cartService.updateCartItem(userId, itemId, request);
         return ResponseEntity.ok(cart);
     }
@@ -72,6 +82,7 @@ public class CartController {
     public ResponseEntity<CartDto> removeFromCart(
             @RequestParam Long userId,
             @PathVariable Long itemId) {
+        authorizationService.requireSelfOrStaff(userId);
         CartDto cart = cartService.removeItemFromCart(userId, itemId);
         return ResponseEntity.ok(cart);
     }
@@ -82,6 +93,7 @@ public class CartController {
      */
     @DeleteMapping
     public ResponseEntity<Map<String, String>> clearCart(@RequestParam Long userId) {
+        authorizationService.requireSelfOrStaff(userId);
         cartService.clearCart(userId);
         return ResponseEntity.ok(Map.of("message", "Cart cleared successfully"));
     }
