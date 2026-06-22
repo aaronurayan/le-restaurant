@@ -150,10 +150,11 @@ export const orderApi = {
   getOrdersByCustomer: (customerId: number): Promise<Order[]> =>
     apiRequest<Order[]>(`/orders/customer/${customerId}`),
 
-  cancelOrder: (orderId: number): Promise<Order> =>
-    apiRequest<Order>(`/orders/${orderId}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: 'CANCELLED' }),
+  // Cancel an order. The backend exposes cancellation as DELETE /orders/{id}
+  // (owner or staff); there is no PATCH /status handler.
+  cancelOrder: (orderId: number): Promise<{ message: string }> =>
+    apiRequest<{ message: string }>(`/orders/${orderId}`, {
+      method: 'DELETE',
     }),
 };
 
