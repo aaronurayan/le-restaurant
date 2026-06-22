@@ -46,7 +46,7 @@ class Scenario6_OrderCancellationByManagerTest extends BaseE2ETest {
         // Verify order is cancelled
         OrderDto cancelledOrder = orderService.getOrderById(orderId);
         assertNotNull(cancelledOrder);
-        assertEquals("CANCELLED", cancelledOrder.getStatus());
+        assertEquals(com.lerestaurant.le_restaurant_backend.entity.Order.OrderStatus.CANCELLED, cancelledOrder.getStatus());
 
         // Verify refund process initiated
         // (In real implementation, this would create a refund entry in payments table)

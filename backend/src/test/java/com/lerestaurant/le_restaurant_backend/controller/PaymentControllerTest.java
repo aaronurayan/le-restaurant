@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lerestaurant.le_restaurant_backend.dto.PaymentDto;
 import com.lerestaurant.le_restaurant_backend.dto.PaymentRequestDto;
 import com.lerestaurant.le_restaurant_backend.entity.Payment;
+import com.lerestaurant.le_restaurant_backend.service.AuthorizationService;
 import com.lerestaurant.le_restaurant_backend.service.PaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import com.lerestaurant.le_restaurant_backend.util.JwtUtil;
 
 @WebMvcTest(PaymentController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -42,6 +44,13 @@ class PaymentControllerTest {
 
     @MockBean
     private PaymentService paymentService;
+
+    @MockBean
+    private AuthorizationService authorizationService;
+
+    // Satisfies the auto-included JwtAuthenticationFilter (depends on JwtUtil).
+    @MockBean
+    private JwtUtil jwtUtil;
 
     private PaymentDto testPaymentDto;
     private PaymentRequestDto testPaymentRequest;
@@ -217,25 +226,21 @@ class PaymentControllerTest {
         void shouldReturn400WhenOrderIdIsMissing() throws Exception {
             // Given
             testPaymentRequest.setOrderId(null);
-            when(paymentService.createPayment(any(PaymentRequestDto.class)))
-                    .thenThrow(new RuntimeException("Order ID is required"));
-
-            // When & Then
+            // @Valid (@NotNull orderId) rejects before the controller runs; service not called.
             mockMvc.perform(post("/api/payments")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(testPaymentRequest)))
                     .andExpect(status().isBadRequest());
 
-            verify(paymentService, times(1)).createPayment(any(PaymentRequestDto.class));
+            verify(paymentService, never()).createPayment(any(PaymentRequestDto.class));
         }
 
         @Test
         @DisplayName("Should return 400 when amount is invalid")
         void shouldReturn400WhenAmountIsInvalid() throws Exception {
-            // Given
+            // Given a negative amount, @Valid (@DecimalMin) rejects before the controller
+            // runs; the service is never called.
             testPaymentRequest.setAmount(new BigDecimal("-10.00"));
-            when(paymentService.createPayment(any(PaymentRequestDto.class)))
-                    .thenThrow(new RuntimeException("Amount must be positive"));
 
             // When & Then
             mockMvc.perform(post("/api/payments")
@@ -243,13 +248,13 @@ class PaymentControllerTest {
                             .content(objectMapper.writeValueAsString(testPaymentRequest)))
                     .andExpect(status().isBadRequest());
 
-            verify(paymentService, times(1)).createPayment(any(PaymentRequestDto.class));
+            verify(paymentService, never()).createPayment(any(PaymentRequestDto.class));
         }
 
         @Test
-        @DisplayName("Should return 400 when order not found")
-        void shouldReturn400WhenOrderNotFound() throws Exception {
-            // Given
+        @DisplayName("Should return 404 when order not found")
+        void shouldReturn404WhenOrderNotFound() throws Exception {
+            // "Order not found" -> GlobalExceptionHandler maps the message to 404.
             when(paymentService.createPayment(any(PaymentRequestDto.class)))
                     .thenThrow(new RuntimeException("Order not found with id: 100"));
 
@@ -257,7 +262,7 @@ class PaymentControllerTest {
             mockMvc.perform(post("/api/payments")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(testPaymentRequest)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isNotFound());
 
             verify(paymentService, times(1)).createPayment(any(PaymentRequestDto.class));
         }

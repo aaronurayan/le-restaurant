@@ -5,7 +5,10 @@ import com.lerestaurant.le_restaurant_backend.dto.AuthRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserCreateRequestDto;
 import com.lerestaurant.le_restaurant_backend.dto.UserDto;
 import com.lerestaurant.le_restaurant_backend.entity.User;
+import com.lerestaurant.le_restaurant_backend.service.AuthorizationService;
+import com.lerestaurant.le_restaurant_backend.service.PasswordResetService;
 import com.lerestaurant.le_restaurant_backend.service.UserService;
+import com.lerestaurant.le_restaurant_backend.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,6 +42,17 @@ public class UserAuthAndRegistrationControllerTest {
 
     @MockBean
     private UserService userService;
+
+    // AuthController + UserController dependencies and the auto-included JwtAuthenticationFilter
+    // all require these beans to be present for the @WebMvcTest context to load.
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private PasswordResetService passwordResetService;
+
+    @MockBean
+    private AuthorizationService authorizationService;
 
     // --- Auth (Login) Test Data ---
     private UserDto testUserDto;
@@ -86,6 +100,7 @@ public class UserAuthAndRegistrationControllerTest {
         @DisplayName("POST /api/auth/login - success returns user and token")
         void loginSuccess() throws Exception {
             when(userService.authenticateUser("john@example.com", "SecurePass123!")).thenReturn(testUserDto);
+            when(jwtUtil.generateToken(any(), any())).thenReturn("mock.jwt.token");
             mockMvc.perform(post("/api/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(authRequest)))
@@ -181,46 +196,44 @@ public class UserAuthAndRegistrationControllerTest {
         @DisplayName("POST /api/users - missing password returns 400")
         void registrationMissingPasswordReturns400() throws Exception {
             createReq.setPassword(null);
-            when(userService.createUser(any(UserCreateRequestDto.class)))
-                    .thenThrow(new RuntimeException("Password is required"));
+            // @Valid (@NotBlank) rejects before the controller runs; service not called.
             mockMvc.perform(post("/api/users")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(createReq)))
                     .andExpect(status().isBadRequest());
-            verify(userService, times(1)).createUser(any(UserCreateRequestDto.class));
+            verify(userService, never()).createUser(any(UserCreateRequestDto.class));
         }
 
         @Test
         @DisplayName("POST /api/users - weak password returns 400")
         void registrationWeakPasswordReturns400() throws Exception {
             createReq.setPassword("weak");
-            when(userService.createUser(any(UserCreateRequestDto.class)))
-                    .thenThrow(new RuntimeException("Password does not meet strength requirements"));
+            // @Valid (@Size min=8) rejects before the controller runs; service not called.
             mockMvc.perform(post("/api/users")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(createReq)))
                     .andExpect(status().isBadRequest());
-            verify(userService, times(1)).createUser(any(UserCreateRequestDto.class));
+            verify(userService, never()).createUser(any(UserCreateRequestDto.class));
         }
 
         @Test
         @DisplayName("POST /api/users - missing email returns 400")
         void missingEmailReturns400() throws Exception {
             createReq.setEmail(null);
-            when(userService.createUser(any(UserCreateRequestDto.class)))
-                    .thenThrow(new RuntimeException("Email is required"));
+            // @Valid (@NotBlank) rejects before the controller runs; service not called.
             mockMvc.perform(post("/api/users")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(createReq)))
                     .andExpect(status().isBadRequest());
-            verify(userService, times(1)).createUser(any(UserCreateRequestDto.class));
+            verify(userService, never()).createUser(any(UserCreateRequestDto.class));
         }
 
         @Test
-        @DisplayName("POST /api/users - duplicate email returns 400")
-        void duplicateEmailReturns400() throws Exception {
+        @DisplayName("POST /api/users - duplicate email returns 409")
+        void duplicateEmailReturns409() throws Exception {
+            // Duplicate email -> RuntimeException("...already exists") -> 409 (GlobalExceptionHandler).
             when(userService.createUser(any(UserCreateRequestDto.class)))
-                    .thenThrow(new IllegalArgumentException("Email already exists"));
+                    .thenThrow(new RuntimeException("Email already exists"));
             mockMvc.perform(post("/api/users")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(createReq)))
@@ -232,13 +245,12 @@ public class UserAuthAndRegistrationControllerTest {
         @DisplayName("POST /api/users - missing first name returns 400")
         void registrationMissingFirstNameReturns400() throws Exception {
             createReq.setFirstName(null);
-            when(userService.createUser(any(UserCreateRequestDto.class)))
-                    .thenThrow(new RuntimeException("First name is required"));
+            // @Valid (@NotBlank) rejects before the controller runs; service not called.
             mockMvc.perform(post("/api/users")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(createReq)))
                     .andExpect(status().isBadRequest());
-            verify(userService, times(1)).createUser(any(UserCreateRequestDto.class));
+            verify(userService, never()).createUser(any(UserCreateRequestDto.class));
         }
     }
 }

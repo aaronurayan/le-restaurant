@@ -43,15 +43,16 @@ class Scenario8_DeliveryDriverWorkflowTest extends BaseE2ETest {
         Long deliveryId = delivery.getId();
 
         // Step 2: Manager Assigns Driver (F107)
-        // Create a driver user first
-        UserDto driver = createTestCustomer("driver@example.com", "Driver", "John");
-        
+        // Register a delivery driver (driver assignment resolves a DeliveryDriver, not a User).
+        UserDto driverUser = createTestCustomer("driver@example.com", "Driver", "John");
+        Long driverId = createDriver(driverUser.getId());
+
         DeliveryUpdateRequestDto assignDto = new DeliveryUpdateRequestDto();
-        assignDto.setDriverId(driver.getId());
-        
+        assignDto.setDriverId(driverId);
+
         DeliveryDto assignedDelivery = deliveryService.updateDeliveryStatus(deliveryId, assignDto);
         assertNotNull(assignedDelivery);
-        assertEquals(driver.getId(), assignedDelivery.getDriverId());
+        assertEquals(driverId, assignedDelivery.getDriverId());
 
         // Step 3: Driver Updates Status (F107)
         DeliveryUpdateRequestDto statusDto1 = new DeliveryUpdateRequestDto();
@@ -70,6 +71,6 @@ class Scenario8_DeliveryDriverWorkflowTest extends BaseE2ETest {
         statusDto3.setStatus(Delivery.DeliveryStatus.DELIVERED);
         deliveryService.updateDeliveryStatus(deliveryId, statusDto3);
         DeliveryDto deliveredStatus = deliveryService.getDeliveryById(deliveryId);
-        assertEquals("DELIVERED", deliveredStatus.getStatus());
+        assertEquals(Delivery.DeliveryStatus.DELIVERED, deliveredStatus.getStatus());
     }
 }

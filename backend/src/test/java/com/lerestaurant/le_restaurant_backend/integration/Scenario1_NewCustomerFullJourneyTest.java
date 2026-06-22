@@ -73,7 +73,7 @@ class Scenario1_NewCustomerFullJourneyTest extends BaseE2ETest {
         deliveryService.updateDeliveryStatus(deliveryId, statusDto3);
 
         DeliveryDto finalDelivery = deliveryService.getDeliveryById(deliveryId);
-        assertEquals("DELIVERED", finalDelivery.getStatus());
+        assertEquals(Delivery.DeliveryStatus.DELIVERED, finalDelivery.getStatus());
 
         // Step 6: Make Reservation (F108)
         ReservationDto reservation = createReservation(
@@ -83,7 +83,7 @@ class Scenario1_NewCustomerFullJourneyTest extends BaseE2ETest {
             4
         );
         assertNotNull(reservation);
-        assertEquals("PENDING_APPROVAL", reservation.getStatus());
+        assertEquals("PENDING", reservation.getStatus());
         Long reservationId = reservation.getId();
 
         // Step 7: Approve Reservation (F109)
@@ -92,6 +92,6 @@ class Scenario1_NewCustomerFullJourneyTest extends BaseE2ETest {
         
         ReservationDto approvedReservation = reservationService.approveReservation(reservationId, manager.getId());
         assertNotNull(approvedReservation);
-        assertEquals(com.lerestaurant.le_restaurant_backend.entity.Reservation.ReservationStatus.CONFIRMED, approvedReservation.getStatus());
+        assertEquals("CONFIRMED", approvedReservation.getStatus());
     }
 }

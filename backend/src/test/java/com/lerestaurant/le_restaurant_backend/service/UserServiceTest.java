@@ -80,7 +80,7 @@ class UserServiceTest {
         @DisplayName("Should create user successfully with encoded password")
         void shouldCreateUserWithEncodedPassword() {
             // Given
-            when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+            when(userRepository.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
             when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -101,7 +101,7 @@ class UserServiceTest {
         @DisplayName("Should throw exception when email already exists")
         void shouldThrowExceptionWhenEmailExists() {
             // Given
-            when(userRepository.findByEmail("newuser@example.com")).thenReturn(Optional.of(testUser));
+            when(userRepository.existsByEmail("newuser@example.com")).thenReturn(true);
 
             // When & Then
             assertThatThrownBy(() -> userService.createUser(testUserCreateRequest))
@@ -115,7 +115,7 @@ class UserServiceTest {
         @DisplayName("Should set default status to ACTIVE for new users")
         void shouldSetDefaultStatusActive() {
             // Given
-            when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+            when(userRepository.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
             when(userRepository.save(any(User.class))).thenReturn(testUser);
 

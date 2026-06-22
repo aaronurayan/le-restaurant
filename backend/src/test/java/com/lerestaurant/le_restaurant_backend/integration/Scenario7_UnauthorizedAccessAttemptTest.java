@@ -49,10 +49,10 @@ class Scenario7_UnauthorizedAccessAttemptTest extends BaseE2ETest {
 
         // Verify manager role is set
         UserDto updatedManager = userService.getUserById(manager.getId());
-        assertEquals("MANAGER", updatedManager.getRole());
+        assertEquals(User.UserRole.MANAGER, updatedManager.getRole());
 
         // Verify customer role is different
-        assertEquals("CUSTOMER", customer.getRole());
+        assertEquals(User.UserRole.CUSTOMER, customer.getRole());
         assertNotEquals(updatedManager.getRole(), customer.getRole());
     }
 }
