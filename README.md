@@ -16,6 +16,13 @@
 ![Azure](https://img.shields.io/badge/Azure-Cloud-0078D4?style=flat-square&logo=microsoft-azure)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)
 
+[![CI](https://github.com/aaronurayan/le-restaurant/actions/workflows/ci.yml/badge.svg)](https://github.com/aaronurayan/le-restaurant/actions/workflows/ci.yml)
+[![Deploy to Azure](https://github.com/aaronurayan/le-restaurant/actions/workflows/azure-deploy.yml/badge.svg)](https://github.com/aaronurayan/le-restaurant/actions/workflows/azure-deploy.yml)
+[![Docker Images](https://github.com/aaronurayan/le-restaurant/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/aaronurayan/le-restaurant/actions/workflows/docker-publish.yml)
+[![Release](https://github.com/aaronurayan/le-restaurant/actions/workflows/release.yml/badge.svg)](https://github.com/aaronurayan/le-restaurant/actions/workflows/release.yml)
+[![License](https://img.shields.io/badge/License-Academic-blue.svg)](#-license)
+![Last Commit](https://img.shields.io/github/last-commit/aaronurayan/le-restaurant?style=flat-square)
+
 **한국어** | [English](README.en.md) | [日本語](README.ja.md) | [Русский](README.ru.md)
 
 </div>
@@ -48,6 +55,10 @@ The easiest way to run the full stack locally is Docker Compose. You only need *
 # Clone the repository
 git clone https://github.com/aaronurayan/le-restaurant.git
 cd le-restaurant
+
+# Create the .env file (the backend requires a JWT signing secret and fails fast without it)
+cp .env.example .env
+# then edit .env and set JWT_SECRET to a random value >= 32 bytes, e.g. `openssl rand -base64 48`
 
 # Start the entire stack (PostgreSQL + Backend + Frontend)
 docker compose up --build
@@ -95,36 +106,147 @@ npm run dev
 
 ## 🏗️ Architecture
 
+### System Architecture
+
+```mermaid
+flowchart TB
+    subgraph Client["🌐 Browser (User)"]
+        FE["React 18 + TypeScript<br/>Tailwind CSS · Vite<br/>Zustand · React Query"]
+    end
+
+    subgraph API["⚙️ Spring Boot REST API (Java 17)"]
+        SEC["Spring Security + JWT<br/>RBAC: CUSTOMER · STAFF · MANAGER · ADMIN"]
+        CTRL["Controllers<br/>Auth · Menu · Order · Payment · Reservation · Delivery"]
+        SVC["Service Layer<br/>business logic + ownership checks"]
+        JPA["Spring Data JPA"]
+        SEC --> CTRL --> SVC --> JPA
+    end
+
+    DB[("PostgreSQL 14<br/>H2 for local dev")]
+
+    FE -- "HTTP/JSON · Axios · Bearer JWT" --> SEC
+    JPA -- "JDBC" --> DB
+
+    subgraph Cloud["☁️ Azure / Docker Deployment"]
+        AZF["Azure Static Web Apps<br/>(frontend · nginx:1.25-alpine :3000)"]
+        AZB["Azure App Service<br/>(backend · temurin:17-jre-alpine :8080)"]
+        AZD[("Azure DB for PostgreSQL<br/>Australia East · postgres:14-alpine :5432")]
+    end
+
+    FE -.deploy.-> AZF
+    API -.deploy.-> AZB
+    DB -.managed.-> AZD
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                     Browser (User)                          │
-│        React 18 + TypeScript  ·  Tailwind CSS  ·  Vite     │
-└─────────────────────────┬────────────────────────────────────┘
-                          │  HTTP/JSON (Axios)
-                          ▼
-┌──────────────────────────────────────────────────────────────┐
-│            Spring Boot REST API  (Java 17)                  │
-│                                                              │
-│   Auth (JWT)  │  Menu  │  Order  │  Payment  │  Delivery   │
-│               │        │         │           │  Reservation │
-│   ── Spring Security ── Spring Data JPA ──────────────────  │
-└─────────────────────────┬────────────────────────────────────┘
-                          │  JDBC
-                          ▼
-┌──────────────────────────────────────────────────────────────┐
-│         PostgreSQL 14  (H2 for local dev)                   │
-│  18 tables: User · Order · MenuItem · Payment · Reservation │
-└──────────────────────────────────────────────────────────────┘
 
-Cloud Deployment:
-  Frontend  ──►  Azure Static Web Apps
-  Backend   ──►  Azure App Service
-  Database  ──►  Azure Database for PostgreSQL (Australia East)
+### Entity Relationship Diagram
 
-Docker:
-  frontend  ──►  nginx:1.25-alpine  (port 3000)
-  backend   ──►  eclipse-temurin:17-jre-alpine  (port 8080)
-  postgres  ──►  postgres:14-alpine  (port 5432)
+```mermaid
+erDiagram
+    USER ||--o{ ORDER : places
+    USER ||--o{ RESERVATION : makes
+    USER ||--o| CART : has
+    USER ||--o{ DELIVERY_ADDRESS : owns
+    USER ||--o| DELIVERY_DRIVER : "may be"
+    USER ||--o{ AUDIT_LOG : generates
+    ORDER ||--o{ ORDER_ITEM : contains
+    ORDER ||--o{ PAYMENT : "paid by"
+    ORDER ||--o| DELIVERY : "fulfilled by"
+    ORDER }o--o| RESTAURANT_TABLE : "seated at"
+    MENU_ITEM ||--o{ ORDER_ITEM : "ordered as"
+    MENU_ITEM ||--o{ CART_ITEM : "added as"
+    CART ||--o{ CART_ITEM : holds
+    PAYMENT ||--o{ PAYMENT_REFUND : "refunded by"
+    DELIVERY }o--|| DELIVERY_ADDRESS : "delivered to"
+    DELIVERY }o--o| DELIVERY_DRIVER : "assigned to"
+    RESERVATION }o--o| RESTAURANT_TABLE : "for"
+
+    USER {
+        Long user_id PK
+        String email UK
+        String passwordHash
+        enum role
+        enum status
+    }
+    ORDER {
+        Long order_id PK
+        Long customer_id FK
+        enum orderType
+        enum status
+        BigDecimal totalAmount
+    }
+    PAYMENT {
+        Long payment_id PK
+        Long order_id FK
+        enum paymentMethod
+        enum status
+        String transactionId UK
+    }
+    RESERVATION {
+        Long reservation_id PK
+        Long customer_id FK
+        Date reservationDate
+        int partySize
+        enum status
+    }
+    MENU_ITEM {
+        Long id PK
+        String name
+        BigDecimal price
+        int stockQuantity
+    }
+```
+
+### Sequence — Authentication (JWT login)
+
+```mermaid
+sequenceDiagram
+    actor C as Customer
+    participant FE as React Frontend
+    participant API as AuthController
+    participant US as UserService
+    participant JWT as JwtUtil
+    participant DB as PostgreSQL
+
+    C->>FE: enter email + password
+    FE->>API: POST /api/auth/login
+    API->>US: authenticateUser(email, password)
+    US->>DB: findByEmail
+    DB-->>US: user
+    US->>US: bcrypt match? account ACTIVE?
+    US->>DB: save lastLogin + AUTH_LOGIN audit
+    US-->>API: UserDto
+    API->>JWT: generateToken(email, role)
+    JWT-->>API: signed JWT (HS256)
+    API-->>FE: 200 { user, token }
+    FE->>FE: store token; send as Bearer on requests
+```
+
+### Sequence — Order → Payment
+
+```mermaid
+sequenceDiagram
+    actor C as Customer
+    participant FE as Frontend
+    participant OC as OrderController
+    participant OS as OrderService
+    participant PC as PaymentController
+    participant PS as PaymentService
+    participant DB as PostgreSQL
+
+    C->>FE: checkout cart
+    FE->>OC: POST /api/orders (Bearer JWT)
+    OC->>OC: bind customerId = authenticated principal
+    OC->>OS: createOrder
+    OS->>DB: persist order + items (server-side totals)
+    OS-->>OC: OrderDto
+    OC-->>FE: 201 Created (order)
+    FE->>PC: POST /api/payments { orderId, amount }
+    PC->>PS: createPayment
+    PS->>PS: requireSelfOrStaff(order.customer)
+    PS->>PS: amount == order total?
+    PS->>DB: persist payment (no raw card data)
+    PS-->>PC: PaymentDto (PENDING)
+    PC-->>FE: 201 Created (payment)
 ```
 
 ### Design Patterns Used
