@@ -41,6 +41,12 @@ variables:
   NODE_VERSION: 20.x
   JAVA_VERSION: '17'
 
+  # JWT signing secret for EPHEMERAL CI verification runs only (NOT a production secret).
+  # The backend fails fast at startup if jwt.secret is unset, so the bootRun-based
+  # verification jobs below need this provided. Production injects the real JWT_SECRET
+  # from Azure App Settings; never reuse this value outside CI.
+  JWT_SECRET: 'ci-verification-only-jwt-signing-secret-min-32-bytes-0123456789'
+
   # Path Configuration
   FRONTEND_PATH: frontend
   BACKEND_PATH: backend
@@ -310,6 +316,8 @@ stages:
                 echo "Waiting for backend... ($((i * 5))s)"
               done
             displayName: '🚀 Start Backend for Integration Tests'
+            env:
+              JWT_SECRET: $(JWT_SECRET)   # backend fails fast without a signing key
 
           - script: |
               cd integration-tests
@@ -483,6 +491,8 @@ stages:
               sleep 8
               echo "✅ Frontend preview started on port 4173"
             displayName: '🚀 Start Full Stack for E2E Tests'
+            env:
+              JWT_SECRET: $(JWT_SECRET)   # backend fails fast without a signing key
 
           - script: |
               cd e2e
